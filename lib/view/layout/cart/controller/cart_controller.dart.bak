@@ -107,8 +107,6 @@ class CartController extends ChangeNotifier {
     });
 
     final response = await ApiHelper.instance.post(Urls.addToCart, body: body);
-    debugPrint("ADD_TO_CART => ${response.state}");
-    debugPrint(response.data.toString());
     Utils.loadingOff();
     if (response.state == ResponseState.complete) {
       CommonMethods.showToast(message: response.data['message']);

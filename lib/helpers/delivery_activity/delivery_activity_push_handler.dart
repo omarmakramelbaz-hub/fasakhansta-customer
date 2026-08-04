@@ -54,7 +54,17 @@ class DeliveryActivityPushHandler {
           log('LiveActivityPush action=end target=$activityId done');
         } else {
           await _liveActivities.updateActivity(activityId, payloadData);
-          log('LiveActivityPush action=update target=$activityId done');
+
+if (payloadData['order_status'] == 'Rejected') {
+  Future.delayed(const Duration(seconds: 2), () async {
+    try {
+      await _liveActivities.endActivity(activityId);
+      log('LiveActivityPush auto-end rejected activity=$activityId');
+    } catch (_) {}
+  });
+}
+
+log('LiveActivityPush action=update target=$activityId done');
         }
         return;
       }
@@ -218,9 +228,7 @@ class DeliveryActivityPushHandler {
         status.toLowerCase().trim().replaceAll(RegExp(r'[\s-]+'), '_');
     return normalized == 'ended' ||
         normalized == 'delivered' ||
-        normalized == 'completed' ||
-        normalized == 'cancelled' ||
-        normalized == 'declined';
+        normalized == 'completed' ;
   }
 
   static Map<String, dynamic> _buildLiveActivityData(
@@ -273,6 +281,10 @@ class DeliveryActivityPushHandler {
       case 'delivered':
       case 'completed':
         return 'Delivered';
+      case 'declined':
+      case 'cancelled':
+      case 'rejected':
+        return 'Rejected';
       default:
         final value = rawValue.replaceAll('_', ' ').trim();
         return value.isEmpty ? 'Preparing' : value;

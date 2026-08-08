@@ -25,6 +25,7 @@ import '../model/restaurants_near_you_home_model.dart';
 import '../widgets/coupon_widget.dart';
 import '../widgets/go_drive_card_widget.dart';
 import '../widgets/home_header.dart';
+import '../widgets/home_wallet_card.dart';
 import '../widgets/restaurants_and_delegate_request_widget.dart';
 import 'home_screen_widget.dart';
 
@@ -166,7 +167,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final homeController = context.read<HomeController>();
 
-    // Reset local provider states
     homeController.initialCountCart();
     homeController.initialSlider();
     homeController.initialDefaultSlider();
@@ -175,7 +175,6 @@ class _HomeScreenState extends State<HomeScreen> {
     homeController.initialCoupon();
     homeController.initialSpacialRestaurants();
 
-    // Update persisted location
     HiveMethods.updateSelectedCity(address.id!);
     HiveMethods.updateLat(double.tryParse(address.lat.toString()) ?? 0);
     HiveMethods.updateLan(double.tryParse(address.lng.toString()) ?? 0);
@@ -206,6 +205,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const HomeWalletCard(),
                 SliderWidget(controller: controller),
                 if (HiveMethods.getToken() != null)
                   ApiResponseWidget(
@@ -218,9 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: CouponWidget(controller: controller),
                   ),
                 12.sbH,
-                // RestaurantsNearYouWidget(controller: controller),
                 SpecialRestaurantsSectionWidget(controller: controller),
-                // PreviousOrdersSectionWidget(controller: controller),
                 10.sbH,
                 Row(
                   children: [

@@ -183,6 +183,10 @@ class AppTextStyle {
     return TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: color ?? AppColors.secondAppColor);
   }
 
+  static TextStyle text12BW({Color? color}) {
+    return TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: color ?? AppColors.whiteColor);
+  }
+
   static TextStyle text11RS({Color? color}) {
     return TextStyle(fontSize: 11, fontWeight: FontWeight.w400, color: color ?? AppColors.greyColor);
   }

@@ -2,12 +2,10 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:pusher_channels_flutter/pusher_channels_flutter.dart';
 
 import '../../../../helpers/extensions/extensions.dart';
-import '../../../../helpers/images/app_images.dart';
 import '../../../../helpers/pusher_service/pusher_controller.dart';
 import '../../../../helpers/routes/app_routers_import.dart';
 import '../../../../helpers/theme/app_colors.dart';
@@ -38,39 +36,32 @@ class WalletScreen extends StatefulWidget {
 
 class _WalletScreenState extends State<WalletScreen> {
   late PusherController _pusherController;
-
   String? pusherWalletAmount;
 
   @override
   void initState() {
     super.initState();
-
     _pusherController = context.read<PusherController>();
     _pusherController.addEventListener('balance.updated', _handleWalletUpdate);
   }
 
   void _handleWalletUpdate(PusherEvent event) {
     try {
-      var jsonData = jsonDecode(event.data) as Map<String, dynamic>;
-      log('Wallet updated: $jsonData');
-
-      String amount = jsonData['user_balance']?.toString() ?? '0';
+      final jsonData = jsonDecode(event.data) as Map<String, dynamic>;
+      final amount = jsonData['user_balance']?.toString() ?? '0';
       pusherWalletAmount = num.parse(amount).toStringAsFixed(2);
-
-      log('Notification updated: $jsonData');
       if (mounted) {
-        var transaction = WalletModel.fromJson(jsonData);
-        // context.read<WalletController>().getWallet();
+        final transaction = WalletModel.fromJson(jsonData);
         context.read<WalletController>().updateWallet(transaction: transaction);
       }
     } catch (e, stackTrace) {
-      log('Error handling Pusher event: $e');
-      log('Stack trace: $stackTrace');
+      log('Error handling wallet update: $e');
+      log('$stackTrace');
     }
   }
 
   @override
-  dispose() {
+  void dispose() {
     _pusherController.removeEventListener('balance.updated', _handleWalletUpdate);
     super.dispose();
   }
@@ -80,115 +71,54 @@ class _WalletScreenState extends State<WalletScreen> {
     return Consumer2<WalletController, MyAccountController>(
       builder: (context, walletController, myAccountController, _) {
         final authController = context.read<AuthController>();
+        final balance = pusherWalletAmount ?? walletController.wallet?.balance?.toStringAsFixed(2) ?? '0.00';
 
         return Scaffold(
           extendBody: true,
           body: PageContainer(
             bottom: false,
             child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 22, 20, 130),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  24.sbH,
                   CustomAccountAppBar(title: 'theWallet'.tr),
-                  22.sbH,
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: AppColors.whiteColor,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(34),
-                        topRight: Radius.circular(34),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.greyColor.withValues(alpha: 0.2),
-                          offset: const Offset(0, -3),
-                          blurRadius: 10,
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Column(
-                          children: [
-                            24.sbH,
-                            Row(
-                              children: [
-                                if (authController.profile?.gender == 'male')
-                                  SvgPicture.asset(AppImages.avatarMale)
-                                else if (authController.profile?.gender == 'female')
-                                  SvgPicture.asset(AppImages.avatarFemale)
-                                else
-                                  CircleAvatar(
-                                    backgroundColor: AppColors.mainAppColor,
-                                    child: Text(
-                                      authController.profile?.name?.substring(0, 1) ?? '',
-                                      style: AppTextStyle.text20MW(),
-                                    ),
-                                  ),
-                                const SizedBox(width: 10),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      authController.profile?.name ?? '',
-                                      style: AppTextStyle.text18MS(),
-                                    ),
-                                    5.sbH,
-                                    Row(
-                                      children: [
-                                        // SvgPicture.asset(AppImages.egyptIcon),
-                                        const SizedBox(width: 10),
-                                        Text(
-                                          authController.profile?.areaTitle ?? '',
-                                          style: AppTextStyle.text16RG(),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        const Divider(),
-                        15.sbH,
-                        MyCurrentBalanceWidget(wallet: walletController.wallet, pusherWalletAmount: pusherWalletAmount),
-                        20.sbH,
-                        CustomButton(
-                          text: 'moneyTransfer'.tr,
-                          onPressed: () {
-                            Utils.showAppBottomSheet(
-                              enableDrag: true,
-                              isScrollControlled: true,
-                              ChangeNotifierProvider.value(
-                                value: walletController,
-                                child: MoneyTransferBottomSheet(walletController: walletController),
-                              ),
-                            );
-                          },
-                        ),
-                        32.sbH,
-                        Text('recentTransactions'.tr, style: AppTextStyle.text18BS()),
-                        15.sbH,
-                        ApiResponseWidget(
-                          apiResponse: walletController.walletResponse,
-                          onReload: walletController.getWallet,
-                          isEmpty: walletController.wallet?.wallet?.isEmpty ?? true,
-                          child: RecentTransactionsWidget(wallet: walletController.wallet?.wallet),
-                        ),
-                        100.sbH,
-                      ],
-                    ),
+                  const SizedBox(height: 18),
+                  MyCurrentBalanceWidget(
+                    wallet: walletController.wallet,
+                    pusherWalletAmount: pusherWalletAmount,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildQuickActions(context, walletController, myAccountController, authController),
+                  const SizedBox(height: 22),
+                  Row(
+                    children: [
+                      Expanded(child: Text('عروض استخدام رصيد المحفظة', style: AppTextStyle.text18BS())),
+                      Text('عرض الكل', style: AppTextStyle.text16MS().copyWith(color: AppColors.mainAppColor)),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  _buildWalletOffer(),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(child: Text('سجل العمليات', style: AppTextStyle.text18BS())),
+                      Text('${walletController.wallet?.wallet?.length ?? 0} عملية', style: AppTextStyle.text14RM()),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  ApiResponseWidget(
+                    apiResponse: walletController.walletResponse,
+                    onReload: walletController.getWallet,
+                    isEmpty: walletController.wallet?.wallet?.isEmpty ?? true,
+                    child: RecentTransactionsWidget(wallet: walletController.wallet?.wallet),
                   ),
                 ],
               ),
             ),
           ),
           bottomNavigationBar: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 18),
             child: (myAccountController.setting?.walletCardActivate == 'false' &&
                     myAccountController.setting?.paymentCardActivate == 'false')
                 ? const SizedBox()
@@ -215,6 +145,127 @@ class _WalletScreenState extends State<WalletScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildQuickActions(
+    BuildContext context,
+    WalletController walletController,
+    MyAccountController myAccountController,
+    AuthController authController,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: AppColors.whiteColor,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.greyColor.withValues(alpha: .10)),
+        boxShadow: [BoxShadow(color: AppColors.greyColor.withValues(alpha: .08), blurRadius: 14, offset: const Offset(0, 5))],
+      ),
+      child: Row(
+        children: [
+          _actionItem(
+            icon: Icons.receipt_long_outlined,
+            title: 'سجل العمليات',
+            onTap: () {},
+          ),
+          _actionDivider(),
+          _actionItem(
+            icon: Icons.swap_horiz_rounded,
+            title: 'تحويل الأموال',
+            onTap: () {
+              Utils.showAppBottomSheet(
+                enableDrag: true,
+                isScrollControlled: true,
+                ChangeNotifierProvider.value(
+                  value: walletController,
+                  child: MoneyTransferBottomSheet(walletController: walletController),
+                ),
+              );
+            },
+          ),
+          _actionDivider(),
+          _actionItem(
+            icon: Icons.account_balance_wallet_outlined,
+            title: 'شحن المحفظة',
+            onTap: () {
+              if (authController.profile?.email == null) {
+                NamedNavigatorImpl.push(PersonalInformationScreen.routeName);
+                return;
+              }
+              Utils.showAppBottomSheet(
+                enableDrag: true,
+                isScrollControlled: true,
+                ChangeNotifierProvider.value(
+                  value: walletController,
+                  child: ChargeWalletBottomSheet(walletController: walletController, myAccountController: myAccountController),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _actionItem({required IconData icon, required String title, required VoidCallback onTap}) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Column(
+          children: [
+            Container(
+              width: 54,
+              height: 54,
+              decoration: BoxDecoration(color: AppColors.mainAppColor.withValues(alpha: .08), shape: BoxShape.circle),
+              child: Icon(icon, color: AppColors.mainAppColor, size: 27),
+            ),
+            const SizedBox(height: 8),
+            Text(title, style: AppTextStyle.text14MS(), textAlign: TextAlign.center),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _actionDivider() => Container(width: 1, height: 72, color: AppColors.greyColor.withValues(alpha: .12));
+
+  Widget _buildWalletOffer() {
+    return Container(
+      height: 145,
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.mainAppColor, AppColors.mainAppColor.withValues(alpha: .72)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('اشحن محفظتك واستمتع', style: AppTextStyle.text18BS().copyWith(color: Colors.white)),
+                const SizedBox(height: 6),
+                Text('استخدم رصيدك بسهولة في طلباتك القادمة', style: AppTextStyle.text14RM().copyWith(color: Colors.white.withValues(alpha: .9))),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
+                  child: Text('فسخانستا', style: AppTextStyle.text14MS().copyWith(color: AppColors.mainAppColor)),
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.card_giftcard_rounded, color: Colors.white, size: 70),
+        ],
+      ),
     );
   }
 }

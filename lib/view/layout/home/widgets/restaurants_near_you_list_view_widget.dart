@@ -26,122 +26,140 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return ApiResponseWidget(
       apiResponse: context.read<HomeController>().restaurantsNearYouApiResponse,
-      onReload: () =>
-          context.read<HomeController>().getRestaurantsNearYou(lat: HiveMethods.getLat(), lng: HiveMethods.getLan()),
-      isEmpty: context.read<HomeController>().restaurantsNearYou.isEmpty,
+      onReload: () => context.read<HomeController>().getRestaurantsNearYou(
+            lat: HiveMethods.getLat(),
+            lng: HiveMethods.getLan(),
+          ),
+      isEmpty: restaurantsNearYou.isEmpty,
       loadingWidget: CustomShimmer(
-        height: 120,
+        height: 205,
         width: double.infinity,
         fillColor: AppColors.greyColor.withValues(alpha: 0.05),
         shimmerColor: AppColors.mainAppColor,
       ),
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16),
-        height: 180,
-        child: SingleChildScrollView(
+      child: SizedBox(
+        height: 210,
+        child: ListView.separated(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           scrollDirection: Axis.horizontal,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ...List.generate(
-                restaurantsNearYou.length,
-                (index) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 5),
-                    child: Container(
-                      width: context.width * 0.45,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.borderColor),
-                      ),
-                      child: InkWell(
-                        onTap: () {
-                          restaurantsNearYou[index].underContract == 'yes' || restaurantsNearYou[index].status == 'busy'
-                              ? null
-                              : NamedNavigatorImpl.push(
-                                  RestaurantDetailsScreen.routeName,
-                                  arguments: RestaurantDetailsArgs(id: restaurantsNearYou[index].id ?? 0),
-                                );
-                        },
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.start,
+          itemCount: restaurantsNearYou.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 10),
+          itemBuilder: (context, index) {
+            final model = restaurantsNearYou[index];
+            final canOpen = model.underContract != 'yes' && model.status != 'busy' && model.status != 'closed';
+
+            return SizedBox(
+              width: 180,
+              child: Material(
+                color: AppColors.whiteColor,
+                borderRadius: BorderRadius.circular(16),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: canOpen
+                      ? () => NamedNavigatorImpl.push(
+                            RestaurantDetailsScreen.routeName,
+                            arguments: RestaurantDetailsArgs(id: model.id ?? 0),
+                          )
+                      : null,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.borderColorContainer),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.blackColor.withOpacity(.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Stack(
                           children: [
-                            Stack(
-                              children: [
-                                CustomNetworkImage(
-                                  imageUrl: restaurantsNearYou[index].bgImage ?? '',
-                                  height: 100,
-                                  width: context.width * 0.45,
-                                  radius: 12,
-                                  fit: BoxFit.fill,
-                                ),
-                                BranchLogoWidget(model: restaurantsNearYou[index]),
-                                IsRestaurantBusyWidget(model: restaurantsNearYou[index]),
-                              ],
+                            CustomNetworkImage(
+                              imageUrl: model.bgImage ?? '',
+                              height: 105,
+                              width: 180,
+                              radius: 16,
+                              fit: BoxFit.cover,
                             ),
-                            8.sbH,
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                            Positioned(
+                              top: 8,
+                              left: 8,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.mainAppColor,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.location_on_rounded, size: 12, color: Colors.white),
+                                    const SizedBox(width: 2),
+                                    Text(
+                                      '${model.distance ?? ''} كم',
+                                      style: AppTextStyle.text12BS(color: AppColors.whiteColor),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            BranchLogoWidget(model: model),
+                            IsRestaurantBusyWidget(model: model),
+                          ],
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                model.name ?? '',
+                                style: AppTextStyle.text16BS(),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 5),
+                              Row(
                                 children: [
-                                  Text(
-                                    restaurantsNearYou[index].name ?? '',
-                                    style: AppTextStyle.text16RS().copyWith(fontSize: 14),
-                                    textAlign: TextAlign.center,
-                                    maxLines: 1,
+                                  SvgPicture.asset(AppImages.clockIcon, width: 14, height: 14),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      model.deliveryTime ?? '',
+                                      style: AppTextStyle.text14RS(color: AppColors.greyColor),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
-                                  if (restaurantsNearYou[index].deliveryTime != null)
-                                    Row(
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.only(bottom: 5),
-                                          child: SvgPicture.asset(AppImages.clockIcon),
-                                        ),
-                                        8.sbW,
-                                        Text(
-                                          restaurantsNearYou[index].deliveryTime ?? '',
-                                          style: AppTextStyle.text16RS()
-                                              .copyWith(fontSize: 14, color: AppColors.lightTextColor),
-                                          textAlign: TextAlign.center,
-                                          maxLines: 1,
-                                        ),
-                                        const Spacer(),
-                                        IsFreeDeliveryWidget(model: restaurantsNearYou[index]),
-                                      ],
-                                    ),
-                                  Container(
-                                    padding: const EdgeInsets.only(left: 5, right: 5, top: 5),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.lightGreyColor,
-                                      borderRadius: BorderRadius.circular(3),
-                                    ),
-                                    child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        SvgPicture.asset(AppImages.starIcon),
-                                        const SizedBox(width: 5),
-                                        Text(
-                                          restaurantsNearYou[index].avgRate?.toStringAsFixed(1).toString() ?? '',
-                                          style: AppTextStyle.text14RS().copyWith(height: 1.4),
-                                        ),
-                                      ],
-                                    ),
+                                  SvgPicture.asset(AppImages.starIcon, width: 14, height: 14),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    model.avgRate?.toStringAsFixed(1) ?? '0.0',
+                                    style: AppTextStyle.text14BS(),
                                   ),
                                 ],
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 5),
+                              Text(
+                                canOpen ? 'مفتوح الآن' : (model.status == 'closed' ? 'مغلق' : 'غير متاح'),
+                                style: AppTextStyle.text14BS(
+                                  color: canOpen ? AppColors.greenColor : AppColors.greyColor,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                  );
-                },
+                  ),
+                ),
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -157,19 +175,19 @@ class BranchLogoWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Positioned(
       bottom: 6,
-      right: 2,
+      right: 6,
       child: Container(
         padding: const EdgeInsets.all(2),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.borderColor),
+          border: Border.all(color: AppColors.whiteColor, width: 2),
           color: AppColors.whiteColor,
         ),
         child: CustomNetworkImage(
           imageUrl: model.logo ?? '',
-          height: 30,
-          width: 30,
-          radius: 12,
+          height: 32,
+          width: 32,
+          radius: 10,
           fit: BoxFit.contain,
         ),
       ),
@@ -188,19 +206,15 @@ class IsFreeDeliveryWidget extends StatelessWidget {
         'freeDelivery'.tr,
         style: AppTextStyle.text16RS().copyWith(fontSize: 14, color: AppColors.lightTextColor),
       );
-    } else {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const CustomImage(path: AppImages.fastDeliveryImage, width: 16, type: ImageType.asset),
-          3.sbW,
-          Text(
-            'egyp'.tr.replaceAll('{}', model.kmPrice.toString()),
-            style: AppTextStyle.text14MS(),
-          ),
-        ],
-      );
     }
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const CustomImage(path: AppImages.fastDeliveryImage, width: 16, type: ImageType.asset),
+        3.sbW,
+        Text('egyp'.tr.replaceAll('{}', model.kmPrice.toString()), style: AppTextStyle.text14MS()),
+      ],
+    );
   }
 }
 
@@ -211,36 +225,25 @@ class IsRestaurantBusyWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final unavailable = model.status == 'closed' || model.underContract == 'yes' || model.status == 'busy';
+    if (!unavailable) return const SizedBox.shrink();
+
     return Positioned.fill(
-      child: model.status == 'closed' || model.underContract == 'yes' || model.status == 'busy'
-          ? Container(
-              height: 70,
-              width: 82,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.blackColor.withValues(alpha: 0.6),
-                    blurRadius: 1,
-                    offset: const Offset(0, 0),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 5),
-                  child: Text(
-                    model.underContract == 'yes'
-                        ? 'underContract'.tr
-                        : model.status == 'closed'
-                            ? 'closed'.tr
-                            : 'busy'.tr,
-                    style: AppTextStyle.text14MW(),
-                  ),
-                ),
-              ),
-            )
-          : const SizedBox(),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.blackColor.withOpacity(.48),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          model.underContract == 'yes'
+              ? 'underContract'.tr
+              : model.status == 'closed'
+                  ? 'closed'.tr
+                  : 'busy'.tr,
+          style: AppTextStyle.text14MW(),
+        ),
+      ),
     );
   }
 }

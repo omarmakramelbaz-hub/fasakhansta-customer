@@ -12,7 +12,6 @@ import '../../../../helpers/theme/app_text_style.dart';
 import '../../../../helpers/translation/all_translation.dart';
 import '../../../../helpers/utils/common_methods.dart';
 import '../../../custom_widgets/api_response_widget/api_response_widget.dart';
-import '../../../custom_widgets/custom_app_bar/custom_app_bar.dart';
 import '../../../custom_widgets/custom_image/custom_image.dart';
 import '../../auth/controller/auth_controller.dart';
 import '../../restaurants/screen/restaurant_details_screen.dart';
@@ -31,14 +30,15 @@ class CartScreen extends StatefulWidget {
 
 class _CartScreenState extends State<CartScreen> {
   @override
-  initState() {
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      Provider.of<CartController>(context, listen: false).initialCart();
-      Provider.of<CartController>(context, listen: false).getCart();
-      Provider.of<AuthController>(context, listen: false).initialProfile();
-      Provider.of<AuthController>(context, listen: false).getProfile();
-    });
+  void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final cart = context.read<CartController>();
+      cart.initialCart();
+      cart.getCart();
+      context.read<AuthController>().initialProfile();
+      context.read<AuthController>().getProfile();
+    });
   }
 
   @override
@@ -46,365 +46,291 @@ class _CartScreenState extends State<CartScreen> {
     return Consumer2<CartController, AuthController>(
       builder: (context, cartController, authController, _) {
         final totalPrice = cartController.totalPrice;
-        final num serviceFees = (((cartController.cart?.resturant?.serviceFees ?? 0) * (totalPrice)) / 100);
-        final num addedPrice = (((cartController.cart?.resturant?.tax ?? 0) * (totalPrice)) / 100);
-        final num grandTotal = (serviceFees + addedPrice + (totalPrice));
+        final serviceFees = ((cartController.cart?.resturant?.serviceFees ?? 0) * totalPrice) / 100;
+        final addedPrice = ((cartController.cart?.resturant?.tax ?? 0) * totalPrice) / 100;
+        final grandTotal = serviceFees + addedPrice + totalPrice;
+        final hasItems = cartController.cart?.carts?.isNotEmpty ?? false;
+
         return Scaffold(
-          appBar: CustomAppBar(
-            actions: [
-              ((cartController.cart?.carts?.isNotEmpty ?? false) && cartController.cart?.resturant?.resturantId != 0)
-                  ? TextButton(
-                      onPressed: () {
-                        NamedNavigatorImpl.push(
-                          RestaurantDetailsScreen.routeName,
-                          arguments: RestaurantDetailsArgs(
-                            id: cartController.cart?.resturant?.resturantId ?? 0,
-                            onSuccessAddItem: () => cartController.getCart(),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        'addMore'.tr,
-                        style: AppTextStyle.text16BS().copyWith(color: AppColors.mainAppColor),
-                      ),
-                    )
-                  : const SizedBox(),
-            ],
-            height: 70,
-            centerTitle: false,
+          backgroundColor: const Color(0xFFF8F8F8),
+          appBar: AppBar(
+            elevation: 0,
+            backgroundColor: AppColors.mainAppColor,
+            foregroundColor: AppColors.whiteColor,
+            centerTitle: true,
+            title: Text('shoppingCart'.tr, style: AppTextStyle.text18BS().copyWith(color: AppColors.whiteColor)),
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-              onPressed: () {
-                Navigator.pop(context);
-              },
+              icon: const Icon(Icons.arrow_back_ios_new_rounded),
+              onPressed: () => Navigator.pop(context),
             ),
-            title: Text('shoppingCart'.tr, style: AppTextStyle.text16BS()),
+            actions: [
+              if (hasItems && (cartController.cart?.resturant?.resturantId ?? 0) != 0)
+                IconButton(
+                  tooltip: 'addMore'.tr,
+                  icon: const Icon(Icons.add_shopping_cart_rounded),
+                  onPressed: () {
+                    NamedNavigatorImpl.push(
+                      RestaurantDetailsScreen.routeName,
+                      arguments: RestaurantDetailsArgs(
+                        id: cartController.cart?.resturant?.resturantId ?? 0,
+                        onSuccessAddItem: () => cartController.getCart(),
+                      ),
+                    );
+                  },
+                ),
+            ],
           ),
           body: ApiResponseWidget(
             apiResponse: cartController.cartResponse,
             onReload: cartController.getCart,
-            isEmpty: cartController.cart?.carts?.isEmpty ?? false || cartController.cart == null,
-            emptyWidget: Center(
-              child: ListView(
-                children: [
-                  SizedBox(height: context.height * 0.2),
-                  const CustomImage(path: AppImages.emptyCartIcon, type: ImageType.svg, height: 100),
-                  const SizedBox(height: 40),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'cartIsEmpty'.tr,
-                        style: AppTextStyle.text14BS().copyWith(color: AppColors.mainAppColor),
-                      ),
-                      const SizedBox(width: 35),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+            isEmpty: !hasItems || cartController.cart == null,
+            emptyWidget: _buildEmptyCart(),
             child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.only(top: 14, bottom: 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 28),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(cartController.cart?.resturant?.resturantName ?? '', style: AppTextStyle.text16BS()),
+                  _buildRestaurantHeader(cartController),
+                  14.sbH,
+                  ...List.generate(
+                    cartController.cart?.carts?.length ?? 0,
+                    (index) => OrdersInCartWidget(cart: cartController.cart!.carts![index]),
                   ),
-                  const SizedBox(height: 24),
-                  ListView.separated(
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    separatorBuilder: (context, index) => const Divider(indent: 20, endIndent: 20, thickness: 1),
-                    itemCount: cartController.cart?.carts?.length ?? 0,
-                    itemBuilder: (context, index) => OrdersInCartWidget(cart: cartController.cart!.carts![index]),
-                  ),
-                  Divider(color: AppColors.greyColor.withValues(alpha: 0.5), height: 2),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text('youMayAlsoLike'.tr, style: AppTextStyle.text16BS()),
-                  ),
-                  buildYouMayAlsoLikeWidget(cartController),
-                  //===========> Empty Cart button
-                  // Padding(
-                  //   padding: const EdgeInsets.all(16.0),
-                  //   child: CustomButton(
-                  //     text: 'emptyCart'.tr,
-                  //     prefixIcon: Icon(
-                  //       Icons.delete_forever_sharp,
-                  //       color: AppColor.whiteColor,
-                  //     ),
-                  //     onPressed: () {
-                  //       cartController.emptyCart(onSuccess: () {
-                  //         cartController.getCart();
-                  //       });
-                  //     },
-                  //   ),
-                  // ),
-                  const SizedBox(height: 24),
-                  Container(
-                    height: 5,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: AppColors.greyColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('paymentSummary'.tr, style: AppTextStyle.text16BS()),
-                        const SizedBox(height: 24),
-                        Row(
-                          children: [
-                            Text('subtotal'.tr, style: AppTextStyle.text16RG()),
-                            const Spacer(),
-                            Text(
-                              'pound'.tr.replaceAll('{}', totalPrice.toString()),
-                              style: AppTextStyle.text16RG(),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        // Row(
-                        //   children: [
-                        //     Text(
-                        //       'deliveryCharges'.tr,
-                        //       style: AppTextStyle.text16RG(),
-                        //     ),
-                        //     const Spacer(),
-                        //     //======== ======= todo: add km price acceding to location
-                        //     //علي حسب المسافة بالكيلو متر ولنفرصض مثلا انها كيلو متر واحد
-                        //     Text(
-                        //       'pound'.tr.replaceAll(
-                        //           "{}", kmPrice.toStringAsFixed(2).toString()),
-                        //       style: AppTextStyle.text16RG(),
-                        //     ),
-                        //   ],
-                        // ),
-                        // const SizedBox(
-                        //   height: 24,
-                        // ),
-                        Row(
-                          children: [
-                            Text('serviceFees'.tr, style: AppTextStyle.text16RG()),
-                            const Spacer(),
-                            Text(
-                              'pound'.tr.replaceAll('{}', (serviceFees.toStringAsFixed(2).toString())),
-                              style: AppTextStyle.text16RG(),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Text('addedValuePrice'.tr, style: AppTextStyle.text16RG()),
-                            const Spacer(),
-                            Text(
-                              'pound'.tr.replaceAll('{}', (addedPrice.toStringAsFixed(2).toString())),
-                              style: AppTextStyle.text16RG(),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Divider(color: AppColors.greyColor.withValues(alpha: 0.5), height: 2),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('total'.tr, style: AppTextStyle.text16MS()),
-                                5.sbH,
-                                cartController.cart?.resturant?.resturantKmPrice != 0
-                                    ? Text(
-                                        'thisTotalWithoutDeliveryCharge'.tr,
-                                        style: AppTextStyle.text14MS().copyWith(color: AppColors.redColor),
-                                      )
-                                    : const SizedBox(),
-                              ],
-                            ),
-                            const Spacer(),
-                            Text(
-                              'pound'.tr.replaceAll('{}', (grandTotal.toStringAsFixed(2).toString())),
-                              style: AppTextStyle.text16MS(),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        // Text(
-                        //   'minOrderPrice'
-                        //       .tr
-                        //       .replaceAll("{}", "$resturantMinOrderPrice"),
-                        //   style: AppTextStyle.text16MS(),
-                        // ),
-                      ],
-                    ),
-                  ),
-                  20.sbH,
+                  _buildRecommended(cartController),
+                  14.sbH,
+                  _buildPaymentSummary(totalPrice, serviceFees, addedPrice, grandTotal, cartController),
                 ],
               ),
             ),
           ),
-          bottomNavigationBar: cartController.cart?.carts?.isEmpty ?? false || cartController.cart == null
-              ? null
-              : ButtonNavCartWidget(
-                  totalInCart: grandTotal.toStringAsFixed(2).toString(),
-                  onPressedExecuteTheOrder: () {
-                    log(
-                      cartController.cart?.resturant?.resturantAreas
-                              ?.map((area) => area.areaId)
-                              .whereType<int>()
-                              .toList()
-                              .toString() ??
-                          '',
-                    );
-                    if (((cartController.cart?.resturant?.resturantMinOrderPrice ?? 0) > totalPrice)) {
-                      CommonMethods.showError(
-                        message: 'cantExecuteOrderLessThan'.tr.replaceAll(
-                              '{}',
-                              '${cartController.cart?.resturant?.resturantMinOrderPrice ?? 0}',
-                            ),
-                      );
-                    } else {
-                      if (cartController.cart?.resturant?.resturantAreas
-                              ?.map((area) => area.areaId)
-                              .whereType<int>()
-                              .toList()
-                              .isNotEmpty ??
-                          true) {
-                        NamedNavigatorImpl.push(
-                          ChooseAddressFromMapScreen.routeName,
-                          arguments: ChooseAddressFromMapScreenArgs(
-                            resturantId: cartController.cart?.resturant?.resturantId ?? 0,
-                            areaId: cartController.cart?.resturant?.resturantAreas
-                                    ?.map((area) => area.areaId)
-                                    .whereType<int>()
-                                    .toList() ??
-                                [],
-                          ),
-                        );
-                      } else {
-                        NamedNavigatorImpl.push(
-                          ChooseAddressFromMapScreen.routeName,
-                          arguments: ChooseAddressFromMapScreenArgs(
-                            resturantId: cartController.cart?.resturant?.resturantId ?? 0,
-                            areaId: [1],
-                          ),
-                        );
-                      }
-                      // PrintLog.e(cartController.cart?.resturant?.toJson());
-                    }
-                  },
-                ),
+          bottomNavigationBar: hasItems
+              ? _buildCheckoutBar(cartController, totalPrice, grandTotal)
+              : null,
         );
       },
     );
   }
 
-  SizedBox buildYouMayAlsoLikeWidget(CartController cartController) {
-    return SizedBox(
-      width: double.infinity,
-      height: 170,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: cartController.cart?.recommendedProducts?.length ?? 0,
-        itemBuilder: (context, index) => Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 5),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Stack(
-                children: [
-                  CustomImage(
-                    height: 106,
-                    width: 96,
-                    radius: 12,
-                    fit: BoxFit.cover,
-                    path: cartController.cart?.recommendedProducts?[index].productImage ?? '',
-                    type: ImageType.network,
-                  ),
-                  Positioned(
-                    bottom: 5,
-                    left: 2,
-                    child: InkWell(
-                      onTap: () {
-                        cartController.addToCart(
-                          restaurantProductId: cartController.cart?.recommendedProducts?[index].id ?? 0,
-                          qty: 1,
-                          onSuccess: () => cartController.getCart(),
-                          anotherCart: () {},
-                        );
-                      },
-                      child: Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(4.0),
-                          child: Icon(Icons.add, color: AppColors.mainAppColor, size: 15),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              5.sbH,
-              SizedBox(
-                width: 96,
-                child: Text(cartController.cart?.recommendedProducts?[index].productName ?? '', maxLines: 2),
-              ),
-              SizedBox(
-                width: 96,
-                child: Text(
-                  'egyp'.tr.replaceAll(
-                        '{}',
-                        '${cartController.cart?.recommendedProducts?[index].productPrice.toString()}',
-                      ),
-                  maxLines: 2,
+  Widget _buildRestaurantHeader(CartController controller) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+      decoration: BoxDecoration(
+        color: AppColors.whiteColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.mainAppColor.withValues(alpha: .15)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: AppColors.mainAppColor.withValues(alpha: .1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.storefront_rounded, color: AppColors.mainAppColor),
+          ),
+          12.sbW,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('yourOrderFrom'.tr, style: AppTextStyle.text12RG()),
+                2.sbH,
+                Text(controller.cart?.resturant?.resturantName ?? '', style: AppTextStyle.text16BS()),
+              ],
+            ),
+          ),
+          Icon(Icons.chevron_right_rounded, color: AppColors.greyColor),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecommended(CartController controller) {
+    final products = controller.cart?.recommendedProducts ?? [];
+    if (products.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          child: Text('youMayAlsoLike'.tr, style: AppTextStyle.text17BS()),
+        ),
+        SizedBox(
+          height: 168,
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            scrollDirection: Axis.horizontal,
+            itemCount: products.length,
+            separatorBuilder: (_, __) => 10.sbW,
+            itemBuilder: (context, index) {
+              final product = products[index];
+              return Container(
+                width: 132,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.whiteColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.greyColor.withValues(alpha: .12)),
                 ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Stack(
+                      children: [
+                        CustomImage(
+                          height: 82,
+                          width: double.infinity,
+                          radius: 12,
+                          fit: BoxFit.cover,
+                          path: product.productImage ?? '',
+                          type: ImageType.network,
+                        ),
+                        Positioned(
+                          left: 5,
+                          bottom: 5,
+                          child: InkWell(
+                            onTap: () => controller.addToCart(
+                              restaurantProductId: product.id ?? 0,
+                              qty: 1,
+                              onSuccess: () => controller.getCart(),
+                              anotherCart: () {},
+                            ),
+                            child: Container(
+                              width: 30,
+                              height: 30,
+                              decoration: BoxDecoration(
+                                color: AppColors.whiteColor,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(Icons.add, color: AppColors.mainAppColor, size: 19),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    6.sbH,
+                    Text(product.productName ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyle.text13BS()),
+                    3.sbH,
+                    Text(
+                      'egyp'.tr.replaceAll('{}', '${product.productPrice ?? 0}'),
+                      style: AppTextStyle.text12MS().copyWith(color: AppColors.mainAppColor),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPaymentSummary(double subtotal, double serviceFees, double addedPrice, double total, CartController controller) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.whiteColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.greyColor.withValues(alpha: .12)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('paymentSummary'.tr, style: AppTextStyle.text17BS()),
+          16.sbH,
+          _summaryRow('subtotal'.tr, subtotal),
+          10.sbH,
+          _summaryRow('serviceFees'.tr, serviceFees),
+          10.sbH,
+          _summaryRow('addedValuePrice'.tr, addedPrice),
+          14.sbH,
+          Divider(color: AppColors.greyColor.withValues(alpha: .2)),
+          14.sbH,
+          Row(
+            children: [
+              Text('total'.tr, style: AppTextStyle.text17BS()),
+              const Spacer(),
+              Text(
+                'pound'.tr.replaceAll('{}', total.toStringAsFixed(2)),
+                style: AppTextStyle.text18BS().copyWith(color: AppColors.mainAppColor),
               ),
             ],
           ),
+          if (controller.cart?.resturant?.resturantKmPrice != 0) ...[
+            6.sbH,
+            Text('thisTotalWithoutDeliveryCharge'.tr, style: AppTextStyle.text12MS().copyWith(color: AppColors.redColor)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _summaryRow(String title, double value) {
+    return Row(
+      children: [
+        Text(title, style: AppTextStyle.text14RG()),
+        const Spacer(),
+        Text('pound'.tr.replaceAll('{}', value.toStringAsFixed(2)), style: AppTextStyle.text14RM()),
+      ],
+    );
+  }
+
+  Widget _buildCheckoutBar(CartController controller, double subtotal, double grandTotal) {
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+        decoration: BoxDecoration(
+          color: AppColors.whiteColor,
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: .1), blurRadius: 16, offset: const Offset(0, -4)),
+          ],
+        ),
+        child: ButtonNavCartWidget(
+          totalInCart: grandTotal.toStringAsFixed(2),
+          onPressedExecuteTheOrder: () => _executeOrder(controller, subtotal),
         ),
       ),
     );
   }
 
-  dynamic resturantAreaId({CartController? cartController, AuthController? authController}) {
-    // Retrieve user's address list from authController
-    var userAddresses = authController?.profile?.userAddresses;
-
-    // Retrieve restaurant areas from cartController
-    var resturantAreas = cartController?.cart?.resturant?.resturantAreas;
-
-    // Return null if either list is null
-    if (userAddresses == null || resturantAreas == null) {
-      return null; // Handle null scenario
+  void _executeOrder(CartController controller, double subtotal) {
+    log(controller.cart?.resturant?.resturantAreas?.map((area) => area.areaId).whereType<int>().toList().toString() ?? '');
+    if ((controller.cart?.resturant?.resturantMinOrderPrice ?? 0) > subtotal) {
+      CommonMethods.showError(
+        message: 'cantExecuteOrderLessThan'.tr.replaceAll('{}', '${controller.cart?.resturant?.resturantMinOrderPrice ?? 0}'),
+      );
+      return;
     }
 
-    // Iterate over user addresses and restaurant areas to find a matching areaId
-    for (var userAddress in userAddresses) {
-      for (var resturantArea in resturantAreas) {
-        // Ensure resturantArea has a valid areaId
-        if (resturantArea.areaId == null) {
-          continue; // Skip if restaurant areaId is null
-        }
+    NamedNavigatorImpl.push(
+      ChooseAddressFromMapScreen.routeName,
+      arguments: ChooseAddressFromMapScreenArgs(
+        resturantId: controller.cart?.resturant?.resturantId ?? 0,
+        areaId: controller.cart?.resturant?.resturantAreas?.map((area) => area.areaId).whereType<int>().toList() ?? [1],
+      ),
+    );
+  }
 
-        // Check if the selected city area ID matches the restaurant areaId
-        if (HiveMethods.getSelectedCityAreaId() == resturantArea.areaId) {
-          return resturantArea.areaId;
-        }
-
-        // Check if the userAddress cityId matches the restaurant areaId
-        if (userAddress.cityId == resturantArea.areaId) {
-          return resturantArea.areaId;
-        }
-      }
-    }
-
-    // No matching area found, return null
-    return null;
+  Widget _buildEmptyCart() {
+    return Center(
+      child: ListView(
+        shrinkWrap: true,
+        children: [
+          SizedBox(height: context.height * .16),
+          const CustomImage(path: AppImages.emptyCartIcon, type: ImageType.svg, height: 110),
+          28.sbH,
+          Center(child: Text('cartIsEmpty'.tr, style: AppTextStyle.text16BS().copyWith(color: AppColors.mainAppColor))),
+          8.sbH,
+          Center(child: Text('addYourFavoriteProducts'.tr, style: AppTextStyle.text13RG())),
+        ],
+      ),
+    );
   }
 }

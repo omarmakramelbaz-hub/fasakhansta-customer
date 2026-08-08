@@ -25,23 +25,7 @@ import '../../orders/screen/orders_screen.dart';
 import '../../restaurants/controller/restaurants_controller.dart';
 import '../../restaurants/screen/restaurant_details_screen.dart';
 import '../controller/advertising_controller.dart';
-
-class BottomNavigationController extends ChangeNotifier {
-  int screenIndex = 0;
-
-  void updateIndex(int index) {
-    screenIndex = index;
-    notifyListeners();
-  }
-
-  void onWillPop(bool pop) {
-    if (screenIndex != 0) {
-      updateIndex(0);
-    } else {
-      NamedNavigatorImpl.pop;
-    }
-  }
-}
+import 'bottom_navigation_controller.dart';
 
 class BottomNavLogicController {
   final BuildContext context = NamedNavigatorImpl.context;

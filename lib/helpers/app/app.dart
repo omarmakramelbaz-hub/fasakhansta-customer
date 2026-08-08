@@ -10,6 +10,7 @@ import '../../view/layout/home/controller/home_controller.dart';
 import '../../view/layout/on_boarding/screen/splash_screen.dart';
 import '../../view/layout/orders/controller/last_order_controller.dart';
 import '../../view/layout/request_delegate/controller/request_delegate_controller.dart';
+import '../../view/layout/wallet/controller/wallet_controller.dart';
 import '../delivery_activity/delivery_provider.dart';
 import '../pusher_service/pusher_controller.dart';
 import '../routes/app_routers_import.dart';
@@ -38,6 +39,7 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider(create: (_) => DeliveryProvider()),
         ChangeNotifierProvider(create: (_) => AuthController()),
         ChangeNotifierProvider(create: (_) => HomeController()),
+        ChangeNotifierProvider(create: (_) => WalletController()),
         ChangeNotifierProvider(create: (_) => AddressController()),
         ChangeNotifierProvider(create: (_) => RequestDelegateController()),
         ChangeNotifierProvider(create: (_) => AdvertisingController()..init()),

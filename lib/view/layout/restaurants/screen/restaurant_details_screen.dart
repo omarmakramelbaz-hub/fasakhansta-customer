@@ -16,7 +16,7 @@ import '../../../../helpers/translation/all_translation.dart';
 import '../../../../helpers/utils/common_methods.dart';
 import '../../../custom_widgets/api_response_widget/api_response_widget.dart';
 import '../../../custom_widgets/custom_image/custom_image.dart';
-import '../../../custom_widgets/custom_network_image/custom_network_image.dart';
+import '../../../custom_widgets/custom_image/custom_network_image.dart';
 import '../../cart/controller/cart_controller.dart';
 import '../../cart/screen/cart_screen.dart';
 import '../controller/restaurants_controller.dart';
@@ -178,9 +178,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
       final box = context.findRenderObject() as RenderBox?;
       if (box == null) continue;
       final position = box.localToGlobal(Offset.zero).dy;
-      if (position < 190) {
-        if (currentIndex != i) setState(() => currentIndex = i);
-      }
+      if (position < 190 && currentIndex != i) setState(() => currentIndex = i);
     }
   }
 
@@ -296,15 +294,10 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
             Icon(Icons.card_giftcard_rounded, color: AppColors.mainAppColor, size: 28),
             const SizedBox(width: 10),
             Expanded(
-              child: RichText(
+              child: Text(
+                'عرض خاص  تابع العروض المتاحة داخل الفرع واستفد من أفضل الأسعار',
                 textAlign: TextAlign.right,
-                text: TextSpan(
-                  style: AppTextStyle.text13RS(),
-                  children: [
-                    TextSpan(text: 'عرض خاص  ', style: AppTextStyle.text14BS().copyWith(color: AppColors.mainAppColor)),
-                    const TextSpan(text: 'تابع العروض المتاحة داخل الفرع واستفد من أفضل الأسعار'),
-                  ],
-                ),
+                style: AppTextStyle.text13RS(),
               ),
             ),
             const SizedBox(width: 8),
@@ -336,11 +329,6 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
             borderSide: const BorderSide(color: Color(0xFFEDEDED)),
           ),
         ),
-        onSubmitted: (value) {
-          if (value.trim().isNotEmpty) {
-            // The product list remains API driven; this keeps the existing route/search behavior available.
-          }
-        },
       ),
     );
   }
@@ -508,10 +496,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
             Container(
               width: 52,
               height: 52,
-              decoration: BoxDecoration(
-                color: AppColors.mainAppColor,
-                borderRadius: BorderRadius.circular(15),
-              ),
+              decoration: BoxDecoration(color: AppColors.mainAppColor, borderRadius: BorderRadius.circular(15)),
               child: const Icon(Icons.local_fire_department_rounded, color: Colors.white, size: 30),
             ),
             const SizedBox(width: 12),
@@ -560,7 +545,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
               ),
               itemBuilder: (context, itemIndex) {
                 final item = category.resturantItems![itemIndex];
-                return _gridProductCard(item, controller);
+                return _gridProductCard(item);
               },
             ),
           ],
@@ -569,7 +554,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
     });
   }
 
-  Widget _gridProductCard(ResturantItems item, RestaurantsController controller) {
+  Widget _gridProductCard(ResturantItems item) {
     final available = item.status == 'show';
     return GestureDetector(
       onTap: () {
@@ -605,10 +590,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
                       right: 8,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.mainAppColor,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                        decoration: BoxDecoration(color: AppColors.mainAppColor, borderRadius: BorderRadius.circular(8)),
                         child: Text('الأكثر طلباً', style: AppTextStyle.text10BW()),
                       ),
                     ),
@@ -628,14 +610,11 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
                     available ? '${item.productPrice?.toStringAsFixed(0) ?? '-'} ج' : 'غير متاح',
                     style: AppTextStyle.text13BS().copyWith(color: available ? AppColors.mainAppColor : Colors.grey),
                   ),
-                  GestureDetector(
-                    onTap: available ? () => _openProduct(item.id ?? 0) : null,
-                    child: Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(color: available ? AppColors.mainAppColor : Colors.grey, shape: BoxShape.circle),
-                      child: const Icon(Icons.add, color: Colors.white, size: 20),
-                    ),
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(color: available ? AppColors.mainAppColor : Colors.grey, shape: BoxShape.circle),
+                    child: const Icon(Icons.add, color: Colors.white, size: 20),
                   ),
                 ],
               ),

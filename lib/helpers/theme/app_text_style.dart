@@ -162,4 +162,32 @@ class AppTextStyle {
   static TextStyle text18MW({Color? color}) {
     return TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: color ?? AppColors.whiteColor);
   }
+
+  static TextStyle text13RS({Color? color}) {
+    return TextStyle(fontSize: 13, fontWeight: FontWeight.w400, color: color ?? AppColors.secondAppColor);
+  }
+
+  static TextStyle text13BS({Color? color}) {
+    return TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: color ?? AppColors.secondAppColor);
+  }
+
+  static TextStyle text12RS({Color? color}) {
+    return TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: color ?? AppColors.secondAppColor);
+  }
+
+  static TextStyle text12BS({Color? color}) {
+    return TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: color ?? AppColors.secondAppColor);
+  }
+
+  static TextStyle text11RS({Color? color}) {
+    return TextStyle(fontSize: 11, fontWeight: FontWeight.w400, color: color ?? AppColors.greyColor);
+  }
+
+  static TextStyle text10BW({Color? color}) {
+    return TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: color ?? AppColors.whiteColor);
+  }
+
+  static TextStyle text9BW({Color? color}) {
+    return TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: color ?? AppColors.whiteColor);
+  }
 }

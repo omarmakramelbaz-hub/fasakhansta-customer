@@ -17,18 +17,12 @@ import '../model/restaurants_model.dart';
 
 class RestaurantsController extends ChangeNotifier {
   void updateResturant(RestaurantsModel updatedResturant) {
-    // Find the index of the order with the matching ID
     final index = _restaurants.indexWhere((order) => order.id == updatedResturant.id);
-
     if (index != -1) {
-      // Update the existing order
       _restaurants[index] = updatedResturant;
     } else {
-      // If the order doesn't exist, add it to the list
       _restaurants.add(updatedResturant);
     }
-
-    // Notify listeners to update the UI
     notifyListeners();
   }
 
@@ -78,7 +72,6 @@ class RestaurantsController extends ChangeNotifier {
     }
   }
 
-  //==============================================================================
   num? _productPrice;
   num? get productPrice => _productPrice;
   void setProductPrice(num value) {
@@ -128,7 +121,6 @@ class RestaurantsController extends ChangeNotifier {
     }
   }
 
-  //=================> Details Restaurants <==================
   void updateResturantDetails(DetailsRestaurantModel updatedResturant) {
     if (updatedResturant.id == _detailsRestaurant?.id) {
       _detailsRestaurant = updatedResturant;
@@ -137,18 +129,21 @@ class RestaurantsController extends ChangeNotifier {
   }
 
   void updateAccordingToYourTasteResturantProductOrder(HighestRated highestRated) {
-    final index = _detailsRestaurant!.highestRated!.indexWhere((order) => order.id == highestRated.id);
+    final highestRatedList = _detailsRestaurant?.highestRated;
+    if (highestRatedList == null) return;
 
+    final index = highestRatedList.indexWhere((order) => order.id == highestRated.id);
     if (index != -1) {
-      // Update the existing order
-      _detailsRestaurant!.highestRated![index] = highestRated;
+      highestRatedList[index] = highestRated;
     } else {
-      // If the order doesn't exist, add it to the list
-      _detailsRestaurant!.highestRated!.add(highestRated);
+      highestRatedList.add(highestRated);
     }
-
-    // Notify listeners to update the UI
     notifyListeners();
+  }
+
+  // Kept for the restaurant-details Pusher event handler.
+  void updateAccordingToYourTasteResturantProduct(HighestRated highestRated) {
+    updateAccordingToYourTasteResturantProductOrder(highestRated);
   }
 
   ApiResponse _restaurantsDetailsApiResponse = ApiResponse(state: ResponseState.sleep, data: null);
@@ -175,20 +170,13 @@ class RestaurantsController extends ChangeNotifier {
     }
   }
 
-  //========>Previous Order <========
   void updateResturantPreviousProductOrder(PreviousOrderModel product) {
-    // Find the index of the order with the matching ID
     final index = _previousOrders.indexWhere((order) => order.id == product.id);
-
     if (index != -1) {
-      // Update the existing order
       _previousOrders[index] = product;
     } else {
-      // If the order doesn't exist, add it to the list
       _previousOrders.add(product);
     }
-
-    // Notify listeners to update the UI
     notifyListeners();
   }
 
@@ -219,24 +207,16 @@ class RestaurantsController extends ChangeNotifier {
     }
   }
 
-  //===================> productsRestaurant <====================
   void updateResturantProductOrder(products.ResturantItems product) {
-    // Find the index of the order with the matching ID
     final index = _productsRestaurant.indexWhere(
       (order) => order.resturantItems?.any((e) => e.id == product.id) ?? false,
     );
-
     if (index != -1) {
-      // Find the specific product within resturantItems
       final productIndex = _productsRestaurant[index].resturantItems?.indexWhere((e) => e.id == product.id);
-
       if (productIndex != null && productIndex != -1) {
-        // Update the product at the specific index
         _productsRestaurant[index].resturantItems![productIndex] = product;
       }
     }
-
-    // Notify listeners to update the UI
     notifyListeners();
   }
 
@@ -265,8 +245,6 @@ class RestaurantsController extends ChangeNotifier {
     }
   }
 
-  //===================> productsDetailsRestaurant <====================
-
   ApiResponse _productsDetailsRestaurantApiResponse = ApiResponse(state: ResponseState.sleep, data: null);
   ApiResponse get productsDetailsRestaurantApiResponse => _productsDetailsRestaurantApiResponse;
 
@@ -293,26 +271,19 @@ class RestaurantsController extends ChangeNotifier {
     }
   }
 
-  //====================================================================
-
   void updatePreviousResturant(PreviousOrderHomeModel updatedResturant) {
-    // Find the index of the order with the matching ID
     final index = _previousRestOrders.indexWhere((order) => order.id == updatedResturant.id);
-
     if (index != -1) {
-      // Update the existing order
       _previousRestOrders[index] = updatedResturant;
     } else {
-      // If the order doesn't exist, add it to the list
       _previousRestOrders.add(updatedResturant);
     }
-
-    // Notify listeners to update the UI
     notifyListeners();
   }
 
   ApiResponse _previousRestOrderApiResponse = ApiResponse(state: ResponseState.sleep, data: null);
   ApiResponse get previousRestOrderApiResponse => _previousRestOrderApiResponse;
+
   void initialRestPreviousOrder() {
     _previousRestOrderApiResponse = ApiResponse(state: ResponseState.sleep, data: null);
     _previousRestOrders = [];
@@ -334,8 +305,6 @@ class RestaurantsController extends ChangeNotifier {
       notifyListeners();
     }
   }
-
-  //===================> add or remove to wishlist <====================
 
   Future<void> addOrRemoveToWishlist({required int id, required VoidCallback onSuccess}) async {
     Utils.loading();

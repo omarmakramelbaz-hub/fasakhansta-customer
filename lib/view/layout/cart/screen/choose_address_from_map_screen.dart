@@ -12,7 +12,6 @@ import '../../../../helpers/translation/all_translation.dart';
 import '../../../../helpers/utils/common_methods.dart';
 import '../../../custom_widgets/api_response_widget/api_response_widget.dart';
 import '../../../custom_widgets/buttons/custom_button.dart';
-import '../../../custom_widgets/custom_app_bar/custom_app_bar.dart';
 import '../../../custom_widgets/custom_image/custom_image.dart';
 import '../../address/controller/address_controller.dart';
 import '../../address/screen/update_address_screen.dart';
@@ -30,6 +29,7 @@ class ChooseAddressFromMapScreenArgs {
 class ChooseAddressFromMapScreen extends StatefulWidget {
   static const String routeName = 'ChooseAddressFromMap';
   final ChooseAddressFromMapScreenArgs args;
+
   const ChooseAddressFromMapScreen({super.key, required this.args});
 
   @override
@@ -45,6 +45,7 @@ class _ChooseAddressFromMapScreenState extends State<ChooseAddressFromMapScreen>
   @override
   Widget build(BuildContext context) {
     log(widget.args.areaId.toString());
+
     return ChangeNotifierProvider(
       create: (context) => AddressController()
         ..initialAddress()
@@ -57,18 +58,22 @@ class _ChooseAddressFromMapScreenState extends State<ChooseAddressFromMapScreen>
             selectedAddressLang = addressController.address[0].lng;
             selectedAddressIndex = 0;
           }
+
           return Scaffold(
-            appBar: CustomAppBar(
-              actions: const [],
-              height: 90,
-              radius: 60,
-              leading: IconButton(
-                icon: Icon(Icons.arrow_back_ios, color: AppColors.blackColor),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
+            backgroundColor: const Color(0xFFF8F8F8),
+            appBar: AppBar(
+              elevation: 0,
+              backgroundColor: AppColors.mainAppColor,
+              foregroundColor: AppColors.whiteColor,
+              centerTitle: true,
+              title: Text(
+                'deliveryLocations'.tr,
+                style: AppTextStyle.text18BS().copyWith(color: AppColors.whiteColor),
               ),
-              title: Text('deliveryLocations'.tr, style: AppTextStyle.text16MS()),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                onPressed: () => Navigator.pop(context),
+              ),
             ),
             body: ApiResponseWidget(
               apiResponse: addressController.addressResponse,
@@ -76,120 +81,192 @@ class _ChooseAddressFromMapScreenState extends State<ChooseAddressFromMapScreen>
               isEmpty: addressController.address.isEmpty,
               emptyWidget: NoDeliveryLocationWidget(addressController: addressController),
               child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 110),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    20.sbH,
-                    if (addressController.address.isNotEmpty)
-                      ...List.generate(addressController.address.length, (index) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          child: InkWell(
-                            onTap: () {
-                              setState(() {
-                                selectedAddressIndex = index;
-                                selectedAddressId = addressController.address[index].id;
-                                selectedAddressLat = addressController.address[index].lat;
+                    Text('deliveryLocations'.tr, style: AppTextStyle.text18BS()),
+                    5.sbH,
+                    Text(
+                      'chooseAddress'.tr,
+                      style: AppTextStyle.text13RG(),
+                    ),
+                    16.sbH,
+                    ...List.generate(addressController.address.length, (index) {
+                      final address = addressController.address[index];
+                      final selected = selectedAddressIndex == index;
 
-                                selectedAddressLang = addressController.address[index].lng;
-                              });
-                            },
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: AppColors.whiteColor,
-                                border: Border.all(
-                                  color: selectedAddressIndex == index ? AppColors.mainAppColor : Colors.transparent,
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(18),
+                          onTap: () {
+                            setState(() {
+                              selectedAddressIndex = index;
+                              selectedAddressId = address.id;
+                              selectedAddressLat = address.lat;
+                              selectedAddressLang = address.lng;
+                            });
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            padding: const EdgeInsets.all(15),
+                            decoration: BoxDecoration(
+                              color: AppColors.whiteColor,
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(
+                                color: selected ? AppColors.mainAppColor : AppColors.greyColor.withValues(alpha: .12),
+                                width: selected ? 1.6 : 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: selected ? .06 : .035),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.greyColor.withValues(alpha: 0.2),
-                                    offset: const Offset(0, -3),
-                                    blurRadius: 10,
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 46,
+                                  height: 46,
+                                  decoration: BoxDecoration(
+                                    color: selected
+                                        ? AppColors.mainAppColor.withValues(alpha: .12)
+                                        : AppColors.greyColor.withValues(alpha: .08),
+                                    shape: BoxShape.circle,
                                   ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            const CustomImage(path: AppImages.addressIcon, type: ImageType.svg),
-                                            const SizedBox(width: 10),
-                                            Text('area'.tr, style: AppTextStyle.text14MG()),
-                                          ],
-                                        ),
-                                        10.sbH,
-                                        Text(
-                                          "${addressController.address[index].countryName ?? ''} - ${addressController.address[index].cityName ?? ''} - ${addressController.address[index].streetName ?? ''}",
-                                          style: AppTextStyle.text14RS(),
-                                        ),
-                                      ],
-                                    ),
+                                  child: Icon(
+                                    address.type == 'home' ? Icons.home_rounded : Icons.location_on_rounded,
+                                    color: selected ? AppColors.mainAppColor : AppColors.greyColor,
                                   ),
-                                  InkWell(
-                                    onTap: () {
-                                      NamedNavigatorImpl.push(
-                                        UpdateAddressScreen.routeName,
-                                        arguments: UpdateAddressScreenArgs(
-                                          id: addressController.address[index].id ?? 0,
-                                          areaName: addressController.address[index].areaName ?? '',
-                                          apartmentNo: addressController.address[index].apartmentNo ?? '',
-                                          floorNo: addressController.address[index].floorNo ?? '',
-                                          streetName: addressController.address[index].streetName ?? '',
-                                          mobile: addressController.address[index].mobile ?? '',
-                                          badge: addressController.address[index].badge ?? '',
-                                          addressName: addressController.address[index].addressName ?? '',
-                                          type: addressController.address[index].type ?? '',
-                                          lat: addressController.address[index].lat ?? '',
-                                          lng: addressController.address[index].lng ?? '',
-                                          onSuccess: () {
-                                            Provider.of<AddressController>(
-                                              context,
-                                              listen: false,
-                                            ).getAddress(areaId: widget.args.areaId);
-                                          },
-                                          userAddressId: context.read<AuthController>().profile?.id ?? 0,
-                                        ),
-                                      );
-                                    },
-                                    child: Text(
-                                      'edit'.tr,
-                                      style: AppTextStyle.text14MM().copyWith(decoration: TextDecoration.underline),
-                                    ),
+                                ),
+                                12.sbW,
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              address.addressName?.isNotEmpty == true
+                                                  ? address.addressName!
+                                                  : 'area'.tr,
+                                              style: AppTextStyle.text15BS(),
+                                            ),
+                                          ),
+                                          if (selected)
+                                            Icon(Icons.check_circle_rounded, color: AppColors.mainAppColor, size: 22),
+                                        ],
+                                      ),
+                                      5.sbH,
+                                      Text(
+                                        "${address.countryName ?? ''} - ${address.cityName ?? ''} - ${address.streetName ?? ''}",
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: AppTextStyle.text13RS(),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                                8.sbW,
+                                InkWell(
+                                  borderRadius: BorderRadius.circular(10),
+                                  onTap: () {
+                                    NamedNavigatorImpl.push(
+                                      UpdateAddressScreen.routeName,
+                                      arguments: UpdateAddressScreenArgs(
+                                        id: address.id ?? 0,
+                                        areaName: address.areaName ?? '',
+                                        apartmentNo: address.apartmentNo ?? '',
+                                        floorNo: address.floorNo ?? '',
+                                        streetName: address.streetName ?? '',
+                                        mobile: address.mobile ?? '',
+                                        badge: address.badge ?? '',
+                                        addressName: address.addressName ?? '',
+                                        type: address.type ?? '',
+                                        lat: address.lat ?? '',
+                                        lng: address.lng ?? '',
+                                        onSuccess: () => addressController.getAddress(areaId: widget.args.areaId),
+                                        userAddressId: context.read<AuthController>().profile?.id ?? 0,
+                                      ),
+                                    );
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(6),
+                                    child: Icon(Icons.edit_outlined, color: AppColors.mainAppColor, size: 20),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        );
-                      }),
-                    SizedBox(height: context.height * 0.1),
+                        ),
+                      );
+                    }),
+                    if (addressController.address.isNotEmpty)
+                      InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () {
+                          NamedNavigatorImpl.push(
+                            UpdateAddressScreen.routeName,
+                            arguments: UpdateAddressScreenArgs(
+                              id: 0,
+                              areaName: '',
+                              apartmentNo: '',
+                              floorNo: '',
+                              streetName: '',
+                              mobile: '',
+                              badge: '',
+                              addressName: '',
+                              type: 'home',
+                              lat: '',
+                              lng: '',
+                              onSuccess: () => addressController.getAddress(areaId: widget.args.areaId),
+                              userAddressId: context.read<AuthController>().profile?.id ?? 0,
+                            ),
+                          );
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          decoration: BoxDecoration(
+                            color: AppColors.mainAppColor.withValues(alpha: .07),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: AppColors.mainAppColor.withValues(alpha: .25)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.add_location_alt_outlined, color: AppColors.mainAppColor),
+                              8.sbW,
+                              Text('addAddress'.tr, style: AppTextStyle.text14BS().copyWith(color: AppColors.mainAppColor)),
+                            ],
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
             ),
-            bottomNavigationBar: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-              decoration: BoxDecoration(
-                color: AppColors.whiteColor,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.greyColor.withValues(alpha: 0.2),
-                    offset: const Offset(0, 0),
-                    blurRadius: 10,
-                  ),
-                ],
-              ),
-              child: CustomButton(
-                onPressed: () {
-                  if (selectedAddressId == null) {
-                    CommonMethods.showError(message: 'mustChooseAccount'.tr);
-                  } else {
+            bottomNavigationBar: SafeArea(
+              top: false,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+                decoration: BoxDecoration(
+                  color: AppColors.whiteColor,
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withValues(alpha: .1), blurRadius: 16, offset: const Offset(0, -4)),
+                  ],
+                ),
+                child: CustomButton(
+                  onPressed: () {
+                    if (selectedAddressId == null) {
+                      CommonMethods.showError(message: 'mustChooseAccount'.tr);
+                      return;
+                    }
                     addressController.canDeliver(
                       restaurantId: widget.args.resturantId,
                       customerLat: selectedAddressLat!,
@@ -201,9 +278,9 @@ class _ChooseAddressFromMapScreenState extends State<ChooseAddressFromMapScreen>
                         );
                       },
                     );
-                  }
-                },
-                text: 'confirm'.tr,
+                  },
+                  text: 'confirm'.tr,
+                ),
               ),
             ),
           );

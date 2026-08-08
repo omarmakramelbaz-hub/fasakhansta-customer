@@ -25,7 +25,8 @@ import '../../orders/screen/orders_screen.dart';
 import '../../restaurants/controller/restaurants_controller.dart';
 import '../../restaurants/screen/restaurant_details_screen.dart';
 import '../controller/advertising_controller.dart';
-import 'bottom_navigation_controller.dart';
+
+export 'bottom_navigation_controller.dart';
 
 class BottomNavLogicController {
   final BuildContext context = NamedNavigatorImpl.context;

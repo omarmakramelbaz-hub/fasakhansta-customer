@@ -167,6 +167,10 @@ class AppTextStyle {
     return TextStyle(fontSize: 13, fontWeight: FontWeight.w400, color: color ?? AppColors.secondAppColor);
   }
 
+  static TextStyle text13RG({Color? color}) {
+    return TextStyle(fontSize: 13, fontWeight: FontWeight.w400, color: color ?? AppColors.greyColor);
+  }
+
   static TextStyle text13BS({Color? color}) {
     return TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: color ?? AppColors.secondAppColor);
   }
@@ -201,6 +205,10 @@ class AppTextStyle {
 
   static TextStyle text10BW({Color? color}) {
     return TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: color ?? AppColors.whiteColor);
+  }
+
+  static TextStyle text9RG({Color? color}) {
+    return TextStyle(fontSize: 9, fontWeight: FontWeight.w400, color: color ?? AppColors.greyColor);
   }
 
   static TextStyle text9GR({Color? color}) {

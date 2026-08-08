@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../../../helpers/extensions/extensions.dart';
-import '../../../../helpers/images/app_images.dart';
 import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/theme/app_text_style.dart';
-import '../../../../helpers/translation/all_translation.dart';
 import '../../../custom_widgets/custom_loading/custom_shimmer.dart';
 import '../model/wallet_model.dart';
 
@@ -41,7 +37,11 @@ class _MyCurrentBalanceWidgetState extends State<MyCurrentBalanceWidget> {
       ),
       child: Stack(
         children: [
-          Positioned(right: -30, bottom: -35, child: Icon(Icons.account_balance_wallet_outlined, size: 170, color: Colors.white.withValues(alpha: .08))),
+          Positioned(
+            right: -30,
+            bottom: -35,
+            child: Icon(Icons.account_balance_wallet_outlined, size: 170, color: Colors.white.withValues(alpha: .08)),
+          ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -57,7 +57,13 @@ class _MyCurrentBalanceWidgetState extends State<MyCurrentBalanceWidget> {
               Text('رصيد المحفظة', style: AppTextStyle.text16MS().copyWith(color: Colors.white.withValues(alpha: .9))),
               const SizedBox(height: 8),
               if (balance == null)
-                CustomShimmer(height: 42, width: 150, radius: 8, fillColor: Colors.white.withValues(alpha: .2), shimmerColor: Colors.white)
+                CustomShimmer(
+                  height: 42,
+                  width: 150,
+                  radius: 8,
+                  fillColor: Colors.white.withValues(alpha: .2),
+                  shimmerColor: Colors.white,
+                )
               else
                 Text(_visible ? balance : '••••••', style: AppTextStyle.text20MW().copyWith(color: Colors.white, fontSize: 38)),
               Text('جنيه مصري', style: AppTextStyle.text16MS().copyWith(color: Colors.white.withValues(alpha: .9))),
@@ -66,7 +72,7 @@ class _MyCurrentBalanceWidgetState extends State<MyCurrentBalanceWidget> {
                 children: [
                   const Icon(Icons.remove_red_eye_outlined, size: 18, color: Colors.white),
                   const SizedBox(width: 6),
-                  Text(_visible ? 'إظهار الرصيد' : 'إخفاء الرصيد', style: AppTextStyle.text16MS().copyWith(color: Colors.white)),
+                  Text(_visible ? 'إخفاء الرصيد' : 'إظهار الرصيد', style: AppTextStyle.text16MS().copyWith(color: Colors.white)),
                 ],
               ),
             ],

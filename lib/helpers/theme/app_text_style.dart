@@ -20,6 +20,7 @@ class AppTextStyle {
   static TextStyle text20MS({Color? color}) => TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: color ?? AppColors.secondAppColor);
   static TextStyle text20BS({Color? color}) => TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: color ?? AppColors.secondAppColor);
   static TextStyle text20MW({Color? color}) => TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: color ?? AppColors.whiteColor);
+  static TextStyle text19BS({Color? color}) => TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: color ?? AppColors.secondAppColor);
   static TextStyle text18RDG({Color? color}) => TextStyle(fontSize: 18, fontWeight: FontWeight.w400, color: color ?? AppColors.darkGreyColor);
   static TextStyle text18MS({Color? color}) => TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: color ?? AppColors.secondAppColor);
   static TextStyle text18BS({Color? color}) => TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: color ?? AppColors.secondAppColor);
@@ -27,6 +28,7 @@ class AppTextStyle {
   static TextStyle text18RS({Color? color}) => TextStyle(fontSize: 18, fontWeight: FontWeight.w400, color: color ?? AppColors.secondAppColor);
   static TextStyle text18BR({Color? color}) => TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: color ?? AppColors.redColor);
   static TextStyle text18MW({Color? color}) => TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: color ?? AppColors.whiteColor);
+  static TextStyle text17BS({Color? color}) => TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: color ?? AppColors.secondAppColor);
   static TextStyle text16MS({Color? color}) => TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: color ?? AppColors.secondAppColor);
   static TextStyle text16EM({Color? color}) => TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: color ?? AppColors.mainAppColor);
   static TextStyle text16BS({Color? color}) => TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: color ?? AppColors.secondAppColor);

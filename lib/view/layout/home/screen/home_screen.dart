@@ -25,6 +25,7 @@ import '../model/restaurants_near_you_home_model.dart';
 import '../widgets/coupon_widget.dart';
 import '../widgets/go_drive_card_widget.dart';
 import '../widgets/home_header.dart';
+import '../widgets/home_search_bar.dart';
 import '../widgets/home_wallet_card.dart';
 import '../widgets/restaurants_and_delegate_request_widget.dart';
 import 'home_screen_widget.dart';
@@ -134,8 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   itemBuilder: (context, index) {
                     final address = userAddresses[index];
                     return ListTile(
-                      leading:
-                          CustomImage(path: AppImages.addressIcon, type: ImageType.svg, color: AppColors.blackColor),
+                      leading: CustomImage(path: AppImages.addressIcon, type: ImageType.svg, color: AppColors.blackColor),
                       title: Text(
                         "${address.countryName ?? ""} - ${address.cityName ?? ""} - ${address.streetName ?? ""}",
                         style: AppTextStyle.text16BS(),
@@ -206,6 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const HomeWalletCard(),
+                const HomeSearchBar(),
                 SliderWidget(controller: controller),
                 if (HiveMethods.getToken() != null)
                   ApiResponseWidget(
@@ -218,6 +219,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: CouponWidget(controller: controller),
                   ),
                 12.sbH,
+                RestaurantsNearYouWidget(controller: controller),
+                10.sbH,
                 SpecialRestaurantsSectionWidget(controller: controller),
                 10.sbH,
                 Row(

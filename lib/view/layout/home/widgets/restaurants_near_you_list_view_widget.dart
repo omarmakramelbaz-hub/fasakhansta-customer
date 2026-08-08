@@ -94,16 +94,9 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
                                   color: AppColors.mainAppColor,
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.location_on_rounded, size: 12, color: Colors.white),
-                                    const SizedBox(width: 2),
-                                    Text(
-                                      '${model.distance ?? ''} كم',
-                                      style: AppTextStyle.text12BS(color: AppColors.whiteColor),
-                                    ),
-                                  ],
+                                child: Text(
+                                  model.deliveryTime ?? 'توصيل سريع',
+                                  style: AppTextStyle.text12BS(color: AppColors.whiteColor),
                                 ),
                               ),
                             ),
@@ -129,7 +122,7 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
                                   const SizedBox(width: 4),
                                   Expanded(
                                     child: Text(
-                                      model.deliveryTime ?? '',
+                                      model.address ?? model.cityName ?? '',
                                       style: AppTextStyle.text14RS(color: AppColors.greyColor),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,

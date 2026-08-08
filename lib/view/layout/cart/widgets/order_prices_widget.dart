@@ -6,15 +6,7 @@ import '../../../../helpers/translation/all_translation.dart';
 import '../controller/cart_controller.dart';
 
 class ExecuteOrderPricesWidget extends StatelessWidget {
-  const ExecuteOrderPricesWidget({
-    super.key,
-    required this.totalPrice,
-    required this.kmPrice,
-    required this.serviceFees,
-    required this.cartController,
-    required this.addedPrice,
-    required this.resturantMinOrderPrice,
-  });
+  const ExecuteOrderPricesWidget({super.key, required this.totalPrice, required this.kmPrice, required this.serviceFees, required this.cartController, required this.addedPrice, required this.resturantMinOrderPrice});
 
   final double totalPrice;
   final num kmPrice;
@@ -25,83 +17,50 @@ class ExecuteOrderPricesWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+    final grandTotal = totalPrice + serviceFees + kmPrice + addedPrice;
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 15),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.whiteColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.greyColor.withValues(alpha: .12)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: .04), blurRadius: 14, offset: const Offset(0, 5))],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('paymentSummary'.tr, style: AppTextStyle.text16BS()),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Text('subtotal'.tr, style: AppTextStyle.text16RG()),
-              const Spacer(),
-              Text('pound'.tr.replaceAll('{}', totalPrice.toString()), style: AppTextStyle.text16RG()),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Text('deliveryCharges'.tr, style: AppTextStyle.text16RG()),
-              const Spacer(),
-              //======== ======= todo: add km price acceding to location
-              //علي حسب المسافة بالكيلو متر ولنفرصض مثلا انها كيلو متر واحد
-              Text(
-                kmPrice == 0 ? 'free'.tr : 'pound'.tr.replaceAll('{}', kmPrice.toStringAsFixed(2)),
-                style: AppTextStyle.text16RG(),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Text('serviceFees'.tr, style: AppTextStyle.text16RG()),
-              const Spacer(),
-              Text(
-                'pound'.tr.replaceAll('{}', serviceFees.toStringAsFixed(2)),
-                style: AppTextStyle.text16RG(),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Text('addedValuePrice'.tr, style: AppTextStyle.text16RG()),
-              const Spacer(),
-              Text(
-                'pound'.tr.replaceAll('{}', addedPrice.toStringAsFixed(2)),
-                style: AppTextStyle.text16RG(),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Divider(color: AppColors.greyColor.withValues(alpha: 0.5), height: 2),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Text('total'.tr, style: AppTextStyle.text16MS()),
-              const Spacer(),
-              Text(
-                'pound'.tr.replaceAll(
-                      '{}',
-                      (totalPrice + serviceFees + kmPrice + addedPrice).toStringAsFixed(2),
-                    ),
-                style: AppTextStyle.text16MS(),
-              ),
-            ],
-          ),
-          // const SizedBox(
-          //   height: 24,
-          // ),
-          // Text(
-          //   'minOrderPrice'
-          //       .tr
-          //       .replaceAll("{}", "$resturantMinOrderPrice"),
-          //   style: AppTextStyle.text16MS(),
-          // ),
-          const SizedBox(height: 24),
+          Row(children: [
+            Container(width: 40, height: 40, decoration: BoxDecoration(color: AppColors.mainAppColor.withValues(alpha: .09), borderRadius: BorderRadius.circular(12)), child: Icon(Icons.receipt_long_rounded, color: AppColors.mainAppColor)),
+            const SizedBox(width: 10),
+            Text('paymentSummary'.tr, style: AppTextStyle.text17BS()),
+          ]),
+          const SizedBox(height: 18),
+          _row('subtotal'.tr, totalPrice, false),
+          const SizedBox(height: 12),
+          _row('deliveryCharges'.tr, kmPrice, kmPrice == 0),
+          const SizedBox(height: 12),
+          _row('serviceFees'.tr, serviceFees, false),
+          const SizedBox(height: 12),
+          _row('addedValuePrice'.tr, addedPrice, false),
+          const SizedBox(height: 14),
+          Divider(color: AppColors.greyColor.withValues(alpha: .2)),
+          const SizedBox(height: 14),
+          Row(children: [
+            Text('total'.tr, style: AppTextStyle.text17BS()),
+            const Spacer(),
+            Text('pound'.tr.replaceAll('{}', grandTotal.toStringAsFixed(2)), style: AppTextStyle.text19BS().copyWith(color: AppColors.mainAppColor)),
+          ]),
         ],
       ),
     );
+  }
+
+  Widget _row(String title, num value, bool free) {
+    return Row(children: [
+      Text(title, style: AppTextStyle.text14RG()),
+      const Spacer(),
+      Text(free ? 'free'.tr : 'pound'.tr.replaceAll('{}', value.toStringAsFixed(2)), style: AppTextStyle.text14RM().copyWith(color: free ? AppColors.mainAppColor : null)),
+    ]);
   }
 }

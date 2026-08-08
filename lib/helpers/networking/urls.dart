@@ -16,10 +16,11 @@ class Urls {
   static const String updateAddress = '${baseUrl}user/update/address/';
   static const String deleteAddress = '${baseUrl}user/delete/address/';
   static const String canDeliver = '${baseUrl}can_deliver';
-
   static const String addressDetails = '${baseUrl}user/address/';
   static const String couponWheels = '${baseUrl}coupon_wheels';
   static const String favorite = '${baseUrl}user/wishlist';
+  static const String productFavorite = '${baseUrl}user/product-wishlist';
+  static String toggleProductFavorite(int id) => '${baseUrl}user/product-wishlist/$id/toggle';
   static const String restaurants = '${baseUrl}resturants';
   static const String previousOrders = '${baseUrl}user/previous/order/resturant';
   static const String productDetails = '${baseUrl}resturants/item/';
@@ -29,13 +30,10 @@ class Urls {
   static const String splashes = '${baseUrl}splashes';
   static const String updateUserProfile = '${baseUrl}user/update-profile';
   static const String changePassword = '${baseUrl}change-password';
-  //?================> forget pass
   static const String checkMobileHasAccount = '${baseUrl}user/check_mobile_has_account';
   static const String forgetPassword = '${baseUrl}user/forget_pass';
   static const String checkCode = '${baseUrl}user/check_code';
   static const String resetPassword = '${baseUrl}user/reset_password';
-
-  //?====================================================
   static const String deleteAccount = '${baseUrl}user/delete_account';
   static const String userCart = '${baseUrl}user/cart/index';
   static const String userNotifications = '${baseUrl}user/notifications';
@@ -74,7 +72,6 @@ class Urls {
   static const String acceptOrDeclinedDelegate = '${baseUrl}shipping/accept/delegate';
   static const String otpChecker = '${baseUrl}user/check-otp-order';
   static String getAcceptedDelegates(int orderId) => '${baseUrl}shipping/$orderId/accepted/delegates';
-
   static String getCartItemDetails(int itemId) => '${baseUrl}user/cart/$itemId/show';
   static String updateCartItemDetails(int itemId) => '${baseUrl}user/cart/$itemId/update/item';
 }

@@ -18,109 +18,154 @@ import '../model/restaurants_near_you_home_model.dart';
 
 class SpacialRestaurantsListViewWidget extends StatelessWidget {
   final List<RestaurantsNearYouHomeModel> spacialRest;
+
   const SpacialRestaurantsListViewWidget({super.key, required this.spacialRest});
 
   @override
   Widget build(BuildContext context) {
     return ApiResponseWidget(
       apiResponse: context.read<HomeController>().spacialRestaurantApiResponse,
-      onReload: () =>
-          context.read<HomeController>().getSpacialRestaurants(lat: HiveMethods.getLat(), lng: HiveMethods.getLan()),
+      onReload: () => context.read<HomeController>().getSpacialRestaurants(
+            lat: HiveMethods.getLat(),
+            lng: HiveMethods.getLan(),
+          ),
       isEmpty: context.read<HomeController>().spacialRestaurants.isEmpty,
       loadingWidget: CustomShimmer(
-        height: 120,
+        height: 180,
         width: double.infinity,
         fillColor: AppColors.greyColor.withValues(alpha: 0.05),
         shimmerColor: AppColors.mainAppColor,
       ),
       child: SizedBox(
-        height: 120,
-        child: ListView.builder(
+        height: 185,
+        child: ListView.separated(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           scrollDirection: Axis.horizontal,
-          shrinkWrap: true,
           itemCount: spacialRest.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 12),
           itemBuilder: (context, index) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 5),
-              child: SizedBox(
-                width: 86,
-                child: InkWell(
-                  onTap: () {
-                    spacialRest[index].status == 'busy' || spacialRest[index].underContract == 'yes'
-                        ? null
-                        : NamedNavigatorImpl.push(
-                            RestaurantDetailsScreen.routeName,
-                            arguments: RestaurantDetailsArgs(id: spacialRest[index].id ?? 0),
-                          );
-                  },
+            final restaurant = spacialRest[index];
+            final unavailable = restaurant.status == 'closed' ||
+                restaurant.status == 'busy' ||
+                restaurant.underContract == 'yes';
+
+            return SizedBox(
+              width: 155,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(18),
+                onTap: unavailable
+                    ? null
+                    : () => NamedNavigatorImpl.push(
+                          RestaurantDetailsScreen.routeName,
+                          arguments: RestaurantDetailsArgs(id: restaurant.id ?? 0),
+                        ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.whiteColor,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: AppColors.borderColor.withValues(alpha: .65)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.blackColor.withValues(alpha: .06),
+                        blurRadius: 12,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  clipBehavior: Clip.antiAlias,
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Stack(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.borderColor),
-                            ),
-                            child: CustomNetworkImage(
-                              imageUrl: spacialRest[index].logo ?? '',
-                              height: 70,
-                              width: 82,
-                              radius: 12,
-                              fit: BoxFit.contain,
-                            ),
+                          CustomNetworkImage(
+                            imageUrl: restaurant.logo ?? '',
+                            height: 105,
+                            width: 155,
+                            radius: 0,
+                            fit: BoxFit.contain,
                           ),
-                          Positioned.fill(
-                            child: spacialRest[index].status == 'closed' ||
-                                    spacialRest[index].status == 'busy' ||
-                                    spacialRest[index].underContract == 'yes'
-                                ? Container(
-                                    height: 70,
-                                    width: 82,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: AppColors.blackColor.withValues(alpha: 0.6),
-                                          blurRadius: 1,
-                                          offset: const Offset(0, 0),
-                                        ),
-                                      ],
+                          if (restaurant.kmPrice == 0)
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.mainAppColor,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const CustomImage(
+                                      path: AppImages.fastDeliveryImage,
+                                      width: 13,
+                                      type: ImageType.asset,
                                     ),
-                                    child: Center(
-                                      child: Text(
-                                        spacialRest[index].underContract == 'yes'
-                                            ? 'underContract'.tr
-                                            : spacialRest[index].status == 'closed'
-                                                ? 'closed'.tr
-                                                : 'busy'.tr,
-                                        style: AppTextStyle.text14MW(),
+                                    3.sbW,
+                                    Text(
+                                      'freeDelivery'.tr,
+                                      style: AppTextStyle.text12BW().copyWith(
+                                        color: AppColors.whiteColor,
                                       ),
                                     ),
-                                  )
-                                : const SizedBox.shrink(),
-                          ),
-                          Positioned(
-                            top: 5,
-                            left: 5,
-                            child: spacialRest[index].kmPrice == 0
-                                ? const CustomImage(
-                                    path: AppImages.freeDeliveryImage,
-                                    type: ImageType.asset,
-                                    height: 25,
-                                  )
-                                : const SizedBox.shrink(),
-                          ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          if (unavailable)
+                            Positioned.fill(
+                              child: Container(
+                                color: AppColors.blackColor.withValues(alpha: .48),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  restaurant.underContract == 'yes'
+                                      ? 'underContract'.tr
+                                      : restaurant.status == 'closed'
+                                          ? 'closed'.tr
+                                          : 'busy'.tr,
+                                  style: AppTextStyle.text14MW(),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
-                      12.sbH,
-                      Expanded(
-                        child: Text(
-                          spacialRest[index].name ?? '',
-                          style: AppTextStyle.text14RS(),
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(10, 8, 10, 9),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              restaurant.name ?? '',
+                              style: AppTextStyle.text14BS(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            5.sbH,
+                            Row(
+                              children: [
+                                const Icon(Icons.star_rounded, size: 16, color: AppColors.mainAppColor),
+                                3.sbW,
+                                Text(
+                                  restaurant.avgRate?.toStringAsFixed(1) ?? '0.0',
+                                  style: AppTextStyle.text12MS(),
+                                ),
+                                const Spacer(),
+                                if (restaurant.deliveryTime != null)
+                                  Flexible(
+                                    child: Text(
+                                      restaurant.deliveryTime!,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: AppTextStyle.text12RS().copyWith(
+                                        color: AppColors.lightTextColor,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ],

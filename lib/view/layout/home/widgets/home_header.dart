@@ -22,32 +22,69 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final isLoggedIn = HiveMethods.getToken() != null;
     final profile = context.watch<AuthController>().profile;
+    final address = profile?.userAddresses?.isNotEmpty == true
+        ? profile!.userAddresses!.first
+        : null;
+    final location = [address?.streetName, address?.cityName]
+        .where((value) => value != null && value.trim().isNotEmpty)
+        .join(' - ');
 
     return Container(
-      height: 88,
+      height: 108,
       color: AppColors.mainAppColor,
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
-      child: isLoggedIn
-          ? Row(
+      padding: const EdgeInsets.fromLTRB(16, 7, 16, 9),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 52,
+            child: Row(
               children: [
                 _HeaderIcon(icon: AppImages.menuIcon, onTap: () {}),
                 const Spacer(),
                 Image.asset(
                   AppImages.appLogo,
-                  height: 48,
+                  height: 43,
                   fit: BoxFit.contain,
                 ),
                 const Spacer(),
                 Row(
                   children: [
                     _NotificationIcon(count: profile?.notificaionsCount ?? 0),
-                    10.sbW,
+                    9.sbW,
                     _buildCartIcon(context),
                   ],
                 ),
               ],
-            )
-          : const SizedBox.shrink(),
+            ),
+          ),
+          const Spacer(),
+          if (isLoggedIn)
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white, size: 21),
+                  4.sbW,
+                  Flexible(
+                    child: Text(
+                      location.isEmpty ? 'اختر عنوان التوصيل' : location,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.end,
+                      style: AppTextStyle.text13BS().copyWith(color: Colors.white),
+                    ),
+                  ),
+                  5.sbW,
+                  Text(
+                    'التوصيل إلى',
+                    style: AppTextStyle.text12RG().copyWith(color: Colors.white.withOpacity(.85)),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -72,7 +109,7 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(88);
+  Size get preferredSize => const Size.fromHeight(108);
 }
 
 class _HeaderIcon extends StatelessWidget {
@@ -87,8 +124,8 @@ class _HeaderIcon extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(26),
       child: Container(
-        width: 46,
-        height: 46,
+        width: 44,
+        height: 44,
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: AppColors.whiteColor,

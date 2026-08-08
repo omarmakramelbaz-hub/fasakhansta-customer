@@ -16,6 +16,7 @@ class AppTextStyle {
 
   static TextStyle text28RM({Color? color}) => TextStyle(fontSize: 28, fontWeight: FontWeight.w400, color: color ?? AppColors.mainAppColor);
   static TextStyle text24BS({Color? color}) => TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: color ?? AppColors.secondAppColor);
+  static TextStyle text24MS({Color? color}) => TextStyle(fontSize: 24, fontWeight: FontWeight.w500, color: color ?? AppColors.secondAppColor);
   static TextStyle text22BS({Color? color}) => TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: color ?? AppColors.secondAppColor);
   static TextStyle text20MS({Color? color}) => TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: color ?? AppColors.secondAppColor);
   static TextStyle text20BS({Color? color}) => TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: color ?? AppColors.secondAppColor);
@@ -67,6 +68,7 @@ class AppTextStyle {
   static TextStyle text11BS({Color? color}) => TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color ?? AppColors.secondAppColor);
   static TextStyle text11BM({Color? color}) => TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color ?? AppColors.mainAppColor);
   static TextStyle text10BW({Color? color}) => TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: color ?? AppColors.whiteColor);
+  static TextStyle text10MW({Color? color}) => TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: color ?? AppColors.whiteColor);
   static TextStyle text10RG({Color? color}) => TextStyle(fontSize: 10, fontWeight: FontWeight.w400, color: color ?? AppColors.greyColor);
   static TextStyle text9RG({Color? color}) => TextStyle(fontSize: 9, fontWeight: FontWeight.w400, color: color ?? AppColors.greyColor);
   static TextStyle text9GR({Color? color}) => TextStyle(fontSize: 9, fontWeight: FontWeight.w400, color: color ?? AppColors.greyColor);

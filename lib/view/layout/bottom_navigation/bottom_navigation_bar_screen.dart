@@ -71,37 +71,52 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
   }
 
   Widget _buildBottomNavBar(BottomNavigationController controller) {
-    return BottomAppBar(
-      clipBehavior: Clip.antiAliasWithSaveLayer,
-      color: AppColors.whiteColor,
-      shape: const CircularNotchedRectangle(),
-      notchMargin: 10,
-      child: SizedBox(
-        height: 80,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _navItem(
-                index: 0,
-                controller: controller,
-                iconSelected: AppImages.homeIcon,
-                iconUnselected: AppImages.homeUnselectedIcon,
-                title: 'home'.tr,
-                onTap: () => controller.updateIndex(0),
-              ),
-              _navOrders(controller),
-              _navNotifications(controller),
-              _navItem(
-                index: 3,
-                controller: controller,
-                iconSelected: AppImages.accountFillIcon,
-                iconUnselected: AppImages.myAccountIcon,
-                title: 'account'.tr,
-                onTap: () => controller.updateIndex(3),
-              ),
-            ],
+    return SafeArea(
+      top: false,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+        decoration: BoxDecoration(
+          color: AppColors.whiteColor,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.borderColor.withValues(alpha: 0.45)),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.blackColor.withValues(alpha: 0.10),
+              blurRadius: 22,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: SizedBox(
+          height: 74,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _navItem(
+                    index: 0,
+                    controller: controller,
+                    iconSelected: AppImages.homeIcon,
+                    iconUnselected: AppImages.homeUnselectedIcon,
+                    title: 'home'.tr,
+                    onTap: () => controller.updateIndex(0),
+                  ),
+                ),
+                Expanded(child: _navOrders(controller)),
+                Expanded(child: _navNotifications(controller)),
+                Expanded(
+                  child: _navItem(
+                    index: 3,
+                    controller: controller,
+                    iconSelected: AppImages.accountFillIcon,
+                    iconUnselected: AppImages.myAccountIcon,
+                    title: 'account'.tr,
+                    onTap: () => controller.updateIndex(3),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -117,101 +132,133 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
     required VoidCallback onTap,
   }) {
     final selected = controller.screenIndex == index;
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        IconButton(
-          onPressed: onTap,
-          icon: SvgPicture.asset(
-            selected ? iconSelected : iconUnselected,
-            colorFilter: ColorFilter.mode(
-              selected ? AppColors.mainAppColor : AppColors.greyColor,
-              BlendMode.srcIn,
-            ),
-          ),
-        ),
-        Text(
-          title,
-          style: selected ? AppTextStyle.text14RM() : AppTextStyle.text14RG(),
-        ),
-      ],
+
+    return _navButton(
+      selected: selected,
+      title: title,
+      onTap: onTap,
+      icon: selected ? iconSelected : iconUnselected,
     );
   }
 
   Widget _navOrders(BottomNavigationController controller) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        IconButton(
-          onPressed: () {
-            if (HiveMethods.getToken() == null) {
-              CommonMethods.showChooseDialog(
-                context,
-                onPressed: () {
-                  Navigator.pop(context);
-                  NamedNavigatorImpl.push(RegisterScreen.routeName);
-                },
-                message: 'youMustLoginFirst'.tr,
-              );
-            } else {
-              controller.updateIndex(1);
-            }
-          },
-          icon: SvgPicture.asset(
-            controller.screenIndex == 1 ? AppImages.orderFillIcon : AppImages.ordersIcon,
-          ),
-        ),
-        Text(
-          'orders'.tr,
-          style: controller.screenIndex == 1 ? AppTextStyle.text14RM() : AppTextStyle.text14RG(),
-        ),
-      ],
+    final selected = controller.screenIndex == 1;
+
+    return _navButton(
+      selected: selected,
+      title: 'orders'.tr,
+      onTap: () {
+        if (HiveMethods.getToken() == null) {
+          CommonMethods.showChooseDialog(
+            context,
+            onPressed: () {
+              Navigator.pop(context);
+              NamedNavigatorImpl.push(RegisterScreen.routeName);
+            },
+            message: 'youMustLoginFirst'.tr,
+          );
+        } else {
+          controller.updateIndex(1);
+        }
+      },
+      icon: selected ? AppImages.orderFillIcon : AppImages.ordersIcon,
     );
   }
 
   Widget _navNotifications(BottomNavigationController controller) {
+    final selected = controller.screenIndex == 2;
     final hasNewNotifications = HiveMethods.getNotificationsCount() != null &&
         HiveMethods.getNotificationsCount() != context.read<AuthController>().profile?.notificaionsCount;
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        IconButton(
-          onPressed: () {
-            if (HiveMethods.getToken() == null) {
-              CommonMethods.showChooseDialog(
-                context,
-                onPressed: () {
-                  Navigator.pop(context);
-                  NamedNavigatorImpl.push(RegisterScreen.routeName);
-                },
-                message: 'youMustLoginFirst'.tr,
-              );
-            } else {
-              HiveMethods.updateNotificationCount(
-                context.read<AuthController>().profile?.notificaionsCount,
-              );
-              controller.updateIndex(2);
-            }
-          },
-          icon: Stack(
-            children: [
-              SvgPicture.asset(
-                controller.screenIndex == 2 ? AppImages.billFillIcon : AppImages.notificationsIcon,
-                colorFilter: ColorFilter.mode(
-                  controller.screenIndex == 2 ? AppColors.mainAppColor : AppColors.greyColor,
-                  BlendMode.srcIn,
+    return _navButton(
+      selected: selected,
+      title: 'notifications'.tr,
+      onTap: () {
+        if (HiveMethods.getToken() == null) {
+          CommonMethods.showChooseDialog(
+            context,
+            onPressed: () {
+              Navigator.pop(context);
+              NamedNavigatorImpl.push(RegisterScreen.routeName);
+            },
+            message: 'youMustLoginFirst'.tr,
+          );
+        } else {
+          HiveMethods.updateNotificationCount(
+            context.read<AuthController>().profile?.notificaionsCount,
+          );
+          controller.updateIndex(2);
+        }
+      },
+      icon: selected ? AppImages.billFillIcon : AppImages.notificationsIcon,
+      showBadge: hasNewNotifications,
+    );
+  }
+
+  Widget _navButton({
+    required bool selected,
+    required String title,
+    required VoidCallback onTap,
+    required String icon,
+    bool showBadge = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        margin: const EdgeInsets.symmetric(horizontal: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.mainAppColor.withValues(alpha: 0.11)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                SizedBox(
+                  width: 25,
+                  height: 25,
+                  child: SvgPicture.asset(
+                    icon,
+                    colorFilter: ColorFilter.mode(
+                      selected ? AppColors.mainAppColor : AppColors.greyColor,
+                      BlendMode.srcIn,
+                    ),
+                  ),
                 ),
-              ),
-              hasNewNotifications ? CircleAvatar(radius: 5, backgroundColor: AppColors.mainAppColor) : const SizedBox(),
-            ],
-          ),
+                if (showBadge)
+                  Positioned(
+                    right: -5,
+                    top: -4,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: AppColors.mainAppColor,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.whiteColor, width: 1.5),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: selected ? AppTextStyle.text12RM() : AppTextStyle.text12RG(),
+            ),
+          ],
         ),
-        Text(
-          'notifications'.tr,
-          style: controller.screenIndex == 2 ? AppTextStyle.text14RM() : AppTextStyle.text14RG(),
-        ),
-      ],
+      ),
     );
   }
 }

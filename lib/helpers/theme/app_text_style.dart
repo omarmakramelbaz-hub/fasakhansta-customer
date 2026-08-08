@@ -41,6 +41,7 @@ class AppTextStyle {
   static TextStyle text16RM({Color? color}) => TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: color ?? AppColors.mainAppColor);
   static TextStyle text16BW({Color? color}) => TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: color ?? AppColors.whiteColor);
   static TextStyle text15BS({Color? color}) => TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: color ?? AppColors.secondAppColor);
+  static TextStyle text15MS({Color? color}) => TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: color ?? AppColors.secondAppColor);
   static TextStyle text14RS({Color? color}) => TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: color ?? AppColors.secondAppColor);
   static TextStyle text14MM({Color? color}) => TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: color ?? AppColors.mainAppColor);
   static TextStyle text14MS({Color? color}) => TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: color ?? AppColors.secondAppColor);

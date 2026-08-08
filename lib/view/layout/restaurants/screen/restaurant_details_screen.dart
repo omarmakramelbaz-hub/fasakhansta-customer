@@ -14,10 +14,9 @@ import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/theme/app_text_style.dart';
 import '../../../../helpers/translation/all_translation.dart';
 import '../../../../helpers/utils/common_methods.dart';
-import '../../../../helpers/utils/utils.dart';
 import '../../../custom_widgets/api_response_widget/api_response_widget.dart';
 import '../../../custom_widgets/custom_image/custom_image.dart';
-import '../../../custom_widgets/custom_image/custom_network_image.dart';
+import '../../../custom_widgets/custom_network_image/custom_network_image.dart';
 import '../../cart/controller/cart_controller.dart';
 import '../../cart/screen/cart_screen.dart';
 import '../controller/restaurants_controller.dart';
@@ -27,7 +26,6 @@ import '../model/previous_order_model.dart';
 import '../model/products_restaurant_model.dart';
 import '../widgets/choices_according_to_your_taste_widget.dart';
 import '../widgets/header_cover_and_image_restaurant_details_widget.dart';
-import '../widgets/menu_bottom_sheet_widget.dart';
 import '../widgets/previous_orders_list_view_widget.dart';
 import 'product_details_screen.dart';
 
@@ -41,6 +39,7 @@ class RestaurantDetailsArgs {
 class RestaurantDetailsScreen extends StatefulWidget {
   final RestaurantDetailsArgs args;
   static const String routeName = 'RestaurantDetailsScreen';
+
   const RestaurantDetailsScreen({super.key, required this.args});
 
   @override
@@ -51,139 +50,136 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
   int currentIndex = 0;
   final ScrollController _verticalScrollController = ScrollController();
   final List<GlobalKey> _categoryKeys = [];
-  late PusherController _pusherController; // Saved reference
+  late PusherController _pusherController;
 
   @override
   void initState() {
+    super.initState();
     _verticalScrollController.addListener(animateToTab);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<RestaurantsController>(context, listen: false).initialRestaurantsDetails();
-      Provider.of<RestaurantsController>(context, listen: false).initialPreviousOrder();
-      Provider.of<RestaurantsController>(context, listen: false).initialProductsRestaurant();
+      final controller = context.read<RestaurantsController>();
+      controller.initialRestaurantsDetails();
+      controller.initialPreviousOrder();
+      controller.initialProductsRestaurant();
       Future.wait([
-        Provider.of<RestaurantsController>(context, listen: false).getRestaurantsDetails(id: widget.args.id),
-        Provider.of<RestaurantsController>(context, listen: false).getPreviousOrder(id: widget.args.id),
-        Provider.of<RestaurantsController>(context, listen: false).getProductsRestaurant(id: widget.args.id),
+        controller.getRestaurantsDetails(id: widget.args.id),
+        controller.getPreviousOrder(id: widget.args.id),
+        controller.getProductsRestaurant(id: widget.args.id),
       ]);
     });
+
     _pusherController = context.read<PusherController>();
     _pusherController.addEventListener('product.updated', _handleProductUpdated);
     _pusherController.addEventListener('product.updated', _handlePreviousProductUpdated);
     _pusherController.addEventListener('product.updated', _handleHightsRatedUpdated);
     _pusherController.addEventListener('resturant.updated', _handleResturantUpdated);
-    super.initState();
   }
 
   void _handleProductUpdated(PusherEvent event) {
     try {
       final decodedData = json.decode(event.data) as Map<String, dynamic>;
-      final resturantData = decodedData['product'];
-
+      final productData = decodedData['product'];
       if (mounted) {
-        final resturantModel = ResturantItems.fromJson(resturantData as Map<String, dynamic>);
-        context.read<RestaurantsController>().updateResturantProductOrder(resturantModel);
-        log('=================== update resturant product');
+        final product = ResturantItems.fromJson(productData as Map<String, dynamic>);
+        context.read<RestaurantsController>().updateResturantProductOrder(product);
       }
     } catch (e, stackTrace) {
-      log('Error handling Pusher event: $e');
-      log('Stack trace: $stackTrace');
+      log('Error handling product.updated: $e');
+      log('$stackTrace');
     }
   }
 
   void _handleHightsRatedUpdated(PusherEvent event) {
     try {
       final decodedData = json.decode(event.data) as Map<String, dynamic>;
-      final resturantData = decodedData['product'];
-
+      final productData = decodedData['product'];
       if (mounted) {
-        final resturantModel = HighestRated.fromJson(resturantData as Map<String, dynamic>);
-        context.read<RestaurantsController>().updateAccordingToYourTasteResturantProductOrder(resturantModel);
-        log('=================== update resturant product');
+        final product = HighestRated.fromJson(productData as Map<String, dynamic>);
+        context.read<RestaurantsController>().updateAccordingToYourTasteResturantProduct(product);
       }
     } catch (e, stackTrace) {
-      log('Error handling Pusher event: $e');
-      log('Stack trace: $stackTrace');
+      log('Error handling highest rated update: $e');
+      log('$stackTrace');
     }
   }
 
   void _handlePreviousProductUpdated(PusherEvent event) {
     try {
       final decodedData = json.decode(event.data) as Map<String, dynamic>;
-      final resturantData = decodedData['product'];
-
+      final productData = decodedData['product'];
       if (mounted) {
-        final resturantModel = PreviousOrderModel.fromJson(resturantData as Map<String, dynamic>);
-        context.read<RestaurantsController>().updateResturantPreviousProductOrder(resturantModel);
-        log('=================== update previous product');
+        final product = PreviousOrderModel.fromJson(productData as Map<String, dynamic>);
+        context.read<RestaurantsController>().updateResturantPreviousProductOrder(product);
       }
     } catch (e, stackTrace) {
-      log('Error handling Pusher event: $e');
-      log('Stack trace: $stackTrace');
+      log('Error handling previous product update: $e');
+      log('$stackTrace');
     }
   }
 
   void _handleResturantUpdated(PusherEvent event) {
     try {
       final decodedData = json.decode(event.data) as Map<String, dynamic>;
-      final resturantData = decodedData['resturant'];
-
+      final restaurantData = decodedData['resturant'];
       if (mounted) {
-        final resturantModel = details_restaurant_model.DetailsRestaurantModel.fromJson(
-          resturantData as Map<String, dynamic>,
+        final restaurant = details_restaurant_model.DetailsRestaurantModel.fromJson(
+          restaurantData as Map<String, dynamic>,
         );
-        context.read<RestaurantsController>().updateResturantDetails(resturantModel);
-        // context.read<HomeController>().updateSpacialResturant(resturantModel);
+        context.read<RestaurantsController>().updateResturantDetails(restaurant);
       }
     } catch (e, stackTrace) {
-      log('Error handling Pusher event: $e');
-      log('Stack trace: $stackTrace');
+      log('Error handling resturant.updated: $e');
+      log('$stackTrace');
     }
   }
 
   @override
   void dispose() {
-    _pusherController.removeEventListener('product.updated', _handleResturantUpdated);
+    _pusherController.removeEventListener('product.updated', _handleProductUpdated);
+    _pusherController.removeEventListener('product.updated', _handlePreviousProductUpdated);
+    _pusherController.removeEventListener('product.updated', _handleHightsRatedUpdated);
+    _pusherController.removeEventListener('resturant.updated', _handleResturantUpdated);
     _verticalScrollController.dispose();
     super.dispose();
   }
 
   void _scrollToCategory(int index) {
+    if (index < 0 || index >= _categoryKeys.length) return;
     final keyContext = _categoryKeys[index].currentContext;
     if (keyContext != null) {
-      Scrollable.ensureVisible(keyContext, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
+      Scrollable.ensureVisible(
+        keyContext,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeInOut,
+        alignment: 0.08,
+      );
     }
   }
 
   void _scrollToTop() {
-    _verticalScrollController.animateTo(0.0, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
-  }
-
-  void _onBottomSheetSuccess(int index) {
-    setState(() {
-      currentIndex = index;
-    });
-    if (index == -1) {
-      _scrollToTop();
-    } else {
-      _scrollToCategory(index);
-    }
+    _verticalScrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeInOut,
+    );
   }
 
   void animateToTab() {
-    if (_verticalScrollController.offset == 0) {
-      setState(() {
-        currentIndex = 0;
-      });
-    } else {
-      for (var i = 0; i < _categoryKeys.length; i++) {
-        final box = _categoryKeys[i].currentContext!.findRenderObject() as RenderBox;
-        final position = box.localToGlobal(Offset.zero);
+    if (_categoryKeys.isEmpty || !mounted) return;
+    if (_verticalScrollController.offset <= 10) {
+      if (currentIndex != 0) setState(() => currentIndex = 0);
+      return;
+    }
 
-        if (_verticalScrollController.offset >= position.dy) {
-          setState(() {
-            currentIndex = i;
-          });
-        }
+    for (var i = 0; i < _categoryKeys.length; i++) {
+      final context = _categoryKeys[i].currentContext;
+      if (context == null) continue;
+      final box = context.findRenderObject() as RenderBox?;
+      if (box == null) continue;
+      final position = box.localToGlobal(Offset.zero).dy;
+      if (position < 190) {
+        if (currentIndex != i) setState(() => currentIndex = i);
       }
     }
   }
@@ -191,9 +187,13 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Consumer<RestaurantsController>(
-      builder: (BuildContext context, restaurantsController, _) {
-        _categoryKeys.clear();
-        _categoryKeys.addAll(List.generate(restaurantsController.productsRestaurant.length, (index) => GlobalKey()));
+      builder: (context, restaurantsController, _) {
+        _categoryKeys
+          ..clear()
+          ..addAll(List.generate(
+            restaurantsController.productsRestaurant.length,
+            (_) => GlobalKey(),
+          ));
 
         return Container(
           color: AppColors.whiteColor,
@@ -206,110 +206,37 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
             },
             isEmpty: restaurantsController.detailsRestaurant == null,
             child: Scaffold(
-              extendBody: false,
+              backgroundColor: const Color(0xFFFAFAFA),
               body: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   HeaderCoverAndImageRestaurantDetailsWidget(
                     detailsRestaurant: restaurantsController.detailsRestaurant,
                   ),
-                  const SizedBox(height: 31),
-                  _buildTabs(restaurantsController),
-                  const SizedBox(height: 32),
                   Expanded(
                     child: SingleChildScrollView(
                       controller: _verticalScrollController,
+                      padding: const EdgeInsets.only(bottom: 105),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          restaurantsController.previousOrders.isNotEmpty
-                              ? _buildPreviousOrders(restaurantsController)
-                              : const SizedBox(),
-                          restaurantsController.detailsRestaurant?.highestRated?.isNotEmpty == true
-                              ? _buildChoicesAccordingToYourTaste(restaurantsController)
-                              : const SizedBox(),
+                          _buildBranchStats(restaurantsController),
+                          _buildSpecialOffer(),
+                          _buildSearchField(),
+                          _buildCategoryTabs(restaurantsController),
+                          _buildBestSellers(restaurantsController),
+                          _buildOfferBanner(),
                           ..._buildCategories(restaurantsController),
+                          if (restaurantsController.previousOrders.isNotEmpty)
+                            _buildPreviousOrders(restaurantsController),
+                          if (restaurantsController.detailsRestaurant?.highestRated?.isNotEmpty == true)
+                            _buildChoicesAccordingToYourTaste(restaurantsController),
                         ],
                       ),
                     ),
                   ),
                 ],
               ),
-              bottomNavigationBar: (context.read<CartController>().cart == null ||
-                      (context.read<CartController>().cart?.carts?.isEmpty ?? false))
-                  ? Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'minOrderPrice'.tr.replaceAll(
-                                  '{}',
-                                  restaurantsController.detailsRestaurant?.minOrderPrice.toString() ?? '',
-                                ),
-                            style: AppTextStyle.text16BS(),
-                          ),
-                        ],
-                      ),
-                    )
-                  : Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                      child: Row(
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppColors.darkMainAppColor),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
-                              child: Text(
-                                context.read<CartController>().cart?.carts?.length.toString() ?? '0',
-                                style: AppTextStyle.text16BS(),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: InkWell(
-                              onTap: () {
-                                NamedNavigatorImpl.push(CartScreen.routeName);
-                              },
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8),
-                                  color: AppColors.darkMainAppColor,
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [Text('showCart'.tr, style: AppTextStyle.text16BW())],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppColors.darkMainAppColor),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
-                              child: Text(
-                                'egyp'.tr.replaceAll(
-                                      '{}',
-                                      context.read<CartController>().cart?.totalCart.toString() ?? '0',
-                                    ),
-                                style: AppTextStyle.text16BS(),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+              bottomNavigationBar: _buildCartBar(),
             ),
           ),
         );
@@ -317,78 +244,200 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
     );
   }
 
-  Widget _buildTabs(RestaurantsController restaurantsController) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(width: 16),
-        InkWell(
-          onTap: () {
-            Utils.showAppBottomSheet(
-              MenuBottomSheetWidget(
-                products: restaurantsController.productsRestaurant,
-                previousOrders: restaurantsController.previousOrders,
-                onSuccess: _onBottomSheetSuccess,
-                initialIndex: currentIndex + 1,
-              ),
-              enableDrag: true,
-              isScrollControlled: true,
-            );
-          },
-          child: SvgPicture.asset(AppImages.menuIcon),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                if (restaurantsController.previousOrders.isNotEmpty) _buildTabItem('previousOrders'.tr, -2),
-                const SizedBox(width: 8),
-                if (restaurantsController.detailsRestaurant?.highestRated?.isNotEmpty == true)
-                  _buildTabItem('choicesAccordingToYourTaste'.tr, -1),
-                ...List.generate(
-                  restaurantsController.productsRestaurant.length,
-                  (index) => Padding(
-                    padding: const EdgeInsets.only(right: 16),
-                    child: _buildTabItem(
-                      restaurantsController.productsRestaurant[index].categoryName ?? '',
-                      index,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-              ],
-            ),
-          ),
-        ),
-      ],
+  Widget _buildBranchStats(RestaurantsController controller) {
+    final restaurant = controller.detailsRestaurant;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+      child: Row(
+        children: [
+          Expanded(child: _statCard(Icons.delivery_dining, '${restaurant?.serviceFees ?? 0} جنيه', 'رسوم التوصيل')),
+          const SizedBox(width: 8),
+          Expanded(child: _statCard(Icons.near_me_outlined, '${restaurant?.kmPrice ?? 0} كم', 'المسافة منك')),
+          const SizedBox(width: 8),
+          Expanded(child: _statCard(Icons.access_time_rounded, restaurant?.deliveryTime ?? '-', 'وقت التوصيل')),
+        ],
+      ),
     );
   }
 
-  Widget _buildTabItem(String title, int index) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          currentIndex = index;
-        });
-        if (index == -1) {
-          _scrollToTop();
-        } else {
-          _scrollToCategory(index);
-        }
-      },
+  Widget _statCard(IconData icon, String value, String title) {
+    return Container(
+      height: 72,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: AppColors.whiteColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFEDEDED)),
+      ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(title, style: currentIndex == index ? AppTextStyle.text16BM() : AppTextStyle.text16MG()),
-          5.sbH,
-          Container(
-            height: 5,
-            width: 100,
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.only(topLeft: Radius.circular(7), topRight: Radius.circular(7)),
-              color: currentIndex == index ? AppColors.mainAppColor : Colors.transparent,
+          Icon(icon, color: AppColors.mainAppColor, size: 20),
+          const SizedBox(height: 3),
+          Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyle.text14BS()),
+          Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyle.text11RS()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSpecialOffer() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF4EC),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFFFE0CF)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.card_giftcard_rounded, color: AppColors.mainAppColor, size: 28),
+            const SizedBox(width: 10),
+            Expanded(
+              child: RichText(
+                textAlign: TextAlign.right,
+                text: TextSpan(
+                  style: AppTextStyle.text13RS(),
+                  children: [
+                    TextSpan(text: 'عرض خاص  ', style: AppTextStyle.text14BS().copyWith(color: AppColors.mainAppColor)),
+                    const TextSpan(text: 'تابع العروض المتاحة داخل الفرع واستفد من أفضل الأسعار'),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text('التفاصيل', style: AppTextStyle.text12BS().copyWith(color: AppColors.mainAppColor)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchField() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
+      child: TextField(
+        textAlign: TextAlign.right,
+        decoration: InputDecoration(
+          hintText: 'ابحث عن منتج داخل الفرع...',
+          hintStyle: AppTextStyle.text14RG(),
+          prefixIcon: const Icon(Icons.search_rounded),
+          filled: true,
+          fillColor: AppColors.whiteColor,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: const BorderSide(color: Color(0xFFEDEDED)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: const BorderSide(color: Color(0xFFEDEDED)),
+          ),
+        ),
+        onSubmitted: (value) {
+          if (value.trim().isNotEmpty) {
+            // The product list remains API driven; this keeps the existing route/search behavior available.
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildCategoryTabs(RestaurantsController controller) {
+    return SizedBox(
+      height: 96,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        scrollDirection: Axis.horizontal,
+        itemCount: controller.productsRestaurant.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          final selected = currentIndex == index;
+          return GestureDetector(
+            onTap: () {
+              setState(() => currentIndex = index);
+              _scrollToCategory(index);
+            },
+            child: SizedBox(
+              width: 72,
+              child: Column(
+                children: [
+                  Container(
+                    width: 58,
+                    height: 58,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: selected ? AppColors.mainAppColor.withValues(alpha: .12) : AppColors.whiteColor,
+                      border: Border.all(
+                        color: selected ? AppColors.mainAppColor : const Color(0xFFE7E7E7),
+                        width: selected ? 2 : 1,
+                      ),
+                    ),
+                    child: Icon(_categoryIcon(index), color: AppColors.mainAppColor, size: 28),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    controller.productsRestaurant[index].categoryName ?? '',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: selected ? AppTextStyle.text12BS() : AppTextStyle.text12RS(),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  IconData _categoryIcon(int index) {
+    const icons = [
+      Icons.grid_view_rounded,
+      Icons.set_meal_rounded,
+      Icons.restaurant_rounded,
+      Icons.rice_bowl_rounded,
+      Icons.local_dining_rounded,
+      Icons.fastfood_rounded,
+    ];
+    return icons[index % icons.length];
+  }
+
+  Widget _buildBestSellers(RestaurantsController controller) {
+    final items = <ResturantItems>[];
+    for (final category in controller.productsRestaurant) {
+      for (final item in category.resturantItems ?? <ResturantItems>[]) {
+        if (item.status == 'show') items.add(item);
+        if (items.length == 4) break;
+      }
+      if (items.length == 4) break;
+    }
+
+    if (items.isEmpty) return const SizedBox();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 2, 20, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('الأكثر مبيعاً 🏆', style: AppTextStyle.text18BS()),
+              Text('عرض الكل', style: AppTextStyle.text13BS().copyWith(color: AppColors.mainAppColor)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 212,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: items.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 10),
+              itemBuilder: (context, index) => _productCard(items[index]),
             ),
           ),
         ],
@@ -396,156 +445,312 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
     );
   }
 
-  Widget _buildPreviousOrders(RestaurantsController restaurantsController) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text('previousOrders'.tr, style: AppTextStyle.text18BS()),
+  Widget _productCard(ResturantItems item) {
+    return GestureDetector(
+      onTap: () => _openProduct(item.id ?? 0),
+      child: Container(
+        width: 155,
+        decoration: BoxDecoration(
+          color: AppColors.whiteColor,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFEAEAEA)),
         ),
-        10.sbH,
-        if (restaurantsController.previousOrders.isNotEmpty)
-          const PreviousOrdersListViewWidget()
-        else
-          Center(child: Text('thereAreNoPreviousRequests'.tr, style: AppTextStyle.text16RS())),
-        const SizedBox(height: 22),
-      ],
-    );
-  }
-
-  Widget _buildChoicesAccordingToYourTaste(RestaurantsController restaurantsController) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text('choicesAccordingToYourTaste'.tr, style: AppTextStyle.text18BS()),
-        ),
-        restaurantsController.detailsRestaurant?.highestRated?.isNotEmpty == true
-            ? const ChoicesAccordingToYourTasteWidget()
-            : const SizedBox(),
-        const SizedBox(height: 22),
-      ],
-    );
-  }
-
-  List<Widget> _buildCategories(RestaurantsController restaurantsController) {
-    return List.generate(
-      restaurantsController.productsRestaurant.length,
-      (index) => Padding(
-        key: _categoryKeys[index],
-        padding: const EdgeInsets.only(right: 20, left: 20, bottom: 10),
+        clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(restaurantsController.productsRestaurant[index].categoryName ?? '', style: AppTextStyle.text18BS()),
-            const SizedBox(height: 16),
-            ...List.generate(
-              restaurantsController.productsRestaurant[index].resturantItems?.length ?? 0,
-              (indexRestaurantItems) => InkWell(
-                onTap: () {
-                  if (restaurantsController.detailsRestaurant?.status == 'closed') {
-                    CommonMethods.showError(message: 'thisRestaurantIsClosed'.tr);
-                  } else {
-                    if (restaurantsController.productsRestaurant[index].resturantItems?[indexRestaurantItems].status ==
-                        'show') {
-                      NamedNavigatorImpl.push(ProductDetailsScreen.routeName,
-                          arguments: ProductDetailsDetailsArgs(
-                            onSuccessAddItem: widget.args.onSuccessAddItem,
-                            id: restaurantsController
-                                    .productsRestaurant[index].resturantItems?[indexRestaurantItems].id ??
-                                0,
-                          ));
-                    } else {
-                      CommonMethods.showError(message: 'productNotAvailable'.tr);
-                    }
-                  }
-                },
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 36),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              restaurantsController
-                                      .productsRestaurant[index].resturantItems?[indexRestaurantItems].productName ??
-                                  '',
-                              style: AppTextStyle.text18RS(),
-                            ),
-                            const SizedBox(height: 8),
-                            restaurantsController
-                                        .productsRestaurant[index].resturantItems?[indexRestaurantItems].highestRated ==
-                                    'yes'
-                                ? Container(
-                                    decoration: BoxDecoration(
-                                      color: AppColors.mainAppColor.withValues(alpha: 0.2),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          const CustomImage(path: AppImages.starIcon, type: ImageType.svg),
-                                          const SizedBox(width: 5),
-                                          Text(
-                                            'highestRate'.tr,
-                                            style: AppTextStyle.text16BS().copyWith(color: AppColors.darkMainAppColor),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  )
-                                : const SizedBox(),
-                            const SizedBox(height: 8),
-                            restaurantsController
-                                        .productsRestaurant[index].resturantItems?[indexRestaurantItems].status ==
-                                    'show'
-                                ? Text(
-                                    'pound'.tr.replaceAll(
-                                          '{}',
-                                          restaurantsController.productsRestaurant[index]
-                                                  .resturantItems?[indexRestaurantItems].productPrice
-                                                  ?.toStringAsFixed(2)
-                                                  .toString() ??
-                                              '',
-                                        ),
-                                    style: AppTextStyle.text16RG(),
-                                  )
-                                : Text('notAvailable'.tr, style: AppTextStyle.text16RG()),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      Container(
-                        height: 106,
-                        width: 121,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          color: AppColors.mainAppColor.withValues(alpha: 0.15),
-                        ),
-                        child: CustomNetworkImage(
-                          imageUrl: restaurantsController
-                                  .productsRestaurant[index].resturantItems?[indexRestaurantItems].productImage
-                                  .toString() ??
-                              '',
-                          radius: 12,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ],
+            SizedBox(
+              height: 112,
+              width: double.infinity,
+              child: CustomNetworkImage(
+                imageUrl: item.productImage ?? '',
+                radius: 0,
+                fit: BoxFit.cover,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 4),
+              child: Text(item.productName ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyle.text14BS()),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('${item.productPrice?.toStringAsFixed(0) ?? '-'} ج', style: AppTextStyle.text14BS().copyWith(color: AppColors.mainAppColor)),
+                  Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(color: AppColors.mainAppColor, borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(Icons.add, color: Colors.white, size: 20),
                   ),
-                ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOfferBanner() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+        decoration: BoxDecoration(
+          color: const Color(0xFF061827),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: AppColors.mainAppColor,
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: const Icon(Icons.local_fire_department_rounded, color: Colors.white, size: 30),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text('🔥 عرض نار', style: AppTextStyle.text18BS().copyWith(color: AppColors.mainAppColor)),
+                  const SizedBox(height: 3),
+                  Text('اختيارات مميزة من منتجات فسخانستا', style: AppTextStyle.text12RS().copyWith(color: Colors.white)),
+                ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  List<Widget> _buildCategories(RestaurantsController controller) {
+    return List.generate(controller.productsRestaurant.length, (index) {
+      final category = controller.productsRestaurant[index];
+      return Padding(
+        key: _categoryKeys[index],
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(category.categoryName ?? '', style: AppTextStyle.text18BS()),
+                Text('عرض الكل', style: AppTextStyle.text12BS().copyWith(color: AppColors.mainAppColor)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: category.resturantItems?.length ?? 0,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: .70,
+              ),
+              itemBuilder: (context, itemIndex) {
+                final item = category.resturantItems![itemIndex];
+                return _gridProductCard(item, controller);
+              },
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _gridProductCard(ResturantItems item, RestaurantsController controller) {
+    final available = item.status == 'show';
+    return GestureDetector(
+      onTap: () {
+        if (!available) {
+          CommonMethods.showError(message: 'productNotAvailable'.tr);
+          return;
+        }
+        _openProduct(item.id ?? 0);
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.whiteColor,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFEAEAEA)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: CustomNetworkImage(
+                      imageUrl: item.productImage ?? '',
+                      radius: 0,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  if (item.highestRated == 'yes')
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.mainAppColor,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text('الأكثر طلباً', style: AppTextStyle.text10BW()),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 3),
+              child: Text(item.productName ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyle.text14BS()),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    available ? '${item.productPrice?.toStringAsFixed(0) ?? '-'} ج' : 'غير متاح',
+                    style: AppTextStyle.text13BS().copyWith(color: available ? AppColors.mainAppColor : Colors.grey),
+                  ),
+                  GestureDetector(
+                    onTap: available ? () => _openProduct(item.id ?? 0) : null,
+                    child: Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(color: available ? AppColors.mainAppColor : Colors.grey, shape: BoxShape.circle),
+                      child: const Icon(Icons.add, color: Colors.white, size: 20),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openProduct(int id) {
+    if (id == 0) return;
+    NamedNavigatorImpl.push(
+      ProductDetailsScreen.routeName,
+      arguments: ProductDetailsDetailsArgs(
+        onSuccessAddItem: widget.args.onSuccessAddItem,
+        id: id,
+      ),
+    );
+  }
+
+  Widget _buildPreviousOrders(RestaurantsController controller) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('previousOrders'.tr, style: AppTextStyle.text18BS()),
+          const SizedBox(height: 10),
+          const PreviousOrdersListViewWidget(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChoicesAccordingToYourTaste(RestaurantsController controller) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('choicesAccordingToYourTaste'.tr, style: AppTextStyle.text18BS()),
+          const SizedBox(height: 8),
+          const ChoicesAccordingToYourTasteWidget(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCartBar() {
+    return Consumer<CartController>(
+      builder: (context, cartController, _) {
+        final cart = cartController.cart;
+        final hasItems = cart?.carts?.isNotEmpty ?? false;
+        if (!hasItems) return const SizedBox.shrink();
+
+        return SafeArea(
+          top: false,
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.whiteColor,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: const [BoxShadow(blurRadius: 18, color: Color(0x22000000), offset: Offset(0, 5))],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(color: AppColors.mainAppColor.withValues(alpha: .12), borderRadius: BorderRadius.circular(14)),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Center(child: Icon(Icons.shopping_cart_outlined, color: AppColors.mainAppColor, size: 27)),
+                      Positioned(
+                        top: -4,
+                        right: -4,
+                        child: Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                          child: Text('${cart?.carts?.length ?? 0}', style: AppTextStyle.text9BW()),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text('السلة', style: AppTextStyle.text13BS()),
+                      Text('${cart?.totalCart?.toString() ?? 0} ج', style: AppTextStyle.text16BS().copyWith(color: AppColors.mainAppColor)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: () => NamedNavigatorImpl.push(CartScreen.routeName),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.mainAppColor,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  child: const Text('عرض السلة'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

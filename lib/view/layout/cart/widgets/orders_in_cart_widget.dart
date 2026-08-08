@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../helpers/extensions/extensions.dart';
-import '../../../../helpers/routes/app_routers_import.dart';
 import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/theme/app_text_style.dart';
 import '../../../../helpers/translation/all_translation.dart';
@@ -40,7 +39,7 @@ class OrdersInCartWidget extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildProductImage(context, cartController, quantity),
+          _buildProductImage(),
           12.sbW,
           Expanded(
             child: Column(
@@ -88,42 +87,13 @@ class OrdersInCartWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildProductImage(BuildContext context, CartController controller, int quantity) {
-    return Stack(
-      children: [
-        CustomNetworkImage(
-          imageUrl: cart.resturantProduct?.productImage ?? '',
-          height: 118,
-          width: 112,
-          radius: 16,
-          fit: BoxFit.cover,
-        ),
-        Positioned(
-          top: 6,
-          left: 6,
-          child: Material(
-            color: AppColors.whiteColor,
-            shape: const CircleBorder(),
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              onTap: () {
-                NamedNavigatorImpl.push(
-                  ProductInCartDetailsScreen.routeName,
-                  arguments: ProductInCartDetailsDetailsArgs(
-                    cartItemId: cart.id!,
-                    id: cart.resturantProduct?.id ?? 0,
-                    onSuccessAddItem: () {},
-                  ),
-                );
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(7),
-                child: Icon(Icons.edit_outlined, color: AppColors.mainAppColor, size: 17),
-              ),
-            ),
-          ),
-        ),
-      ],
+  Widget _buildProductImage() {
+    return CustomNetworkImage(
+      imageUrl: cart.resturantProduct?.productImage ?? '',
+      height: 118,
+      width: 112,
+      radius: 16,
+      fit: BoxFit.cover,
     );
   }
 

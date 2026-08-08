@@ -12,6 +12,10 @@ class FavoriteModel {
   String? lat;
   String? lng;
   String? createdAt;
+  num? productPrice;
+  int? resturantId;
+  String? resturantName;
+  int? productId;
 
   FavoriteModel({
     this.id,
@@ -27,22 +31,30 @@ class FavoriteModel {
     this.lat,
     this.lng,
     this.createdAt,
+    this.productPrice,
+    this.resturantId,
+    this.resturantName,
+    this.productId,
   });
 
   FavoriteModel.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     vendorId = json['vendor_id'];
     vendorName = json['vendor_name'];
-    name = json['name'];
+    name = json['name'] ?? json['product_name'] ?? json['product_title'];
     status = json['status'];
-    avgRate = json['avg_rate'];
-    address = json['address'];
-    logo = json['logo'];
-    bgImage = json['bg_image'];
-    deliveryTime = json['delivery_time'];
+    avgRate = json['avg_rate'] ?? 0;
+    address = json['address'] ?? json['resturant_name'] ?? '';
+    logo = json['logo'] ?? json['product_image'] ?? '';
+    bgImage = json['bg_image'] ?? json['product_image'] ?? '';
+    deliveryTime = json['delivery_time'] ?? '';
     lat = json['lat'];
     lng = json['lng'];
     createdAt = json['created_at'];
+    productPrice = json['product_price'];
+    resturantId = json['resturant_id'];
+    resturantName = json['resturant_name'];
+    productId = json['product_id'];
   }
 
   Map<String, dynamic> toJson() {
@@ -60,6 +72,10 @@ class FavoriteModel {
     data['lat'] = lat;
     data['lng'] = lng;
     data['created_at'] = createdAt;
+    data['product_price'] = productPrice;
+    data['resturant_id'] = resturantId;
+    data['resturant_name'] = resturantName;
+    data['product_id'] = productId;
     return data;
   }
 }

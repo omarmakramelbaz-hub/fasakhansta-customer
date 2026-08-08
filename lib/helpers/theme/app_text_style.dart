@@ -199,6 +199,10 @@ class AppTextStyle {
     return TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: color ?? AppColors.whiteColor);
   }
 
+  static TextStyle text9GR({Color? color}) {
+    return TextStyle(fontSize: 9, fontWeight: FontWeight.w400, color: color ?? AppColors.greyColor);
+  }
+
   static TextStyle text9BW({Color? color}) {
     return TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: color ?? AppColors.whiteColor);
   }

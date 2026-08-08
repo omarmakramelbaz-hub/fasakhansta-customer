@@ -17,6 +17,7 @@ import '../../auth/controller/auth_controller.dart';
 import '../../restaurants/screen/restaurant_details_screen.dart';
 import '../controller/cart_controller.dart';
 import '../widgets/button_nav_cart_widget.dart';
+import '../widgets/cart_minimum_order_widget.dart';
 import '../widgets/orders_in_cart_widget.dart';
 import 'choose_address_from_map_screen.dart';
 
@@ -50,6 +51,7 @@ class _CartScreenState extends State<CartScreen> {
         final addedPrice = ((cartController.cart?.resturant?.tax ?? 0) * totalPrice) / 100;
         final grandTotal = serviceFees + addedPrice + totalPrice;
         final hasItems = cartController.cart?.carts?.isNotEmpty ?? false;
+        final minimumOrder = (cartController.cart?.resturant?.resturantMinOrderPrice ?? 0).toDouble();
 
         return Scaffold(
           backgroundColor: const Color(0xFFF8F8F8),
@@ -91,6 +93,9 @@ class _CartScreenState extends State<CartScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (minimumOrder > 0)
+                    CartMinimumOrderWidget(current: totalPrice.toDouble(), minimum: minimumOrder),
+                  10.sbH,
                   _buildRestaurantHeader(cartController),
                   14.sbH,
                   ...List.generate(
@@ -282,21 +287,9 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Widget _buildCheckoutBar(CartController controller, double subtotal, double grandTotal) {
-    return SafeArea(
-      top: false,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-        decoration: BoxDecoration(
-          color: AppColors.whiteColor,
-          boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: .1), blurRadius: 16, offset: const Offset(0, -4)),
-          ],
-        ),
-        child: ButtonNavCartWidget(
-          totalInCart: grandTotal.toStringAsFixed(2),
-          onPressedExecuteTheOrder: () => _executeOrder(controller, subtotal),
-        ),
-      ),
+    return ButtonNavCartWidget(
+      totalInCart: grandTotal.toStringAsFixed(2),
+      onPressedExecuteTheOrder: () => _executeOrder(controller, subtotal),
     );
   }
 

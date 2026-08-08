@@ -50,8 +50,8 @@ class CartMinimumOrderWidget extends StatelessWidget {
               children: [
                 Text(
                   reached
-                      ? 'minimumOrderReached'.tr
-                      : 'remainingForFreeDelivery'.tr.replaceAll('{}', remaining.toStringAsFixed(0)),
+                      ? 'minOrderPrice'.tr
+                      : '${'pound'.tr.replaceAll('{}', remaining.toStringAsFixed(0))} ${'minOrderPrice'.tr}',
                   textAlign: TextAlign.right,
                   style: AppTextStyle.text14BS(),
                 ),
@@ -77,7 +77,7 @@ class CartMinimumOrderWidget extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Text('minimum'.tr, style: AppTextStyle.text12RG()),
+                Text('minOrderPrice'.tr, style: AppTextStyle.text12RG()),
                 const SizedBox(height: 2),
                 Text(
                   'pound'.tr.replaceAll('{}', minimum.toStringAsFixed(0)),

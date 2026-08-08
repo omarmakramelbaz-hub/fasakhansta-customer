@@ -145,7 +145,7 @@ class SpacialRestaurantsListViewWidget extends StatelessWidget {
                             5.sbH,
                             Row(
                               children: [
-                                const Icon(Icons.star_rounded, size: 16, color: AppColors.mainAppColor),
+                                Icon(Icons.star_rounded, size: 16, color: AppColors.mainAppColor),
                                 3.sbW,
                                 Text(
                                   restaurant.avgRate?.toStringAsFixed(1) ?? '0.0',

@@ -19,71 +19,109 @@ class DeliveryAgentWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            radius: 35,
-            backgroundColor: AppColors.mainAppColor,
-            child: CustomNetworkImage(
-              imageUrl: orders?.delegateLogo ?? '',
-              radius: 35,
-              fit: BoxFit.fitHeight,
-              height: 70,
-              width: 70,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 18),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.whiteColor,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.mainAppColor.withValues(alpha: .12)),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.greyColor.withValues(alpha: .14),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
             ),
-          ),
-          const SizedBox(width: 10),
-          Column(
-            children: [
-              Text('deliveryAgent'.tr, style: AppTextStyle.text14RS()),
-              5.sbH,
-              Text(orders?.delegateName ?? '', style: AppTextStyle.text16BS()),
-            ],
-          ),
-          const Spacer(),
-          GestureDetector(
-            onTap: () {
-              UrlLauncherMethods.makePhoneCall(orders?.delegateMobile ?? '');
-            },
-            child: Card(
-              elevation: 10,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              child: CircleAvatar(
-                radius: 20,
-                backgroundColor: AppColors.mainAppColor,
-                child: SvgPicture.asset(AppImages.callIcon),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 76,
+              height: 76,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.mainAppColor.withValues(alpha: .10),
+              ),
+              padding: const EdgeInsets.all(3),
+              child: CustomNetworkImage(
+                imageUrl: orders?.delegateLogo ?? '',
+                radius: 40,
+                fit: BoxFit.cover,
+                height: 70,
+                width: 70,
               ),
             ),
-          ),
-          GestureDetector(
-            onTap: () {
-              NamedNavigatorImpl.push(
-                ChatScreen.routeName,
-                arguments: ChatScreenArgs(
-                  orderId: 'DC${orders?.id ?? 0}',
-                  accountType: 'user',
-                  isVendor: false,
-                  receiverDeviceToken: orders?.delegateFcmId ?? '',
-                  receiverName: orders?.delegateName ?? '',
-                  senderDeviceToken: orders?.userFcmId ?? '',
-                  senderName: orders?.userName ?? '',
-                  vendorDeviceToken: orders?.resturantVendorDeviceToken ?? '',
-                ),
-              );
-            },
-            child: Card(
-              elevation: 10,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              child: CircleAvatar(
-                radius: 20,
-                backgroundColor: AppColors.mainAppColor,
-                child: SvgPicture.asset(AppImages.chatIcon),
+            12.sbW,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('deliveryAgent'.tr, style: AppTextStyle.text14RS().copyWith(color: AppColors.mainAppColor)),
+                  4.sbH,
+                  Text(orders?.delegateName ?? '', style: AppTextStyle.text18BS()),
+                  5.sbH,
+                  if ((orders?.delegateMobile ?? '').isNotEmpty)
+                    Text(orders!.delegateMobile!, style: AppTextStyle.text13RG()),
+                ],
               ),
             ),
+            _ActionButton(
+              icon: AppImages.callIcon,
+              onTap: () => UrlLauncherMethods.makePhoneCall(orders?.delegateMobile ?? ''),
+            ),
+            8.sbW,
+            _ActionButton(
+              icon: AppImages.chatIcon,
+              onTap: () {
+                NamedNavigatorImpl.push(
+                  ChatScreen.routeName,
+                  arguments: ChatScreenArgs(
+                    orderId: 'DC${orders?.id ?? 0}',
+                    accountType: 'user',
+                    isVendor: false,
+                    receiverDeviceToken: orders?.delegateFcmId ?? '',
+                    receiverName: orders?.delegateName ?? '',
+                    senderDeviceToken: orders?.userFcmId ?? '',
+                    senderName: orders?.userName ?? '',
+                    vendorDeviceToken: orders?.resturantVendorDeviceToken ?? '',
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final String icon;
+  final VoidCallback onTap;
+
+  const _ActionButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.mainAppColor.withValues(alpha: .10),
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: 42,
+          height: 42,
+          child: Center(
+            child: SvgPicture.asset(
+              icon,
+              width: 20,
+              height: 20,
+              colorFilter: ColorFilter.mode(AppColors.mainAppColor, BlendMode.srcIn),
+            ),
           ),
-        ],
+        ),
       ),
     );
   }

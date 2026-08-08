@@ -78,12 +78,12 @@ class _WalletContent extends StatelessWidget {
                   children: [
                     Text(
                       balance.toStringAsFixed(2),
-                      style: AppTextStyle.text28BS().copyWith(color: AppColors.blackColor),
+                      style: AppTextStyle.text20BS().copyWith(fontSize: 28, color: AppColors.blackColor),
                     ),
                     const SizedBox(width: 6),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 5),
-                      child: Text('جنيه', style: AppTextStyle.text12MS()),
+                      child: Text('جنيه', style: AppTextStyle.text14MS()),
                     ),
                   ],
                 ),
@@ -150,7 +150,7 @@ class _WalletButton extends StatelessWidget {
           side: BorderSide(color: AppColors.mainAppColor, width: 1.2),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           padding: const EdgeInsets.symmetric(horizontal: 8),
-          textStyle: AppTextStyle.text12BS(),
+          textStyle: AppTextStyle.text14BS(),
         ),
       ),
     );

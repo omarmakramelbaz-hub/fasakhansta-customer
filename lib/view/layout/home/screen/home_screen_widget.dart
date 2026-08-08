@@ -19,28 +19,32 @@ class SliderWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sliderData = controller.slider.isEmpty ? controller.defaultSlider : controller.slider;
-    if (controller.defaultSlider.isNotEmpty || controller.slider.isNotEmpty) {
-      return Padding(
-        padding: const EdgeInsets.only(top: 10),
-        child: CustomSlider(
-          color: AppColors.mainAppColor,
-          hasDots: false,
-          sliderArguments: List.generate(
-            sliderData.length,
-            (index) => SliderArguments(
-              child: AdvertisementContainerWidget(
-                restaurantId: sliderData[index].resturantId ?? 0,
-                images: sliderData[index].imgaes?[0].url ?? '',
-                title: sliderData[index].title ?? '',
-                color: AppColors.mainAppColor,
-              ),
+
+    if (sliderData.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 2),
+      child: CustomSlider(
+        color: AppColors.mainAppColor,
+        hasDots: sliderData.length > 1,
+        isDotsOnContent: false,
+        aspectRatio: 2.05,
+        radius: 18,
+        sliderArguments: List.generate(
+          sliderData.length,
+          (index) => SliderArguments(
+            child: AdvertisementContainerWidget(
+              restaurantId: sliderData[index].resturantId ?? 0,
+              images: sliderData[index].imgaes?.isNotEmpty == true
+                  ? sliderData[index].imgaes![0].url ?? ''
+                  : '',
+              title: sliderData[index].title ?? '',
+              color: AppColors.mainAppColor,
             ),
           ),
         ),
-      );
-    } else {
-      return const SizedBox.shrink();
-    }
+      ),
+    );
   }
 }
 
@@ -97,29 +101,3 @@ class SpecialRestaurantsSectionWidget extends StatelessWidget {
     );
   }
 }
-
-// class PreviousOrdersSectionWidget extends StatelessWidget {
-//   final HomeController controller;
-//
-//   const PreviousOrdersSectionWidget({super.key, required this.controller});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     if (HiveMethods.getToken() == null || controller.previousOrders.isEmpty) {
-//       return const SizedBox.shrink();
-//     }
-//
-//     return Column(
-//       crossAxisAlignment: CrossAxisAlignment.start,
-//       children: [
-//         10.sbH,
-//         Padding(
-//           padding: const EdgeInsets.symmetric(horizontal: 16),
-//           child: Text('yourPreviousOrders'.tr, style: AppTextStyle.text16BS()),
-//         ),
-//         10.sbH,
-//         YourPreviousOrdersListViewWidget(previousOrders: controller.previousOrders),
-//       ],
-//     );
-//   }
-// }

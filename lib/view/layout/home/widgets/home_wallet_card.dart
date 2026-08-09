@@ -51,43 +51,61 @@ class _WalletContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 6),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.fromLTRB(30, 0, 30, 14),
+      padding: const EdgeInsets.fromLTRB(22, 18, 22, 20),
       decoration: BoxDecoration(
         color: AppColors.whiteColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.borderColorContainer),
+        borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(.06),
-            blurRadius: 14,
-            offset: const Offset(0, 5),
+            color: Colors.black.withOpacity(.08),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          Container(
+            width: 140,
+            height: 140,
+            decoration: BoxDecoration(
+              color: AppColors.offWhiteColor,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Icon(
+              Icons.account_balance_wallet_outlined,
+              size: 76,
+              color: AppColors.mainAppColor,
+            ),
+          ),
+          const SizedBox(width: 22),
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text('المحفظة', style: AppTextStyle.text14BS()),
+                Text('المحفظة', style: AppTextStyle.text17BS()),
                 const SizedBox(height: 2),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
                       balance.toStringAsFixed(2),
-                      style: AppTextStyle.text20BS().copyWith(fontSize: 28, color: AppColors.blackColor),
+                      style: AppTextStyle.text20BS().copyWith(
+                        fontSize: 38,
+                        color: AppColors.blackColor,
+                      ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 8),
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 5),
-                      child: Text('جنيه', style: AppTextStyle.text14MS()),
+                      padding: const EdgeInsets.only(bottom: 7),
+                      child: Text('جنيه', style: AppTextStyle.text16MS()),
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 18),
                 Row(
                   children: [
                     Expanded(
@@ -98,7 +116,7 @@ class _WalletContent extends StatelessWidget {
                         onTap: () => NamedNavigatorImpl.push(WalletScreen.routeName),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: _WalletButton(
                         title: 'تفاصيل المحفظة',
@@ -111,16 +129,6 @@ class _WalletContent extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 14),
-          Container(
-            width: 82,
-            height: 82,
-            decoration: BoxDecoration(
-              color: AppColors.offWhiteColor,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Icon(Icons.account_balance_wallet_outlined, size: 48, color: AppColors.mainAppColor),
           ),
         ],
       ),
@@ -139,16 +147,16 @@ class _WalletButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 38,
+      height: 52,
       child: OutlinedButton.icon(
         onPressed: onTap,
-        icon: Icon(icon, size: 18),
+        icon: Icon(icon, size: 22),
         label: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
         style: OutlinedButton.styleFrom(
           backgroundColor: filled ? AppColors.mainAppColor : AppColors.whiteColor,
           foregroundColor: filled ? AppColors.whiteColor : AppColors.blackColor,
-          side: BorderSide(color: AppColors.mainAppColor, width: 1.2),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          side: BorderSide(color: AppColors.mainAppColor, width: 1.6),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           padding: const EdgeInsets.symmetric(horizontal: 8),
           textStyle: AppTextStyle.text14BS(),
         ),
@@ -163,11 +171,11 @@ class _WalletSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 156,
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+      height: 220,
+      margin: const EdgeInsets.fromLTRB(30, 0, 30, 14),
       decoration: BoxDecoration(
         color: AppColors.lightGreyColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(30),
       ),
     );
   }

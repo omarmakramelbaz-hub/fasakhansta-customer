@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import '../../../../helpers/routes/app_routers_import.dart';
 import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/theme/app_text_style.dart';
+import '../../restaurants/screen/restaurant_details_screen.dart';
 import '../controller/home_controller.dart';
 import '../screen/draw_resturant_screen.dart';
-import '../../restaurants/screen/restaurant_details_screen.dart';
 
 class HomeFeatureCards extends StatelessWidget {
   final HomeController controller;
@@ -15,7 +15,7 @@ class HomeFeatureCards extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(48, 8, 48, 0),
+      padding: const EdgeInsets.fromLTRB(48, 6, 48, 0),
       child: Row(
         children: [
           Expanded(
@@ -31,7 +31,7 @@ class HomeFeatureCards extends StatelessWidget {
               onTap: () => NamedNavigatorImpl.push(DrawRestaurantScreen.routeName),
             ),
           ),
-          const SizedBox(width: 18),
+          const SizedBox(width: 14),
           Expanded(
             child: _FeatureCard(
               background: const Color(0xFFFFF3E5),
@@ -87,64 +87,64 @@ class _FeatureCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
-        height: 172,
-        padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+        height: 104,
+        padding: const EdgeInsets.fromLTRB(10, 10, 10, 9),
         decoration: BoxDecoration(
           color: background,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(color: AppColors.borderColorContainer.withOpacity(.5)),
         ),
         child: Row(
-          textDirection: TextDirection.rtl,
           children: [
             Container(
-              width: 76,
-              height: 76,
+              width: 54,
+              height: 54,
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(.10),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 52, color: iconColor),
+              child: Icon(icon, size: 34, color: iconColor),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 9),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     title,
                     textAlign: TextAlign.right,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTextStyle.text15BS().copyWith(color: titleColor),
+                    style: AppTextStyle.text13BS().copyWith(color: titleColor),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 2),
                   Text(
                     subtitle,
                     textAlign: TextAlign.right,
                     maxLines: 2,
-                    style: AppTextStyle.text12RS().copyWith(
+                    style: AppTextStyle.text10RS().copyWith(
                       color: subtitleColor,
-                      height: 1.45,
+                      height: 1.25,
                     ),
                   ),
-                  const Spacer(),
+                  const SizedBox(height: 5),
                   SizedBox(
-                    height: 42,
+                    height: 28,
                     child: ElevatedButton(
                       onPressed: onTap,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.mainAppColor,
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 11),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(13),
+                          borderRadius: BorderRadius.circular(9),
                         ),
                       ),
-                      child: Text(button, style: AppTextStyle.text12BS(color: Colors.white)),
+                      child: Text(button, style: AppTextStyle.text10BS(color: Colors.white)),
                     ),
                   ),
                 ],

@@ -10,7 +10,6 @@ import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/theme/app_text_style.dart';
 import '../../../../helpers/translation/all_translation.dart';
 import '../../../custom_widgets/api_response_widget/api_response_widget.dart';
-import '../../../custom_widgets/custom_image/custom_image.dart';
 import '../../../custom_widgets/custom_image/custom_network_image.dart';
 import '../../../custom_widgets/custom_loading/custom_shimmer.dart';
 import '../../restaurants/screen/restaurant_details_screen.dart';
@@ -32,13 +31,13 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
           ),
       isEmpty: restaurantsNearYou.isEmpty,
       loadingWidget: CustomShimmer(
-        height: 132,
+        height: 180,
         width: double.infinity,
         fillColor: AppColors.greyColor.withValues(alpha: 0.05),
         shimmerColor: AppColors.mainAppColor,
       ),
       child: SizedBox(
-        height: 136,
+        height: 188,
         child: ListView.separated(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           scrollDirection: Axis.horizontal,
@@ -49,13 +48,13 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
             final canOpen = model.underContract != 'yes' && model.status != 'busy' && model.status != 'closed';
 
             return SizedBox(
-              width: 250,
-              height: 126,
+              width: 122,
+              height: 184,
               child: Material(
                 color: AppColors.whiteColor,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(18),
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(18),
                   onTap: canOpen
                       ? () => NamedNavigatorImpl.push(
                             RestaurantDetailsScreen.routeName,
@@ -64,101 +63,44 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
                       : null,
                   child: Container(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
+                      color: AppColors.whiteColor,
+                      borderRadius: BorderRadius.circular(18),
                       border: Border.all(color: AppColors.borderColorContainer),
                       boxShadow: [
                         BoxShadow(
                           color: AppColors.blackColor.withOpacity(.05),
-                          blurRadius: 10,
+                          blurRadius: 9,
                           offset: const Offset(0, 4),
                         ),
                       ],
                     ),
                     clipBehavior: Clip.antiAlias,
-                    child: Row(
-                      textDirection: TextDirection.rtl,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(10, 10, 8, 8),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  model.name ?? '',
-                                  style: AppTextStyle.text15BS(),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 5),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    SvgPicture.asset(AppImages.starIcon, width: 14, height: 14),
-                                    const SizedBox(width: 3),
-                                    Text(model.avgRate?.toStringAsFixed(1) ?? '0.0', style: AppTextStyle.text12BS()),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  model.address ?? model.cityName ?? '',
-                                  style: AppTextStyle.text11RS(color: AppColors.greyColor),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.right,
-                                ),
-                                const SizedBox(height: 5),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    SvgPicture.asset(AppImages.clockIcon, width: 13, height: 13),
-                                    const SizedBox(width: 3),
-                                    Flexible(
-                                      child: Text(
-                                        model.deliveryTime ?? 'توصيل سريع',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: AppTextStyle.text11BS(color: AppColors.mainAppColor),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  canOpen ? 'مفتوح الآن' : (model.status == 'closed' ? 'مغلق' : 'غير متاح'),
-                                  style: AppTextStyle.text11BS(
-                                    color: canOpen ? AppColors.greenColor : AppColors.greyColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
                         SizedBox(
-                          width: 105,
-                          height: double.infinity,
+                          height: 92,
                           child: Stack(
                             fit: StackFit.expand,
                             children: [
                               CustomNetworkImage(
-                                imageUrl: model.bgImage ?? '',
-                                height: 126,
-                                width: 105,
+                                imageUrl: model.bgImage ?? model.logo ?? '',
+                                height: 92,
+                                width: 122,
                                 radius: 0,
                                 fit: BoxFit.cover,
                               ),
                               Positioned(
                                 top: 7,
-                                left: 7,
+                                right: 7,
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                                   decoration: BoxDecoration(
                                     color: AppColors.mainAppColor,
-                                    borderRadius: BorderRadius.circular(9),
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Text(
-                                    model.deliveryTime ?? 'توصيل سريع',
+                                    model.deliveryTime ?? 'سريع',
                                     style: AppTextStyle.text10BW(color: AppColors.whiteColor),
                                   ),
                                 ),
@@ -166,6 +108,51 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
                               BranchLogoWidget(model: model),
                               IsRestaurantBusyWidget(model: model),
                             ],
+                          ),
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(7, 6, 7, 6),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  model.name ?? '',
+                                  style: AppTextStyle.text13BS(),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  model.address ?? model.cityName ?? '',
+                                  style: AppTextStyle.text10RS(color: AppColors.lightTextColor),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.right,
+                                ),
+                                const Spacer(),
+                                Row(
+                                  children: [
+                                    if (model.kmPrice != null) ...[
+                                      const Icon(Icons.delivery_dining_rounded, size: 14),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        '${model.kmPrice!.toStringAsFixed(0)} جنيه',
+                                        style: AppTextStyle.text10RS(color: AppColors.greyColor),
+                                      ),
+                                      const Spacer(),
+                                    ] else
+                                      const Spacer(),
+                                    const Icon(Icons.star_rounded, size: 16, color: Colors.deepOrange),
+                                    const SizedBox(width: 2),
+                                    Text(
+                                      model.avgRate?.toStringAsFixed(1) ?? '0.0',
+                                      style: AppTextStyle.text10BS(),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -194,41 +181,18 @@ class BranchLogoWidget extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(2),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: AppColors.whiteColor, width: 2),
           color: AppColors.whiteColor,
         ),
         child: CustomNetworkImage(
           imageUrl: model.logo ?? '',
-          height: 30,
-          width: 30,
-          radius: 9,
+          height: 28,
+          width: 28,
+          radius: 8,
           fit: BoxFit.contain,
         ),
       ),
-    );
-  }
-}
-
-class IsFreeDeliveryWidget extends StatelessWidget {
-  final RestaurantsNearYouHomeModel model;
-  const IsFreeDeliveryWidget({super.key, required this.model});
-
-  @override
-  Widget build(BuildContext context) {
-    if (model.kmPrice == 0) {
-      return Text(
-        'freeDelivery'.tr,
-        style: AppTextStyle.text16RS().copyWith(fontSize: 14, color: AppColors.lightTextColor),
-      );
-    }
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const CustomImage(path: AppImages.fastDeliveryImage, width: 16, type: ImageType.asset),
-        3.sbW,
-        Text('egyp'.tr.replaceAll('{}', model.kmPrice.toString()), style: AppTextStyle.text14MS()),
-      ],
     );
   }
 }

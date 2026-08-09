@@ -159,7 +159,7 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
                                   ),
                                   child: Text(
                                     model.deliveryTime ?? 'توصيل سريع',
-                                    style: AppTextStyle.text10BS(color: AppColors.whiteColor),
+                                    style: AppTextStyle.text10BW(color: AppColors.whiteColor),
                                   ),
                                 ),
                               ),

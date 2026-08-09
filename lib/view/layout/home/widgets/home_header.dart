@@ -26,9 +26,9 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
     return ClipPath(
       clipper: const _ReferenceHeaderClipper(),
       child: Container(
-        height: 250,
+        height: 168,
         color: AppColors.mainAppColor,
-        padding: const EdgeInsets.fromLTRB(28, 24, 28, 34),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -36,25 +36,25 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
               flex: 6,
               child: InkWell(
                 onTap: () => NamedNavigatorImpl.push(SearchScreen.routeName),
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(22),
                 child: Container(
-                  height: 82,
-                  padding: const EdgeInsets.symmetric(horizontal: 22),
+                  height: 48,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
                   decoration: BoxDecoration(
                     color: AppColors.whiteColor,
-                    borderRadius: BorderRadius.circular(28),
+                    borderRadius: BorderRadius.circular(22),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.search_rounded, size: 38, color: Colors.black),
-                      const SizedBox(width: 12),
+                      const Icon(Icons.search_rounded, size: 28, color: Colors.black),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'ابحث عن منتج أو فرع...',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.right,
-                          style: AppTextStyle.text16RS(color: AppColors.hintColor),
+                          style: AppTextStyle.text14RS(color: AppColors.hintColor),
                         ),
                       ),
                     ],
@@ -62,15 +62,14 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 28),
+            const SizedBox(width: 12),
             Expanded(
               flex: 4,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Icon(Icons.location_on_outlined, color: Colors.white, size: 52),
-                  const SizedBox(width: 8),
+                  const Icon(Icons.location_on_outlined, color: Colors.white, size: 32),
+                  const SizedBox(width: 5),
                   Flexible(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
@@ -78,20 +77,19 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
                       children: [
                         Text(
                           'التوصيل إلى',
-                          style: AppTextStyle.text14RS().copyWith(color: Colors.white),
+                          style: AppTextStyle.text11RG().copyWith(color: Colors.white.withOpacity(.95)),
                         ),
-                        const SizedBox(height: 4),
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white, size: 22),
+                            const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white, size: 18),
                             Flexible(
                               child: Text(
                                 location.isEmpty ? 'اختر العنوان' : location,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.end,
-                                style: AppTextStyle.text14BS().copyWith(color: Colors.white),
+                                style: AppTextStyle.text12BS().copyWith(color: Colors.white),
                               ),
                             ),
                           ],
@@ -109,7 +107,7 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(250);
+  Size get preferredSize => const Size.fromHeight(168);
 }
 
 class _ReferenceHeaderClipper extends CustomClipper<Path> {
@@ -117,13 +115,13 @@ class _ReferenceHeaderClipper extends CustomClipper<Path> {
 
   @override
   Path getClip(Size size) {
-    final bottom = size.height - 18;
+    final bottom = size.height - 22;
     final path = Path()..moveTo(0, 0);
     path.lineTo(size.width, 0);
-    path.lineTo(size.width, bottom - 2);
-    path.lineTo(size.width * .67, bottom + 5);
-    path.lineTo(size.width * .34, bottom - 8);
-    path.lineTo(0, bottom + 2);
+    path.lineTo(size.width, bottom + 2);
+    path.lineTo(size.width * .66, bottom - 5);
+    path.lineTo(size.width * .34, bottom + 4);
+    path.lineTo(0, bottom - 2);
     path.close();
     return path;
   }

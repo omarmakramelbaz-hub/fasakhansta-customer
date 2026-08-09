@@ -195,17 +195,14 @@ class _HomeScreenState extends State<HomeScreen> {
     return Consumer<HomeController>(
       builder: (context, controller, _) {
         return Scaffold(
-          // The reference design has the wallet physically floating ABOVE the
-          // orange header, so the header, content and wallet must share one
-          // Stack instead of relying on a translated body below an AppBar.
           body: Stack(
             clipBehavior: Clip.none,
             children: [
-              const Positioned(
+              Positioned(
                 top: 0,
                 left: 0,
                 right: 0,
-                child: HomeHeader(controller: null),
+                child: HomeHeader(controller: controller),
               ),
               Positioned.fill(
                 child: SingleChildScrollView(
@@ -232,7 +229,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 top: 112,
                 left: 0,
                 right: 0,
-                child: HomeWalletCard(),
+                child: const HomeWalletCard(),
               ),
             ],
           ),

@@ -22,8 +22,7 @@ import '../../auth/model/profile_model.dart';
 import '../controller/home_controller.dart';
 import '../model/previous_order_home_model.dart';
 import '../model/restaurants_near_you_home_model.dart';
-import '../widgets/coupon_widget.dart';
-import '../widgets/go_drive_card_widget.dart';
+import '../widgets/home_feature_cards.dart';
 import '../widgets/home_header.dart';
 import '../widgets/home_wallet_card.dart';
 import '../widgets/restaurants_and_delegate_request_widget.dart';
@@ -185,7 +184,6 @@ class _HomeScreenState extends State<HomeScreen> {
         lat: double.tryParse(address.lat ?? '') ?? HiveMethods.getLat(),
         lng: double.tryParse(address.lng ?? '') ?? HiveMethods.getLan(),
       ),
-      homeController.getRestaurantsNearYou(lat: HiveMethods.getLat(), lng: HiveMethods.getLan()),
       homeController.getCoupon(lat: HiveMethods.getLat(), lng: HiveMethods.getLan()),
       homeController.getPreviousOrder(),
       homeController.getSpacialRestaurants(lat: HiveMethods.getLat(), lng: HiveMethods.getLan()),
@@ -205,30 +203,19 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Transform.translate(
-                  offset: const Offset(0, -42),
+                  offset: const Offset(0, -56),
                   child: const HomeWalletCard(),
                 ),
                 Transform.translate(
-                  offset: const Offset(0, -42),
+                  offset: const Offset(0, -46),
                   child: SliderWidget(controller: controller),
                 ),
-                if (HiveMethods.getToken() != null)
-                  ApiResponseWidget(
-                    apiResponse: controller.couponResponse,
-                    onReload: () => controller.getCoupon(),
-                    isEmpty: controller.coupon == null,
-                    emptyWidget: const SizedBox.shrink(),
-                    errorWidget: const SizedBox.shrink(),
-                    loadingWidget: const SizedBox.shrink(),
-                    child: CouponWidget(controller: controller),
-                  ),
-                SpecialRestaurantsSectionWidget(controller: controller),
+                HomeFeatureCards(controller: controller),
                 RestaurantsNearYouWidget(controller: controller),
                 10.sbH,
                 Row(
                   children: [
                     RestaurantsAndDelegateRequestWidget(controller: controller),
-                    GoDriveCardWidget(controller: controller),
                   ],
                 ),
                 20.sbH,

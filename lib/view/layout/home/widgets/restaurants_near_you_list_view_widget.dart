@@ -32,13 +32,13 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
           ),
       isEmpty: restaurantsNearYou.isEmpty,
       loadingWidget: CustomShimmer(
-        height: 205,
+        height: 132,
         width: double.infinity,
         fillColor: AppColors.greyColor.withValues(alpha: 0.05),
         shimmerColor: AppColors.mainAppColor,
       ),
       child: SizedBox(
-        height: 210,
+        height: 136,
         child: ListView.separated(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           scrollDirection: Axis.horizontal,
@@ -49,7 +49,8 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
             final canOpen = model.underContract != 'yes' && model.status != 'busy' && model.status != 'closed';
 
             return SizedBox(
-              width: 180,
+              width: 250,
+              height: 126,
               child: Material(
                 color: AppColors.whiteColor,
                 borderRadius: BorderRadius.circular(16),
@@ -73,76 +74,97 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    clipBehavior: Clip.antiAlias,
+                    child: Row(
+                      textDirection: TextDirection.rtl,
                       children: [
-                        Stack(
-                          children: [
-                            CustomNetworkImage(
-                              imageUrl: model.bgImage ?? '',
-                              height: 105,
-                              width: 180,
-                              radius: 16,
-                              fit: BoxFit.cover,
-                            ),
-                            Positioned(
-                              top: 8,
-                              left: 8,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: AppColors.mainAppColor,
-                                  borderRadius: BorderRadius.circular(10),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(10, 10, 8, 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  model.name ?? '',
+                                  style: AppTextStyle.text15BS(),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                child: Text(
-                                  model.deliveryTime ?? 'توصيل سريع',
-                                  style: AppTextStyle.text12BS(color: AppColors.whiteColor),
+                                const SizedBox(height: 5),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    SvgPicture.asset(AppImages.starIcon, width: 14, height: 14),
+                                    const SizedBox(width: 3),
+                                    Text(model.avgRate?.toStringAsFixed(1) ?? '0.0', style: AppTextStyle.text12BS()),
+                                  ],
                                 ),
-                              ),
-                            ),
-                            BranchLogoWidget(model: model),
-                            IsRestaurantBusyWidget(model: model),
-                          ],
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                model.name ?? '',
-                                style: AppTextStyle.text16BS(),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 5),
-                              Row(
-                                children: [
-                                  SvgPicture.asset(AppImages.clockIcon, width: 14, height: 14),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(
-                                      model.address ?? model.cityName ?? '',
-                                      style: AppTextStyle.text14RS(color: AppColors.greyColor),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                const SizedBox(height: 4),
+                                Text(
+                                  model.address ?? model.cityName ?? '',
+                                  style: AppTextStyle.text11RS(color: AppColors.greyColor),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.right,
+                                ),
+                                const SizedBox(height: 5),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    SvgPicture.asset(AppImages.clockIcon, width: 13, height: 13),
+                                    const SizedBox(width: 3),
+                                    Flexible(
+                                      child: Text(
+                                        model.deliveryTime ?? 'توصيل سريع',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: AppTextStyle.text11BS(color: AppColors.mainAppColor),
+                                      ),
                                     ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  canOpen ? 'مفتوح الآن' : (model.status == 'closed' ? 'مغلق' : 'غير متاح'),
+                                  style: AppTextStyle.text11BS(
+                                    color: canOpen ? AppColors.greenColor : AppColors.greyColor,
                                   ),
-                                  SvgPicture.asset(AppImages.starIcon, width: 14, height: 14),
-                                  const SizedBox(width: 3),
-                                  Text(
-                                    model.avgRate?.toStringAsFixed(1) ?? '0.0',
-                                    style: AppTextStyle.text14BS(),
-                                  ),
-                                ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 105,
+                          height: double.infinity,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              CustomNetworkImage(
+                                imageUrl: model.bgImage ?? '',
+                                height: 126,
+                                width: 105,
+                                radius: 0,
+                                fit: BoxFit.cover,
                               ),
-                              const SizedBox(height: 5),
-                              Text(
-                                canOpen ? 'مفتوح الآن' : (model.status == 'closed' ? 'مغلق' : 'غير متاح'),
-                                style: AppTextStyle.text14BS(
-                                  color: canOpen ? AppColors.greenColor : AppColors.greyColor,
+                              Positioned(
+                                top: 7,
+                                left: 7,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.mainAppColor,
+                                    borderRadius: BorderRadius.circular(9),
+                                  ),
+                                  child: Text(
+                                    model.deliveryTime ?? 'توصيل سريع',
+                                    style: AppTextStyle.text10BS(color: AppColors.whiteColor),
+                                  ),
                                 ),
                               ),
+                              BranchLogoWidget(model: model),
+                              IsRestaurantBusyWidget(model: model),
                             ],
                           ),
                         ),
@@ -178,9 +200,9 @@ class BranchLogoWidget extends StatelessWidget {
         ),
         child: CustomNetworkImage(
           imageUrl: model.logo ?? '',
-          height: 32,
-          width: 32,
-          radius: 10,
+          height: 30,
+          width: 30,
+          radius: 9,
           fit: BoxFit.contain,
         ),
       ),
@@ -225,7 +247,6 @@ class IsRestaurantBusyWidget extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.blackColor.withOpacity(.48),
-          borderRadius: BorderRadius.circular(16),
         ),
         alignment: Alignment.center,
         child: Text(

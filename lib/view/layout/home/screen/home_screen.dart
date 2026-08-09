@@ -24,7 +24,6 @@ import '../model/restaurants_near_you_home_model.dart';
 import '../widgets/home_feature_cards.dart';
 import '../widgets/home_header.dart';
 import '../widgets/home_wallet_card.dart';
-import '../widgets/restaurants_and_delegate_request_widget.dart';
 import 'home_screen_widget.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -214,12 +213,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       SliderWidget(controller: controller),
                       HomeFeatureCards(controller: controller),
                       RestaurantsNearYouWidget(controller: controller),
-                      10.sbH,
-                      Row(
-                        children: [
-                          RestaurantsAndDelegateRequestWidget(controller: controller),
-                        ],
-                      ),
                       20.sbH,
                     ],
                   ),
@@ -229,7 +222,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 top: 112,
                 left: 0,
                 right: 0,
-                child: const HomeWalletCard(),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: const HomeWalletCard(),
+                ),
               ),
             ],
           ),

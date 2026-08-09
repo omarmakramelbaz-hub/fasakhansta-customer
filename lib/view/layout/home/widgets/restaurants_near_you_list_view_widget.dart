@@ -98,7 +98,7 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
                                   ),
                                   child: Text(
                                     model.deliveryTime ?? 'سريع',
-                                    style: AppTextStyle.text9BW(color: AppColors.whiteColor),
+                                    style: AppTextStyle.text10BW(color: AppColors.whiteColor),
                                   ),
                                 ),
                               ),
@@ -122,7 +122,7 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
                                 const SizedBox(height: 2),
                                 Text(
                                   model.address ?? model.cityName ?? '',
-                                  style: AppTextStyle.text9RG(color: AppColors.lightTextColor),
+                                  style: AppTextStyle.text10RG(color: AppColors.lightTextColor),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   textAlign: TextAlign.right,
@@ -135,7 +135,7 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
                                       const SizedBox(width: 2),
                                       Text(
                                         '${model.kmPrice!.toStringAsFixed(0)} جنيه',
-                                        style: AppTextStyle.text9RG(color: AppColors.greyColor),
+                                        style: AppTextStyle.text10RG(color: AppColors.greyColor),
                                       ),
                                       const Spacer(),
                                     ] else
@@ -144,7 +144,7 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
                                     const SizedBox(width: 2),
                                     Text(
                                       model.avgRate?.toStringAsFixed(1) ?? '0.0',
-                                      style: AppTextStyle.text9BW(color: AppColors.blackColor),
+                                      style: AppTextStyle.text10BW(color: AppColors.blackColor),
                                     ),
                                   ],
                                 ),

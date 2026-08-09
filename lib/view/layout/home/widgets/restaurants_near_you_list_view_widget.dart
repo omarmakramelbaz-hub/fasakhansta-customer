@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../helpers/extensions/extensions.dart';
 import '../../../../helpers/hive/hive_methods.dart';
 import '../../../../helpers/routes/app_routers_import.dart';
 import '../../../../helpers/theme/app_colors.dart';
@@ -29,13 +28,13 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
           ),
       isEmpty: restaurantsNearYou.isEmpty,
       loadingWidget: CustomShimmer(
-        height: 180,
+        height: 166,
         width: double.infinity,
         fillColor: AppColors.greyColor.withValues(alpha: 0.05),
         shimmerColor: AppColors.mainAppColor,
       ),
       child: SizedBox(
-        height: 188,
+        height: 166,
         child: ListView.separated(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           scrollDirection: Axis.horizontal,
@@ -46,13 +45,13 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
             final canOpen = model.underContract != 'yes' && model.status != 'busy' && model.status != 'closed';
 
             return SizedBox(
-              width: 122,
-              height: 184,
+              width: 118,
+              height: 162,
               child: Material(
                 color: AppColors.whiteColor,
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(16),
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(16),
                   onTap: canOpen
                       ? () => NamedNavigatorImpl.push(
                             RestaurantDetailsScreen.routeName,
@@ -62,13 +61,13 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       color: AppColors.whiteColor,
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: AppColors.borderColorContainer),
                       boxShadow: [
                         BoxShadow(
                           color: AppColors.blackColor.withOpacity(.05),
-                          blurRadius: 9,
-                          offset: const Offset(0, 4),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
                         ),
                       ],
                     ),
@@ -77,29 +76,29 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         SizedBox(
-                          height: 92,
+                          height: 84,
                           child: Stack(
                             fit: StackFit.expand,
                             children: [
                               CustomNetworkImage(
                                 imageUrl: model.bgImage ?? model.logo ?? '',
-                                height: 92,
-                                width: 122,
+                                height: 84,
+                                width: 118,
                                 radius: 0,
                                 fit: BoxFit.cover,
                               ),
                               Positioned(
-                                top: 7,
-                                right: 7,
+                                top: 6,
+                                right: 6,
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                                   decoration: BoxDecoration(
                                     color: AppColors.mainAppColor,
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(9),
                                   ),
                                   child: Text(
                                     model.deliveryTime ?? 'سريع',
-                                    style: AppTextStyle.text10BW(color: AppColors.whiteColor),
+                                    style: AppTextStyle.text9BW(color: AppColors.whiteColor),
                                   ),
                                 ),
                               ),
@@ -110,20 +109,20 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
                         ),
                         Expanded(
                           child: Padding(
-                            padding: const EdgeInsets.fromLTRB(7, 6, 7, 6),
+                            padding: const EdgeInsets.fromLTRB(7, 5, 7, 5),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
                                   model.name ?? '',
-                                  style: AppTextStyle.text13BS(),
+                                  style: AppTextStyle.text12BS(),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 3),
+                                const SizedBox(height: 2),
                                 Text(
                                   model.address ?? model.cityName ?? '',
-                                  style: AppTextStyle.text10RG(color: AppColors.lightTextColor),
+                                  style: AppTextStyle.text9RG(color: AppColors.lightTextColor),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   textAlign: TextAlign.right,
@@ -132,20 +131,20 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
                                 Row(
                                   children: [
                                     if (model.kmPrice != null) ...[
-                                      const Icon(Icons.delivery_dining_rounded, size: 14),
+                                      const Icon(Icons.delivery_dining_rounded, size: 12),
                                       const SizedBox(width: 2),
                                       Text(
                                         '${model.kmPrice!.toStringAsFixed(0)} جنيه',
-                                        style: AppTextStyle.text10RG(color: AppColors.greyColor),
+                                        style: AppTextStyle.text9RG(color: AppColors.greyColor),
                                       ),
                                       const Spacer(),
                                     ] else
                                       const Spacer(),
-                                    const Icon(Icons.star_rounded, size: 16, color: Colors.deepOrange),
+                                    const Icon(Icons.star_rounded, size: 14, color: Colors.deepOrange),
                                     const SizedBox(width: 2),
                                     Text(
                                       model.avgRate?.toStringAsFixed(1) ?? '0.0',
-                                      style: AppTextStyle.text10BW(color: AppColors.blackColor),
+                                      style: AppTextStyle.text9BW(color: AppColors.blackColor),
                                     ),
                                   ],
                                 ),
@@ -174,20 +173,20 @@ class BranchLogoWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      bottom: 6,
-      right: 6,
+      bottom: 5,
+      right: 5,
       child: Container(
         padding: const EdgeInsets.all(2),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(9),
           border: Border.all(color: AppColors.whiteColor, width: 2),
           color: AppColors.whiteColor,
         ),
         child: CustomNetworkImage(
           imageUrl: model.logo ?? '',
-          height: 28,
-          width: 28,
-          radius: 8,
+          height: 27,
+          width: 27,
+          radius: 7,
           fit: BoxFit.contain,
         ),
       ),

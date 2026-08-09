@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../helpers/extensions/extensions.dart';
 import '../../../../helpers/hive/hive_methods.dart';
-import '../../../../helpers/images/app_images.dart';
-import '../../../../helpers/routes/app_routers_import.dart';
 import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/theme/app_text_style.dart';
 import '../../../../helpers/translation/all_translation.dart';
@@ -125,7 +122,7 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
                                 const SizedBox(height: 3),
                                 Text(
                                   model.address ?? model.cityName ?? '',
-                                  style: AppTextStyle.text10RS(color: AppColors.lightTextColor),
+                                  style: AppTextStyle.text10RG(color: AppColors.lightTextColor),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   textAlign: TextAlign.right,
@@ -138,7 +135,7 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
                                       const SizedBox(width: 2),
                                       Text(
                                         '${model.kmPrice!.toStringAsFixed(0)} جنيه',
-                                        style: AppTextStyle.text10RS(color: AppColors.greyColor),
+                                        style: AppTextStyle.text10RG(color: AppColors.greyColor),
                                       ),
                                       const Spacer(),
                                     ] else
@@ -147,7 +144,7 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
                                     const SizedBox(width: 2),
                                     Text(
                                       model.avgRate?.toStringAsFixed(1) ?? '0.0',
-                                      style: AppTextStyle.text10BS(),
+                                      style: AppTextStyle.text10BW(color: AppColors.blackColor),
                                     ),
                                   ],
                                 ),

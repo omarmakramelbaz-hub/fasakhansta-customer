@@ -195,33 +195,46 @@ class _HomeScreenState extends State<HomeScreen> {
     return Consumer<HomeController>(
       builder: (context, controller, _) {
         return Scaffold(
-          appBar: HomeHeader(controller: controller),
-          body: SingleChildScrollView(
-            physics: const ClampingScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Float the wallet into the bottom edge of the orange header.
-                Transform.translate(
-                  offset: const Offset(0, -56),
-                  child: const HomeWalletCard(),
+          // The reference design has the wallet physically floating ABOVE the
+          // orange header, so the header, content and wallet must share one
+          // Stack instead of relying on a translated body below an AppBar.
+          body: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              const Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: HomeHeader(controller: null),
+              ),
+              Positioned.fill(
+                child: SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  padding: const EdgeInsets.only(top: 238),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SliderWidget(controller: controller),
+                      HomeFeatureCards(controller: controller),
+                      RestaurantsNearYouWidget(controller: controller),
+                      10.sbH,
+                      Row(
+                        children: [
+                          RestaurantsAndDelegateRequestWidget(controller: controller),
+                        ],
+                      ),
+                      20.sbH,
+                    ],
+                  ),
                 ),
-                // Pull the banner up so it sits directly under the floating wallet.
-                Transform.translate(
-                  offset: const Offset(0, -58),
-                  child: SliderWidget(controller: controller),
-                ),
-                HomeFeatureCards(controller: controller),
-                RestaurantsNearYouWidget(controller: controller),
-                10.sbH,
-                Row(
-                  children: [
-                    RestaurantsAndDelegateRequestWidget(controller: controller),
-                  ],
-                ),
-                20.sbH,
-              ],
-            ),
+              ),
+              Positioned(
+                top: 112,
+                left: 0,
+                right: 0,
+                child: HomeWalletCard(),
+              ),
+            ],
           ),
         );
       },

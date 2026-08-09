@@ -23,13 +23,13 @@ class SliderWidget extends StatelessWidget {
     if (sliderData.isEmpty) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 2),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 2),
       child: CustomSlider(
         color: AppColors.mainAppColor,
         hasDots: sliderData.length > 1,
         isDotsOnContent: false,
-        aspectRatio: 2.05,
-        radius: 18,
+        aspectRatio: 1.95,
+        radius: 22,
         sliderArguments: List.generate(
           sliderData.length,
           (index) => SliderArguments(
@@ -65,8 +65,27 @@ class RestaurantsNearYouWidget extends StatelessWidget {
         22.sbH,
         if (HiveMethods.getToken() != null) ...[
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text('restaurantsNearYou'.tr, style: AppTextStyle.text16BS()),
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            child: Row(
+              textDirection: TextDirection.rtl,
+              children: [
+                Icon(Icons.location_on_rounded, size: 22, color: AppColors.mainAppColor),
+                const SizedBox(width: 5),
+                Expanded(
+                  child: Text(
+                    'مطاعم قريبة منك',
+                    style: AppTextStyle.text18BS(),
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+                Text(
+                  'عرض الكل',
+                  style: AppTextStyle.text13BS().copyWith(color: AppColors.mainAppColor),
+                ),
+                const SizedBox(width: 3),
+                Icon(Icons.chevron_left_rounded, size: 22, color: AppColors.mainAppColor),
+              ],
+            ),
           ),
           10.sbH,
           RestaurantsNearYouListViewWidget(restaurantsNearYou: controller.restaurantsNearYou),

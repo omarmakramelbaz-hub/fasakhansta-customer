@@ -13,7 +13,6 @@ import '../../../../helpers/routes/app_routers_import.dart';
 import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/theme/app_text_style.dart';
 import '../../../../helpers/translation/all_translation.dart';
-import '../../../custom_widgets/api_response_widget/api_response_widget.dart';
 import '../../../custom_widgets/bottom_sheet/bottom_sheet_helper.dart';
 import '../../../custom_widgets/custom_image/custom_image.dart';
 import '../../address/screen/add_address_screen.dart';
@@ -202,12 +201,14 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Float the wallet into the bottom edge of the orange header.
                 Transform.translate(
                   offset: const Offset(0, -56),
                   child: const HomeWalletCard(),
                 ),
+                // Pull the banner up so it sits directly under the floating wallet.
                 Transform.translate(
-                  offset: const Offset(0, -46),
+                  offset: const Offset(0, -58),
                   child: SliderWidget(controller: controller),
                 ),
                 HomeFeatureCards(controller: controller),

@@ -28,8 +28,6 @@ class _HomeWalletCardState extends State<HomeWalletCard> {
   Widget build(BuildContext context) {
     return Consumer<WalletController>(
       builder: (context, controller, _) {
-        // Keep the card visible even while the wallet request is loading or fails.
-        // The real balance replaces the fallback as soon as the request succeeds.
         return _WalletContent(balance: controller.wallet?.balance ?? 0);
       },
     );
@@ -95,7 +93,10 @@ class _WalletContent extends StatelessWidget {
                     const SizedBox(width: 6),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4),
-                      child: Text('جنيه', style: AppTextStyle.text13MS()),
+                      child: Text(
+                        'جنيه',
+                        style: AppTextStyle.text16MS().copyWith(fontSize: 12),
+                      ),
                     ),
                   ],
                 ),

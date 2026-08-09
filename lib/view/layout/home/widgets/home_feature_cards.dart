@@ -125,7 +125,7 @@ class _FeatureCard extends StatelessWidget {
                     subtitle,
                     textAlign: TextAlign.right,
                     maxLines: 2,
-                    style: AppTextStyle.text10RS().copyWith(
+                    style: AppTextStyle.text10RG().copyWith(
                       color: subtitleColor,
                       height: 1.25,
                     ),
@@ -144,7 +144,7 @@ class _FeatureCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(9),
                         ),
                       ),
-                      child: Text(button, style: AppTextStyle.text10BS(color: Colors.white)),
+                      child: Text(button, style: AppTextStyle.text10BW(color: Colors.white)),
                     ),
                   ),
                 ],

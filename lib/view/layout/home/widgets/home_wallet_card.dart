@@ -158,7 +158,7 @@ class _WalletButton extends StatelessWidget {
           side: BorderSide(color: AppColors.mainAppColor, width: 1.4),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
           padding: const EdgeInsets.symmetric(horizontal: 5),
-          textStyle: AppTextStyle.text11BS(),
+          textStyle: AppTextStyle.text12BS(),
         ),
       ),
     );

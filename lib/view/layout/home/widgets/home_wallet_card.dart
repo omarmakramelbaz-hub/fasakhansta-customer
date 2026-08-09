@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../../../helpers/routes/app_routers_import.dart';
 import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/theme/app_text_style.dart';
-import '../../../custom_widgets/api_response_widget/api_response_widget.dart';
 import '../../wallet/controller/wallet_controller.dart';
 import '../../wallet/screen/wallet_screen.dart';
 
@@ -29,15 +28,9 @@ class _HomeWalletCardState extends State<HomeWalletCard> {
   Widget build(BuildContext context) {
     return Consumer<WalletController>(
       builder: (context, controller, _) {
-        return ApiResponseWidget(
-          apiResponse: controller.walletResponse,
-          onReload: controller.getWallet,
-          isEmpty: controller.wallet == null,
-          loadingWidget: const _WalletSkeleton(),
-          errorWidget: const SizedBox.shrink(),
-          emptyWidget: const SizedBox.shrink(),
-          child: _WalletContent(balance: controller.wallet?.balance ?? 0),
-        );
+        // Keep the card visible even while the wallet request is loading or fails.
+        // The real balance replaces the fallback as soon as the request succeeds.
+        return _WalletContent(balance: controller.wallet?.balance ?? 0);
       },
     );
   }
@@ -52,7 +45,7 @@ class _WalletContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.fromLTRB(30, 0, 30, 14),
-      padding: const EdgeInsets.fromLTRB(22, 18, 22, 20),
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
       decoration: BoxDecoration(
         color: AppColors.whiteColor,
         borderRadius: BorderRadius.circular(30),
@@ -68,25 +61,26 @@ class _WalletContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 140,
-            height: 140,
+            width: 72,
+            height: 72,
             decoration: BoxDecoration(
               color: AppColors.offWhiteColor,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(
               Icons.account_balance_wallet_outlined,
-              size: 76,
+              size: 42,
               color: AppColors.mainAppColor,
             ),
           ),
-          const SizedBox(width: 22),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text('المحفظة', style: AppTextStyle.text17BS()),
-                const SizedBox(height: 2),
+                Text('المحفظة', style: AppTextStyle.text15BS()),
+                const SizedBox(height: 1),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -94,18 +88,18 @@ class _WalletContent extends StatelessWidget {
                     Text(
                       balance.toStringAsFixed(2),
                       style: AppTextStyle.text20BS().copyWith(
-                        fontSize: 38,
+                        fontSize: 28,
                         color: AppColors.blackColor,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 7),
-                      child: Text('جنيه', style: AppTextStyle.text16MS()),
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text('جنيه', style: AppTextStyle.text13MS()),
                     ),
                   ],
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 8),
                 Row(
                   children: [
                     Expanded(
@@ -116,7 +110,7 @@ class _WalletContent extends StatelessWidget {
                         onTap: () => NamedNavigatorImpl.push(WalletScreen.routeName),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: _WalletButton(
                         title: 'تفاصيل المحفظة',
@@ -142,40 +136,29 @@ class _WalletButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
 
-  const _WalletButton({required this.title, required this.filled, required this.icon, required this.onTap});
+  const _WalletButton({
+    required this.title,
+    required this.filled,
+    required this.icon,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 52,
+      height: 38,
       child: OutlinedButton.icon(
         onPressed: onTap,
-        icon: Icon(icon, size: 22),
+        icon: Icon(icon, size: 17),
         label: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
         style: OutlinedButton.styleFrom(
           backgroundColor: filled ? AppColors.mainAppColor : AppColors.whiteColor,
           foregroundColor: filled ? AppColors.whiteColor : AppColors.blackColor,
-          side: BorderSide(color: AppColors.mainAppColor, width: 1.6),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          textStyle: AppTextStyle.text14BS(),
+          side: BorderSide(color: AppColors.mainAppColor, width: 1.4),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+          padding: const EdgeInsets.symmetric(horizontal: 5),
+          textStyle: AppTextStyle.text11BS(),
         ),
-      ),
-    );
-  }
-}
-
-class _WalletSkeleton extends StatelessWidget {
-  const _WalletSkeleton();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 220,
-      margin: const EdgeInsets.fromLTRB(30, 0, 30, 14),
-      decoration: BoxDecoration(
-        color: AppColors.lightGreyColor,
-        borderRadius: BorderRadius.circular(30),
       ),
     );
   }

@@ -254,12 +254,13 @@ class _SeaHeaderPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5
       ..color = Colors.white.withOpacity(.65);
-    for (final item in [
-      (size.width * .40, 35, 5.0),
-      (size.width * .48, 20, 3.0),
-      (size.width * .60, 43, 4.0),
-      (size.width * .64, 25, 2.0),
-    ]) {
+    final bubbles = <(double, double, double)>[
+      (size.width * .40, 35.0, 5.0),
+      (size.width * .48, 20.0, 3.0),
+      (size.width * .60, 43.0, 4.0),
+      (size.width * .64, 25.0, 2.0),
+    ];
+    for (final item in bubbles) {
       canvas.drawCircle(Offset(item.$1, item.$2), item.$3, bubblePaint);
     }
 

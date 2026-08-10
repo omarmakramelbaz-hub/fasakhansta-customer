@@ -43,6 +43,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _ensureProfileLoaded();
+      if (!mounted) return;
+      await context.read<HomeController>().getSlider();
       await _checkSelectedCity();
     });
 
@@ -178,10 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
     HiveMethods.updateSelectedCityAreaId(address.cityId ?? 0);
 
     Future.wait([
-      homeController.getRestaurantsNearYou(
-        lat: double.tryParse(address.lat ?? '') ?? HiveMethods.getLat(),
-        lng: double.tryParse(address.lng ?? '') ?? HiveMethods.getLan(),
-      ),
+      homeController.getRestaurantsNearYou(lat: double.tryParse(address.lat ?? '') ?? HiveMethods.getLat(), lng: double.tryParse(address.lng ?? '') ?? HiveMethods.getLan()),
       homeController.getCoupon(lat: HiveMethods.getLat(), lng: HiveMethods.getLan()),
       homeController.getPreviousOrder(),
       homeController.getSpacialRestaurants(lat: HiveMethods.getLat(), lng: HiveMethods.getLan()),
@@ -197,12 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
           body: Stack(
             clipBehavior: Clip.none,
             children: [
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: HomeHeader(controller: controller),
-              ),
+              Positioned(top: 0, left: 0, right: 0, child: HomeHeader(controller: controller)),
               Positioned.fill(
                 child: SingleChildScrollView(
                   physics: const ClampingScrollPhysics(),
@@ -218,15 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-              Positioned(
-                top: 112,
-                left: 0,
-                right: 0,
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child: const HomeWalletCard(),
-                ),
-              ),
+              const Positioned(top: 112, left: 0, right: 0, child: Align(alignment: Alignment.topCenter, child: HomeWalletCard())),
             ],
           ),
         );

@@ -13,16 +13,6 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
 
   const HomeHeader({super.key, required this.controller});
 
-  String? get _headerImageUrl {
-    for (final slider in controller.slider) {
-      for (final image in slider.imgaes ?? const []) {
-        final url = image.url?.trim();
-        if (url != null && url.isNotEmpty) return url;
-      }
-    }
-    return null;
-  }
-
   @override
   Widget build(BuildContext context) {
     final profile = context.watch<AuthController>().profile;
@@ -30,7 +20,7 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
     final location = [address?.streetName, address?.cityName]
         .where((value) => value != null && value.trim().isNotEmpty)
         .join(' - ');
-    final imageUrl = _headerImageUrl;
+    final imageUrl = controller.headerImageUrl;
 
     return ClipPath(
       clipper: const _SeaHeaderClipper(),

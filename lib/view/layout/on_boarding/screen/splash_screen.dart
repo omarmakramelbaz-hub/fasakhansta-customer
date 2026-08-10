@@ -86,7 +86,8 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<bool> _checkBiometrics() async {
-    if (kDebugMode) return true;
+    // local_auth is for native platforms. Never call it on Flutter Web.
+    if (kIsWeb || kDebugMode) return true;
 
     try {
       final canAuthenticate = await _localAuth.canCheckBiometrics;

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -26,18 +28,18 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
     return ClipPath(
       clipper: const _SeaHeaderClipper(),
       child: Container(
-        height: 228,
-        decoration: BoxDecoration(
+        height: 214,
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: [
-              AppColors.mainAppColor,
-              const Color(0xFFFF7A00),
-              const Color(0xFFFFB33D),
-              const Color(0xFFFFD98A),
+              Color(0xFFFF7A00),
+              Color(0xFFFF8D00),
+              Color(0xFFFFB12B),
+              Color(0xFFFFD36A),
             ],
-            stops: const [0, .42, .78, 1],
+            stops: [0, .38, .72, 1],
           ),
         ),
         child: Stack(
@@ -46,82 +48,104 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
             SafeArea(
               bottom: false,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 22),
                 child: Directionality(
                   textDirection: TextDirection.ltr,
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      _SearchButton(
+                        onTap: () => NamedNavigatorImpl.push(SearchScreen.routeName),
+                      ),
+                      const SizedBox(width: 8),
                       Expanded(
-                        flex: 6,
-                        child: InkWell(
-                          onTap: () => NamedNavigatorImpl.push(SearchScreen.routeName),
-                          borderRadius: BorderRadius.circular(18),
-                          child: Row(
-                            children: [
-                              _HeaderIconBox(
-                                icon: Icons.search_rounded,
-                                onTap: () => NamedNavigatorImpl.push(SearchScreen.routeName),
-                              ),
-                              const SizedBox(width: 9),
-                              Expanded(
-                                child: Text(
-                                  'ابحث عن منتج أو فرع ...',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.right,
-                                  textDirection: TextDirection.rtl,
-                                  style: AppTextStyle.text14BS().copyWith(
-                                    color: Colors.white,
-                                    fontSize: 13,
-                                  ),
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 7),
+                          child: Text(
+                            'ابحث عن منتج أو فرع ...',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.right,
+                            textDirection: TextDirection.rtl,
+                            style: AppTextStyle.text12BS().copyWith(
+                              color: Colors.white,
+                              fontSize: 12,
+                              shadows: const [
+                                Shadow(
+                                  color: Color(0x55000000),
+                                  blurRadius: 4,
+                                  offset: Offset(0, 1),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        flex: 5,
+                      const SizedBox(width: 8),
+                      Flexible(
+                        flex: 2,
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Flexible(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    'التوصيل إلى',
-                                    textDirection: TextDirection.rtl,
-                                    style: AppTextStyle.text12BS().copyWith(
-                                      color: Colors.white,
-                                      fontSize: 12,
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          Icons.keyboard_arrow_down_rounded,
+                                          color: Colors.white,
+                                          size: 17,
+                                        ),
+                                        const SizedBox(width: 2),
+                                        Text(
+                                          'التوصيل إلى',
+                                          textDirection: TextDirection.rtl,
+                                          style: AppTextStyle.text12BS().copyWith(
+                                            color: Colors.white,
+                                            fontSize: 11,
+                                            shadows: const [
+                                              Shadow(
+                                                color: Color(0x55000000),
+                                                blurRadius: 4,
+                                                offset: Offset(0, 1),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    location.isEmpty ? 'اختر العنوان' : location,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.right,
-                                    textDirection: TextDirection.rtl,
-                                    style: AppTextStyle.text12BS().copyWith(
-                                      color: Colors.white,
-                                      fontSize: 12,
+                                    const SizedBox(height: 1),
+                                    Text(
+                                      location.isEmpty ? 'اختر العنوان' : location,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      textAlign: TextAlign.right,
+                                      textDirection: TextDirection.rtl,
+                                      style: AppTextStyle.text12BS().copyWith(
+                                        color: Colors.white,
+                                        fontSize: 10.5,
+                                        shadows: const [
+                                          Shadow(
+                                            color: Color(0x55000000),
+                                            blurRadius: 4,
+                                            offset: Offset(0, 1),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                  const Icon(
-                                    Icons.keyboard_arrow_down_rounded,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                             const SizedBox(width: 7),
-                            _HeaderIconBox(icon: Icons.location_on_outlined),
+                            const _LocationButton(),
                           ],
                         ),
                       ),
@@ -137,34 +161,77 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(228);
+  Size get preferredSize => const Size.fromHeight(214);
 }
 
-class _HeaderIconBox extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback? onTap;
+class _SearchButton extends StatelessWidget {
+  final VoidCallback onTap;
 
-  const _HeaderIconBox({required this.icon, this.onTap});
+  const _SearchButton({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final box = Container(
-      width: 54,
-      height: 54,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 52,
+        height: 52,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x33000000),
+              blurRadius: 12,
+              offset: Offset(0, 6),
+            ),
+            BoxShadow(
+              color: Color(0x66FFFFFF),
+              blurRadius: 2,
+              offset: Offset(0, -1),
+            ),
+          ],
+        ),
+        child: Icon(
+          Icons.search_rounded,
+          color: AppColors.mainAppColor,
+          size: 29,
+        ),
+      ),
+    );
+  }
+}
+
+class _LocationButton extends StatelessWidget {
+  const _LocationButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 52,
+      height: 52,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(17),
-        boxShadow: [
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withOpacity(.12),
+            color: Color(0x33000000),
             blurRadius: 12,
-            offset: const Offset(0, 5),
+            offset: Offset(0, 6),
+          ),
+          BoxShadow(
+            color: Color(0x66FFFFFF),
+            blurRadius: 2,
+            offset: Offset(0, -1),
           ),
         ],
       ),
-      child: Icon(icon, color: AppColors.mainAppColor, size: 31),
+      child: Icon(
+        Icons.location_on_outlined,
+        color: AppColors.mainAppColor,
+        size: 29,
+      ),
     );
-    return onTap == null ? box : GestureDetector(onTap: onTap, child: box);
   }
 }
 
@@ -175,14 +242,27 @@ class _SeaHeaderClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     final path = Path()..moveTo(0, 0);
     path.lineTo(size.width, 0);
-    path.lineTo(size.width, size.height - 22);
-    const points = 10;
-    final step = size.width / points;
-    for (var i = points - 1; i >= 0; i--) {
-      final x = i * step;
-      final y = size.height - 22 - (i.isEven ? 16 : 0);
-      path.lineTo(x, y);
-    }
+    path.lineTo(size.width, size.height - 24);
+
+    final wave = Path();
+    wave.moveTo(size.width, size.height - 24);
+    wave.cubicTo(
+      size.width * .88,
+      size.height - 8,
+      size.width * .74,
+      size.height - 34,
+      size.width * .58,
+      size.height - 18,
+    );
+    wave.cubicTo(
+      size.width * .43,
+      size.height - 2,
+      size.width * .27,
+      size.height - 35,
+      0,
+      size.height - 13,
+    );
+    path.addPath(wave, Offset.zero);
     path.close();
     return path;
   }
@@ -194,119 +274,182 @@ class _SeaHeaderClipper extends CustomClipper<Path> {
 class _SeaHeaderPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final sun = Paint()..color = const Color(0xFFFFF2B8).withOpacity(.75);
-    canvas.drawCircle(Offset(size.width * .52, 82), 35, sun);
+    final center = Offset(size.width * .52, 76);
 
-    final glow = Paint()..color = Colors.white.withOpacity(.08);
-    canvas.drawCircle(Offset(size.width * .52, 82), 53, glow);
+    final glow = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          Colors.white.withOpacity(.28),
+          Colors.white.withOpacity(.08),
+          Colors.transparent,
+        ],
+      ).createShader(Rect.fromCircle(center: center, radius: 72));
+    canvas.drawCircle(center, 72, glow);
 
-    final mountainBack = Paint()..color = const Color(0xFFFF9A16).withOpacity(.85);
-    final back = Path()
-      ..moveTo(0, 154)
-      ..lineTo(size.width * .13, 100)
-      ..lineTo(size.width * .27, 150)
-      ..lineTo(size.width * .40, 105)
-      ..lineTo(size.width * .54, 153)
-      ..lineTo(size.width * .68, 108)
-      ..lineTo(size.width * .83, 150)
-      ..lineTo(size.width, 96)
-      ..lineTo(size.width, 205)
-      ..lineTo(0, 205)
+    final sun = Paint()..color = const Color(0xFFFFF2C2).withOpacity(.78);
+    canvas.drawCircle(center, 34, sun);
+
+    final horizon = Paint()..color = const Color(0xFFFF9A16).withOpacity(.56);
+    final horizonPath = Path()
+      ..moveTo(0, 138)
+      ..quadraticBezierTo(size.width * .12, 114, size.width * .24, 138)
+      ..quadraticBezierTo(size.width * .38, 162, size.width * .52, 134)
+      ..quadraticBezierTo(size.width * .67, 107, size.width * .82, 136)
+      ..quadraticBezierTo(size.width * .92, 155, size.width, 126)
+      ..lineTo(size.width, 214)
+      ..lineTo(0, 214)
       ..close();
-    canvas.drawPath(back, mountainBack);
+    canvas.drawPath(horizonPath, horizon);
 
-    final mountainFront = Paint()..color = const Color(0xFFE94F00).withOpacity(.9);
-    final front = Path()
-      ..moveTo(0, 176)
-      ..lineTo(size.width * .16, 130)
-      ..lineTo(size.width * .29, 177)
-      ..lineTo(size.width * .44, 128)
-      ..lineTo(size.width * .59, 179)
-      ..lineTo(size.width * .75, 133)
-      ..lineTo(size.width * .88, 176)
-      ..lineTo(size.width, 140)
-      ..lineTo(size.width, 220)
-      ..lineTo(0, 220)
+    final deepLayer = Paint()..color = const Color(0xFFE95300).withOpacity(.34);
+    final deepPath = Path()
+      ..moveTo(0, 171)
+      ..quadraticBezierTo(size.width * .18, 139, size.width * .35, 171)
+      ..quadraticBezierTo(size.width * .51, 199, size.width * .67, 166)
+      ..quadraticBezierTo(size.width * .83, 139, size.width, 168)
+      ..lineTo(size.width, 214)
+      ..lineTo(0, 214)
       ..close();
-    canvas.drawPath(front, mountainFront);
+    canvas.drawPath(deepPath, deepLayer);
 
-    final snow = Paint()..color = Colors.white.withOpacity(.82);
-    _drawTriangle(canvas, size.width * .16, 130, 20, snow);
-    _drawTriangle(canvas, size.width * .44, 128, 21, snow);
-    _drawTriangle(canvas, size.width * .75, 133, 19, snow);
+    _drawWave(
+      canvas,
+      size,
+      y: 148,
+      amplitude: 9,
+      color: Colors.white.withOpacity(.28),
+      width: 1.8,
+    );
+    _drawWave(
+      canvas,
+      size,
+      y: 170,
+      amplitude: 7,
+      color: Colors.white.withOpacity(.16),
+      width: 1.5,
+    );
+    _drawWave(
+      canvas,
+      size,
+      y: 190,
+      amplitude: 6,
+      color: const Color(0xFFFFFFFF).withOpacity(.13),
+      width: 1.3,
+    );
 
-    final wavePaint = Paint()
+    final fishPaint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..color = Colors.white.withOpacity(.34);
-    final wave = Path()..moveTo(-20, 158);
-    wave.cubicTo(size.width * .13, 136, size.width * .24, 170, size.width * .38, 146);
-    wave.cubicTo(size.width * .53, 121, size.width * .66, 168, size.width * .81, 140);
-    wave.cubicTo(size.width * .90, 125, size.width * .97, 147, size.width + 20, 128);
-    canvas.drawPath(wave, wavePaint);
-
-    final fishPaint = Paint()..color = const Color(0xFFD84A00).withOpacity(.48);
-    _drawFish(canvas, Offset(size.width * .51, 54), 34, fishPaint, rotation: -.08);
-    _drawFish(canvas, Offset(size.width * .27, 83), 16, fishPaint, rotation: .12);
-    _drawFish(canvas, Offset(size.width * .84, 94), 13, fishPaint, rotation: .04);
+      ..strokeWidth = 1.7
+      ..color = const Color(0xFFC84A00).withOpacity(.43);
+    _drawFish(canvas, Offset(size.width * .52, 53), 27, fishPaint, rotation: -.08);
+    _drawFish(canvas, Offset(size.width * .22, 86), 13, fishPaint, rotation: .12);
+    _drawFish(canvas, Offset(size.width * .84, 91), 11, fishPaint, rotation: -.06);
 
     final bubblePaint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5
-      ..color = Colors.white.withOpacity(.65);
-    final bubbles = <(double, double, double)>[
-      (size.width * .40, 35.0, 5.0),
-      (size.width * .48, 20.0, 3.0),
-      (size.width * .60, 43.0, 4.0),
-      (size.width * .64, 25.0, 2.0),
+      ..strokeWidth = 1.3
+      ..color = Colors.white.withOpacity(.48);
+    final bubbles = [
+      (size.width * .40, 34.0, 4.5),
+      (size.width * .47, 20.0, 2.5),
+      (size.width * .61, 42.0, 4.0),
+      (size.width * .66, 27.0, 2.0),
+      (size.width * .79, 52.0, 2.8),
     ];
-    for (final item in bubbles) {
-      canvas.drawCircle(Offset(item.$1, item.$2), item.$3, bubblePaint);
+    for (final bubble in bubbles) {
+      canvas.drawCircle(Offset(bubble.$1, bubble.$2), bubble.$3, bubblePaint);
     }
 
     final birdPaint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5
+      ..strokeWidth = 1.4
       ..strokeCap = StrokeCap.round
-      ..color = const Color(0xFF8B3A00).withOpacity(.55);
-    _drawBird(canvas, Offset(size.width * .30, 65), 8, birdPaint);
-    _drawBird(canvas, Offset(size.width * .70, 70), 7, birdPaint);
+      ..color = const Color(0xFF8B3A00).withOpacity(.45);
+    _drawBird(canvas, Offset(size.width * .31, 66), 7, birdPaint);
+    _drawBird(canvas, Offset(size.width * .70, 70), 6, birdPaint);
   }
 
-  void _drawTriangle(Canvas canvas, double x, double y, double h, Paint paint) {
-    final path = Path()
-      ..moveTo(x, y)
-      ..lineTo(x - h, y + h * 1.8)
-      ..lineTo(x + h, y + h * 1.8)
-      ..close();
+  void _drawWave(
+    Canvas canvas,
+    Size size, {
+    required double y,
+    required double amplitude,
+    required Color color,
+    required double width,
+  }) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = width
+      ..color = color;
+
+    final path = Path()..moveTo(-20, y);
+    final period = size.width / 2.6;
+    for (var x = -20.0; x <= size.width + 20; x += period) {
+      path.cubicTo(
+        x + period * .20,
+        y - amplitude,
+        x + period * .30,
+        y - amplitude,
+        x + period * .50,
+        y,
+      );
+      path.cubicTo(
+        x + period * .70,
+        y + amplitude,
+        x + period * .80,
+        y + amplitude,
+        x + period,
+        y,
+      );
+    }
     canvas.drawPath(path, paint);
   }
 
-  void _drawFish(Canvas canvas, Offset center, double length, Paint paint, {double rotation = 0}) {
+  void _drawFish(
+    Canvas canvas,
+    Offset center,
+    double length,
+    Paint paint, {
+    double rotation = 0,
+  }) {
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.rotate(rotation);
+
     final body = Path()
       ..moveTo(-length, 0)
-      ..quadraticBezierTo(-length * .25, -length * .48, length * .48, 0)
-      ..quadraticBezierTo(-length * .25, length * .48, -length, 0)
+      ..quadraticBezierTo(-length * .28, -length * .48, length * .48, 0)
+      ..quadraticBezierTo(-length * .28, length * .48, -length, 0)
       ..close();
     canvas.drawPath(body, paint);
+
     final tail = Path()
       ..moveTo(length * .38, 0)
       ..lineTo(length, -length * .38)
-      ..lineTo(length * .88, 0)
+      ..lineTo(length * .86, 0)
       ..lineTo(length, length * .38)
       ..close();
     canvas.drawPath(tail, paint);
+
+    canvas.drawCircle(Offset(-length * .55, -length * .06), 1.4, paint);
     canvas.restore();
   }
 
   void _drawBird(Canvas canvas, Offset center, double width, Paint paint) {
     final path = Path()
       ..moveTo(center.dx - width, center.dy)
-      ..quadraticBezierTo(center.dx - width * .45, center.dy - width * .5, center.dx, center.dy)
-      ..quadraticBezierTo(center.dx + width * .45, center.dy - width * .5, center.dx + width, center.dy);
+      ..quadraticBezierTo(
+        center.dx - width * .45,
+        center.dy - width * .5,
+        center.dx,
+        center.dy,
+      )
+      ..quadraticBezierTo(
+        center.dx + width * .45,
+        center.dy - width * .5,
+        center.dx + width,
+        center.dy,
+      );
     canvas.drawPath(path, paint);
   }
 

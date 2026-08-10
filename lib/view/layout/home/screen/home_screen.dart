@@ -44,6 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _ensureProfileLoaded();
       if (!mounted) return;
+      await context.read<HomeController>().getHeaderImage();
       await context.read<HomeController>().getSlider();
       await _checkSelectedCity();
     });
@@ -166,6 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final homeController = context.read<HomeController>();
 
     homeController.initialCountCart();
+    homeController.initialHeaderImage();
     homeController.initialSlider();
     homeController.initialDefaultSlider();
     homeController.initialPreviousOrder();
@@ -180,6 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
     HiveMethods.updateSelectedCityAreaId(address.cityId ?? 0);
 
     Future.wait([
+      homeController.getHeaderImage(),
       homeController.getRestaurantsNearYou(lat: double.tryParse(address.lat ?? '') ?? HiveMethods.getLat(), lng: double.tryParse(address.lng ?? '') ?? HiveMethods.getLan()),
       homeController.getCoupon(lat: HiveMethods.getLat(), lng: HiveMethods.getLan()),
       homeController.getPreviousOrder(),

@@ -62,6 +62,35 @@ class HomeController extends ChangeNotifier {
     notifyListeners();
   }
 
+  ApiResponse _headerImageResponse = ApiResponse(state: ResponseState.sleep, data: null);
+  ApiResponse get headerImageResponse => _headerImageResponse;
+  String? _headerImageUrl;
+  String? get headerImageUrl => _headerImageUrl;
+
+  void initialHeaderImage() {
+    _headerImageResponse = ApiResponse(state: ResponseState.sleep, data: null);
+    _headerImageUrl = null;
+    notifyListeners();
+  }
+
+  Future<void> getHeaderImage() async {
+    _headerImageResponse = ApiResponse(state: ResponseState.loading, data: null);
+    notifyListeners();
+
+    final response = await _get(Urls.setting);
+    _headerImageResponse = response;
+
+    if (response.state == ResponseState.complete) {
+      final data = response.data['data'];
+      final value = data is Map ? data['header_image'] : null;
+      _headerImageUrl = value?.toString().trim().isNotEmpty == true ? value.toString().trim() : null;
+    } else {
+      _headerImageUrl = null;
+    }
+
+    notifyListeners();
+  }
+
   ApiResponse _sliderResponse = ApiResponse(state: ResponseState.sleep, data: null);
   ApiResponse get sliderResponse => _sliderResponse;
   List<SliderModel> _slider = [];

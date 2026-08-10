@@ -12,11 +12,11 @@ import '../utils/date_methods.dart';
 import '../utils/http_overrides.dart';
 
 Future<void> initServices() async {
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  // The current notification implementation uses dart:io/mobile-only APIs.
-  // Skip its initialization on Flutter Web so app startup does not crash there.
+  // Firebase/FCM initialization is mobile-only for this Flutter Web build.
+  // The web Firebase options are not configured in this project, and
+  // initializing Firebase here would throw before the first screen renders.
   if (!kIsWeb) {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
     await FirebaseNotifications.setUpFirebase();
   }
 
@@ -29,5 +29,9 @@ Future<void> initServices() async {
   await Hive.openBox('app');
   await GlobalTranslations.init();
   initTimeago();
-  HttpOverrides.global = MyHttpOverrides();
+
+  // HttpOverrides is not needed by the browser networking stack.
+  if (!kIsWeb) {
+    HttpOverrides.global = MyHttpOverrides();
+  }
 }

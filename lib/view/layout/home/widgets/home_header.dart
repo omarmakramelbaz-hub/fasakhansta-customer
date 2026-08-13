@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../helpers/routes/app_routers_import.dart';
 import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/theme/app_text_style.dart';
 import '../../auth/controller/auth_controller.dart';
-import '../../search/screen/search_screen.dart';
 import '../controller/home_controller.dart';
 
 class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
@@ -60,61 +58,39 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
                 child: Directionality(
                   textDirection: TextDirection.ltr,
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
+                      Flexible(
                         child: Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            'ابحث عن منتج أو فرع ...',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.right,
-                            textDirection: TextDirection.rtl,
-                            style: AppTextStyle.text12BS().copyWith(color: Colors.white, fontSize: 12, shadows: const [Shadow(color: Color(0x55000000), blurRadius: 4, offset: Offset(0, 1))]),
+                          padding: const EdgeInsets.only(top: 1),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white, size: 14),
+                                  const SizedBox(width: 2),
+                                  Text('التوصيل إلى', textDirection: TextDirection.rtl, style: AppTextStyle.text12BS().copyWith(color: Colors.white, fontSize: 10, shadows: const [Shadow(color: Color(0x55000000), blurRadius: 4, offset: Offset(0, 1))])),
+                                ],
+                              ),
+                              const SizedBox(height: 1),
+                              Text(
+                                location.isEmpty ? 'اختر العنوان' : location,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.right,
+                                textDirection: TextDirection.rtl,
+                                style: AppTextStyle.text12BS().copyWith(color: Colors.white, fontSize: 9.5, shadows: const [Shadow(color: Color(0x55000000), blurRadius: 4, offset: Offset(0, 1))]),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        flex: 2,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Flexible(
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 1),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white, size: 14),
-                                        const SizedBox(width: 2),
-                                        Text('التوصيل إلى', textDirection: TextDirection.rtl, style: AppTextStyle.text12BS().copyWith(color: Colors.white, fontSize: 10, shadows: const [Shadow(color: Color(0x55000000), blurRadius: 4, offset: Offset(0, 1))])),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 1),
-                                    Text(
-                                      location.isEmpty ? 'اختر العنوان' : location,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      textAlign: TextAlign.right,
-                                      textDirection: TextDirection.rtl,
-                                      style: AppTextStyle.text12BS().copyWith(color: Colors.white, fontSize: 9.5, shadows: const [Shadow(color: Color(0x55000000), blurRadius: 4, offset: Offset(0, 1))]),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 5),
-                            const _LocationButton(),
-                          ],
-                        ),
-                      ),
+                      const SizedBox(width: 5),
+                      const _LocationButton(),
                     ],
                   ),
                 ),

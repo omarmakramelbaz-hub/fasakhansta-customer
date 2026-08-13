@@ -166,15 +166,15 @@ class _SeaHeaderClipper extends CustomClipper<Path> {
     final height = size.height;
     final width = size.width;
 
-    // Three sharp wave vertices along the bottom edge.
+    // Three prominent sharp angles along the bottom edge.
     return Path()
       ..moveTo(0, 0)
       ..lineTo(width, 0)
-      ..lineTo(width, height - 16)
-      ..lineTo(width * .75, height - 2)
-      ..lineTo(width * .50, height - 28)
-      ..lineTo(width * .25, height - 2)
-      ..lineTo(0, height - 16)
+      ..lineTo(width, height - 20)
+      ..lineTo(width * .75, height - 3)
+      ..lineTo(width * .50, height - 44)
+      ..lineTo(width * .25, height - 3)
+      ..lineTo(0, height - 20)
       ..close();
   }
 

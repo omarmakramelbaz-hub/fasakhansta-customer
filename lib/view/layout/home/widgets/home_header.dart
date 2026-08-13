@@ -62,8 +62,6 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _SearchButton(onTap: () => NamedNavigatorImpl.push(SearchScreen.routeName)),
-                      const SizedBox(width: 6),
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.only(top: 4),
@@ -130,21 +128,6 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize => const Size.fromHeight(214);
-}
-
-class _SearchButton extends StatelessWidget {
-  final VoidCallback onTap;
-  const _SearchButton({required this.onTap});
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 9, offset: Offset(0, 4)), BoxShadow(color: Color(0x66FFFFFF), blurRadius: 2, offset: Offset(0, -1))]),
-          child: Icon(Icons.search_rounded, color: AppColors.mainAppColor, size: 20),
-        ),
-      );
 }
 
 class _LocationButton extends StatelessWidget {

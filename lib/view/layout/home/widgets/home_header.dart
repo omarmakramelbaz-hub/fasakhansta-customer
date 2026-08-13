@@ -160,17 +160,24 @@ class _LocationButton extends StatelessWidget {
 
 class _SeaHeaderClipper extends CustomClipper<Path> {
   const _SeaHeaderClipper();
+
   @override
   Path getClip(Size size) {
-    final path = Path()..moveTo(0, 0)..lineTo(size.width, 0)..lineTo(size.width, size.height - 24);
-    final wave = Path()
-      ..moveTo(size.width, size.height - 24)
-      ..cubicTo(size.width * .88, size.height - 8, size.width * .74, size.height - 34, size.width * .58, size.height - 18)
-      ..cubicTo(size.width * .43, size.height - 2, size.width * .27, size.height - 35, 0, size.height - 13);
-    path.addPath(wave, Offset.zero);
-    path.close();
-    return path;
+    final height = size.height;
+    final width = size.width;
+
+    // Three sharp wave vertices along the bottom edge.
+    return Path()
+      ..moveTo(0, 0)
+      ..lineTo(width, 0)
+      ..lineTo(width, height - 16)
+      ..lineTo(width * .75, height - 2)
+      ..lineTo(width * .50, height - 28)
+      ..lineTo(width * .25, height - 2)
+      ..lineTo(0, height - 16)
+      ..close();
   }
+
   @override
   bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }

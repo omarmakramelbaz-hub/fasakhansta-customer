@@ -57,7 +57,7 @@ class AdvertisementContainerWidget extends StatelessWidget {
           Expanded(
             flex: 54,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+              padding: const EdgeInsets.fromLTRB(14, 11, 11, 11),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: isArabic ? CrossAxisAlignment.start : CrossAxisAlignment.end,
@@ -67,22 +67,22 @@ class AdvertisementContainerWidget extends StatelessWidget {
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: openRestaurant,
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(16),
                         child: Container(
-                          height: 30,
-                          padding: const EdgeInsets.symmetric(horizontal: 11),
+                          height: 27,
+                          padding: const EdgeInsets.symmetric(horizontal: 9),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(.96),
-                            borderRadius: BorderRadius.circular(18),
+                            color: Colors.white.withOpacity(.97),
+                            borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: AppColors.mainAppColor.withOpacity(.35),
+                              color: AppColors.mainAppColor.withOpacity(.28),
                               width: 1,
                             ),
                             boxShadow: const [
                               BoxShadow(
-                                color: Color(0x24000000),
-                                blurRadius: 7,
-                                offset: Offset(0, 3),
+                                color: Color(0x20000000),
+                                blurRadius: 5,
+                                offset: Offset(0, 2),
                               ),
                             ],
                           ),
@@ -91,15 +91,16 @@ class AdvertisementContainerWidget extends StatelessWidget {
                             children: [
                               Icon(
                                 Icons.storefront_rounded,
-                                size: 15,
+                                size: 13,
                                 color: AppColors.mainAppColor,
                               ),
-                              6.sbW,
+                              5.sbW,
                               Text(
                                 'عرض المطعم',
                                 style: AppTextStyle.text12BS().copyWith(
                                   color: AppColors.blackColor,
-                                  fontSize: 10.5,
+                                  fontSize: 9.5,
+                                  height: 1,
                                 ),
                               ),
                             ],
@@ -109,51 +110,51 @@ class AdvertisementContainerWidget extends StatelessWidget {
                     )
                   else
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(.15),
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: Colors.white.withOpacity(.16)),
                       ),
                       child: Text(
                         'FASAKHANSTA',
                         style: AppTextStyle.text12BW().copyWith(
                           color: AppColors.whiteColor,
-                          fontSize: 10,
-                          letterSpacing: 1.1,
+                          fontSize: 9.5,
+                          letterSpacing: 1,
                         ),
                       ),
                     ),
-                  8.sbH,
+                  6.sbH,
                   Text(
                     title,
-                    maxLines: 3,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: AppTextStyle.text16BS().copyWith(
-                      fontSize: 16,
-                      height: 1.3,
+                      fontSize: 14,
+                      height: 1.22,
                       color: AppColors.whiteColor,
                     ),
                     textAlign: isArabic ? TextAlign.start : TextAlign.end,
                   ),
-                  9.sbH,
+                  7.sbH,
                   if (restaurantId != 0)
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: openRestaurant,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(11),
                         child: Container(
-                          height: 36,
-                          padding: const EdgeInsets.symmetric(horizontal: 13),
+                          height: 32,
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
                           decoration: BoxDecoration(
                             color: AppColors.whiteColor,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(11),
                             boxShadow: const [
                               BoxShadow(
-                                color: Color(0x26000000),
-                                blurRadius: 7,
-                                offset: Offset(0, 3),
+                                color: Color(0x22000000),
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
                               ),
                             ],
                           ),
@@ -164,13 +165,14 @@ class AdvertisementContainerWidget extends StatelessWidget {
                                 'buyNow'.tr,
                                 style: AppTextStyle.text12BS().copyWith(
                                   color: AppColors.blackColor,
-                                  fontSize: 11,
+                                  fontSize: 10,
+                                  height: 1,
                                 ),
                               ),
-                              6.sbW,
+                              5.sbW,
                               Icon(
                                 isArabic ? Icons.arrow_back_rounded : Icons.arrow_forward_rounded,
-                                size: 16,
+                                size: 14,
                                 color: AppColors.mainAppColor,
                               ),
                             ],

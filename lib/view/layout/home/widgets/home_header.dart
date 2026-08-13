@@ -63,10 +63,10 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _SearchButton(onTap: () => NamedNavigatorImpl.push(SearchScreen.routeName)),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Expanded(
                         child: Padding(
-                          padding: const EdgeInsets.only(top: 7),
+                          padding: const EdgeInsets.only(top: 3),
                           child: Text(
                             'ابحث عن منتج أو فرع ...',
                             maxLines: 1,
@@ -77,7 +77,7 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Flexible(
                         flex: 2,
                         child: Row(
@@ -86,7 +86,7 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
                           children: [
                             Flexible(
                               child: Padding(
-                                padding: const EdgeInsets.only(top: 2),
+                                padding: const EdgeInsets.only(top: 1),
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -94,9 +94,9 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
                                     Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white, size: 17),
+                                        const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white, size: 15),
                                         const SizedBox(width: 2),
-                                        Text('التوصيل إلى', textDirection: TextDirection.rtl, style: AppTextStyle.text12BS().copyWith(color: Colors.white, fontSize: 11, shadows: const [Shadow(color: Color(0x55000000), blurRadius: 4, offset: Offset(0, 1))])),
+                                        Text('التوصيل إلى', textDirection: TextDirection.rtl, style: AppTextStyle.text12BS().copyWith(color: Colors.white, fontSize: 10.5, shadows: const [Shadow(color: Color(0x55000000), blurRadius: 4, offset: Offset(0, 1))])),
                                       ],
                                     ),
                                     const SizedBox(height: 1),
@@ -106,13 +106,13 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
                                       overflow: TextOverflow.ellipsis,
                                       textAlign: TextAlign.right,
                                       textDirection: TextDirection.rtl,
-                                      style: AppTextStyle.text12BS().copyWith(color: Colors.white, fontSize: 10.5, shadows: const [Shadow(color: Color(0x55000000), blurRadius: 4, offset: Offset(0, 1))]),
+                                      style: AppTextStyle.text12BS().copyWith(color: Colors.white, fontSize: 10, shadows: const [Shadow(color: Color(0x55000000), blurRadius: 4, offset: Offset(0, 1))]),
                                     ),
                                   ],
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 7),
+                            const SizedBox(width: 5),
                             const _LocationButton(),
                           ],
                         ),
@@ -139,10 +139,10 @@ class _SearchButton extends StatelessWidget {
   Widget build(BuildContext context) => GestureDetector(
         onTap: onTap,
         child: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 12, offset: Offset(0, 6)), BoxShadow(color: Color(0x66FFFFFF), blurRadius: 2, offset: Offset(0, -1))]),
-          child: Icon(Icons.search_rounded, color: AppColors.mainAppColor, size: 24),
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 10, offset: Offset(0, 5)), BoxShadow(color: Color(0x66FFFFFF), blurRadius: 2, offset: Offset(0, -1))]),
+          child: Icon(Icons.search_rounded, color: AppColors.mainAppColor, size: 21),
         ),
       );
 }
@@ -151,10 +151,10 @@ class _LocationButton extends StatelessWidget {
   const _LocationButton();
   @override
   Widget build(BuildContext context) => Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 12, offset: Offset(0, 6)), BoxShadow(color: Color(0x66FFFFFF), blurRadius: 2, offset: Offset(0, -1))]),
-        child: Icon(Icons.location_on_outlined, color: AppColors.mainAppColor, size: 24),
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 10, offset: Offset(0, 5)), BoxShadow(color: Color(0x66FFFFFF), blurRadius: 2, offset: Offset(0, -1))]),
+        child: Icon(Icons.location_on_outlined, color: AppColors.mainAppColor, size: 21),
       );
 }
 

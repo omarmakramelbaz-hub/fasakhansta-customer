@@ -171,9 +171,9 @@ class _SeaHeaderClipper extends CustomClipper<Path> {
       ..moveTo(0, 0)
       ..lineTo(width, 0)
       ..lineTo(width, height - 20)
-      ..lineTo(width * .75, height - 3)
-      ..lineTo(width * .50, height - 44)
-      ..lineTo(width * .25, height - 3)
+      ..lineTo(width * .90, height - 3)
+      ..lineTo(width * .51, height - 44)
+      ..lineTo(width * .12, height - 3)
       ..lineTo(0, height - 20)
       ..close();
   }

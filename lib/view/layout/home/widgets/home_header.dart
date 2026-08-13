@@ -66,7 +66,7 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Padding(
-                          padding: const EdgeInsets.only(top: 3),
+                          padding: const EdgeInsets.only(top: 4),
                           child: Text(
                             'ابحث عن منتج أو فرع ...',
                             maxLines: 1,
@@ -94,9 +94,9 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
                                     Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white, size: 15),
+                                        const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white, size: 14),
                                         const SizedBox(width: 2),
-                                        Text('التوصيل إلى', textDirection: TextDirection.rtl, style: AppTextStyle.text12BS().copyWith(color: Colors.white, fontSize: 10.5, shadows: const [Shadow(color: Color(0x55000000), blurRadius: 4, offset: Offset(0, 1))])),
+                                        Text('التوصيل إلى', textDirection: TextDirection.rtl, style: AppTextStyle.text12BS().copyWith(color: Colors.white, fontSize: 10, shadows: const [Shadow(color: Color(0x55000000), blurRadius: 4, offset: Offset(0, 1))])),
                                       ],
                                     ),
                                     const SizedBox(height: 1),
@@ -106,7 +106,7 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
                                       overflow: TextOverflow.ellipsis,
                                       textAlign: TextAlign.right,
                                       textDirection: TextDirection.rtl,
-                                      style: AppTextStyle.text12BS().copyWith(color: Colors.white, fontSize: 10, shadows: const [Shadow(color: Color(0x55000000), blurRadius: 4, offset: Offset(0, 1))]),
+                                      style: AppTextStyle.text12BS().copyWith(color: Colors.white, fontSize: 9.5, shadows: const [Shadow(color: Color(0x55000000), blurRadius: 4, offset: Offset(0, 1))]),
                                     ),
                                   ],
                                 ),
@@ -139,10 +139,10 @@ class _SearchButton extends StatelessWidget {
   Widget build(BuildContext context) => GestureDetector(
         onTap: onTap,
         child: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 10, offset: Offset(0, 5)), BoxShadow(color: Color(0x66FFFFFF), blurRadius: 2, offset: Offset(0, -1))]),
-          child: Icon(Icons.search_rounded, color: AppColors.mainAppColor, size: 21),
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 9, offset: Offset(0, 4)), BoxShadow(color: Color(0x66FFFFFF), blurRadius: 2, offset: Offset(0, -1))]),
+          child: Icon(Icons.search_rounded, color: AppColors.mainAppColor, size: 20),
         ),
       );
 }
@@ -151,10 +151,10 @@ class _LocationButton extends StatelessWidget {
   const _LocationButton();
   @override
   Widget build(BuildContext context) => Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 10, offset: Offset(0, 5)), BoxShadow(color: Color(0x66FFFFFF), blurRadius: 2, offset: Offset(0, -1))]),
-        child: Icon(Icons.location_on_outlined, color: AppColors.mainAppColor, size: 21),
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 9, offset: Offset(0, 4)), BoxShadow(color: Color(0x66FFFFFF), blurRadius: 2, offset: Offset(0, -1))]),
+        child: Icon(Icons.location_on_outlined, color: AppColors.mainAppColor, size: 20),
       );
 }
 

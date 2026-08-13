@@ -142,7 +142,7 @@ class HomeFeatureCards extends StatelessWidget {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(11),
                           ),
-                          textStyle: AppTextStyle.text11BW(color: Colors.white),
+                          textStyle: AppTextStyle.text11BS(color: Colors.white),
                         ),
                       ),
                     ),

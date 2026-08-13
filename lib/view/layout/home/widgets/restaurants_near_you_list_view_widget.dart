@@ -28,30 +28,30 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
           ),
       isEmpty: restaurantsNearYou.isEmpty,
       loadingWidget: CustomShimmer(
-        height: 166,
+        height: 176,
         width: double.infinity,
         fillColor: AppColors.greyColor.withValues(alpha: 0.05),
         shimmerColor: AppColors.mainAppColor,
       ),
       child: SizedBox(
-        height: 166,
+        height: 176,
         child: ListView.separated(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           scrollDirection: Axis.horizontal,
           itemCount: restaurantsNearYou.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 10),
+          separatorBuilder: (_, __) => const SizedBox(width: 12),
           itemBuilder: (context, index) {
             final model = restaurantsNearYou[index];
             final canOpen = model.underContract != 'yes' && model.status != 'busy' && model.status != 'closed';
 
             return SizedBox(
-              width: 118,
-              height: 162,
+              width: 132,
+              height: 174,
               child: Material(
                 color: AppColors.whiteColor,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(18),
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(18),
                   onTap: canOpen
                       ? () => NamedNavigatorImpl.push(
                             RestaurantDetailsScreen.routeName,
@@ -61,13 +61,13 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       color: AppColors.whiteColor,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.borderColorContainer),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: AppColors.borderColorContainer.withOpacity(.8)),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.blackColor.withOpacity(.05),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
+                          color: AppColors.blackColor.withOpacity(.055),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
@@ -76,25 +76,32 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         SizedBox(
-                          height: 84,
+                          height: 92,
                           child: Stack(
                             fit: StackFit.expand,
                             children: [
                               CustomNetworkImage(
                                 imageUrl: model.bgImage ?? model.logo ?? '',
-                                height: 84,
-                                width: 118,
+                                height: 92,
+                                width: 132,
                                 radius: 0,
                                 fit: BoxFit.cover,
                               ),
                               Positioned(
-                                top: 6,
-                                right: 6,
+                                top: 7,
+                                right: 7,
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
                                   decoration: BoxDecoration(
                                     color: AppColors.mainAppColor,
-                                    borderRadius: BorderRadius.circular(9),
+                                    borderRadius: BorderRadius.circular(10),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.blackColor.withOpacity(.12),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
                                   ),
                                   child: Text(
                                     model.deliveryTime ?? 'سريع',
@@ -109,15 +116,16 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
                         ),
                         Expanded(
                           child: Padding(
-                            padding: const EdgeInsets.fromLTRB(7, 5, 7, 5),
+                            padding: const EdgeInsets.fromLTRB(8, 6, 8, 7),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
                                   model.name ?? '',
-                                  style: AppTextStyle.text12BS(),
+                                  style: AppTextStyle.text13BS(),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.right,
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
@@ -129,22 +137,35 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
                                 ),
                                 const Spacer(),
                                 Row(
+                                  textDirection: TextDirection.ltr,
                                   children: [
-                                    if (model.kmPrice != null) ...[
-                                      const Icon(Icons.delivery_dining_rounded, size: 12),
-                                      const SizedBox(width: 2),
-                                      Text(
-                                        '${model.kmPrice!.toStringAsFixed(0)} جنيه',
-                                        style: AppTextStyle.text10RG(color: AppColors.greyColor),
+                                    Expanded(
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.delivery_dining_rounded, size: 13),
+                                          const SizedBox(width: 2),
+                                          Flexible(
+                                            child: Text(
+                                              model.kmPrice != null ? '${model.kmPrice!.toStringAsFixed(0)} جنيه' : '',
+                                              style: AppTextStyle.text10RG(color: AppColors.greyColor),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      const Spacer(),
-                                    ] else
-                                      const Spacer(),
-                                    const Icon(Icons.star_rounded, size: 14, color: Colors.deepOrange),
-                                    const SizedBox(width: 2),
-                                    Text(
-                                      model.avgRate?.toStringAsFixed(1) ?? '0.0',
-                                      style: AppTextStyle.text10BW(color: AppColors.blackColor),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.star_rounded, size: 14, color: Colors.deepOrange),
+                                        const SizedBox(width: 2),
+                                        Text(
+                                          model.avgRate?.toStringAsFixed(1) ?? '0.0',
+                                          style: AppTextStyle.text10BW(color: AppColors.blackColor),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -173,20 +194,27 @@ class BranchLogoWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      bottom: 5,
-      right: 5,
+      bottom: 6,
+      right: 6,
       child: Container(
         padding: const EdgeInsets.all(2),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(9),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: AppColors.whiteColor, width: 2),
           color: AppColors.whiteColor,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.blackColor.withOpacity(.12),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: CustomNetworkImage(
           imageUrl: model.logo ?? '',
-          height: 27,
-          width: 27,
-          radius: 7,
+          height: 30,
+          width: 30,
+          radius: 8,
           fit: BoxFit.contain,
         ),
       ),

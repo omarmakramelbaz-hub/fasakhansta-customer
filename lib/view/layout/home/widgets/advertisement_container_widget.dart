@@ -26,6 +26,14 @@ class AdvertisementContainerWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final isArabic = context.languageCode == 'ar';
 
+    void openRestaurant() {
+      if (restaurantId == 0) return;
+      NamedNavigatorImpl.push(
+        RestaurantDetailsScreen.routeName,
+        arguments: RestaurantDetailsArgs(id: restaurantId),
+      );
+    }
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -54,22 +62,68 @@ class AdvertisementContainerWidget extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: isArabic ? CrossAxisAlignment.start : CrossAxisAlignment.end,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(.15),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: Colors.white.withOpacity(.16)),
-                    ),
-                    child: Text(
-                      'FASAKHANSTA',
-                      style: AppTextStyle.text12BW().copyWith(
-                        color: AppColors.whiteColor,
-                        fontSize: 10,
-                        letterSpacing: 1.1,
+                  if (restaurantId != 0)
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: openRestaurant,
+                        borderRadius: BorderRadius.circular(18),
+                        child: Container(
+                          height: 30,
+                          padding: const EdgeInsets.symmetric(horizontal: 11),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(.96),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: AppColors.mainAppColor.withOpacity(.35),
+                              width: 1,
+                            ),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x24000000),
+                                blurRadius: 7,
+                                offset: Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.storefront_rounded,
+                                size: 15,
+                                color: AppColors.mainAppColor,
+                              ),
+                              6.sbW,
+                              Text(
+                                'عرض المطعم',
+                                style: AppTextStyle.text12BS().copyWith(
+                                  color: AppColors.blackColor,
+                                  fontSize: 10.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(.15),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: Colors.white.withOpacity(.16)),
+                      ),
+                      child: Text(
+                        'FASAKHANSTA',
+                        style: AppTextStyle.text12BW().copyWith(
+                          color: AppColors.whiteColor,
+                          fontSize: 10,
+                          letterSpacing: 1.1,
+                        ),
                       ),
                     ),
-                  ),
                   8.sbH,
                   Text(
                     title,
@@ -87,10 +141,7 @@ class AdvertisementContainerWidget extends StatelessWidget {
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        onTap: () => NamedNavigatorImpl.push(
-                          RestaurantDetailsScreen.routeName,
-                          arguments: RestaurantDetailsArgs(id: restaurantId),
-                        ),
+                        onTap: openRestaurant,
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
                           height: 36,

@@ -66,7 +66,9 @@ class _CustomSliderState extends State<CustomSlider> {
                 padding: const EdgeInsets.all(2.0),
                 child: Container(
                   width: widget.width ?? double.infinity,
-                  margin: EdgeInsets.only(bottom: widget.isDotsOnContent ? 0.0 : 20.0),
+                  margin: EdgeInsets.only(
+                    bottom: (!widget.isDotsOnContent && widget.hasDots) ? 20.0 : 0.0,
+                  ),
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
                     color: widget.color ?? AppColors.mainAppColor,

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../../helpers/routes/app_routers_import.dart';
 import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/theme/app_text_style.dart';
-import '../../restaurants/screen/restaurant_details_screen.dart';
 import '../controller/home_controller.dart';
 import '../screen/draw_resturant_screen.dart';
 
@@ -15,142 +14,143 @@ class HomeFeatureCards extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(48, 6, 48, 0),
-      child: Row(
-        children: [
-          Expanded(
-            child: _FeatureCard(
-              background: const Color(0xFF0D2E47),
-              title: 'المسابقة اليومية',
-              subtitle: 'اربح جوائز قيمة\nكل يوم',
-              button: 'شارك الآن',
-              icon: Icons.card_giftcard_rounded,
-              iconColor: AppColors.mainAppColor,
-              titleColor: Colors.white,
-              subtitleColor: Colors.white,
-              onTap: () => NamedNavigatorImpl.push(DrawRestaurantScreen.routeName),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+      child: InkWell(
+        onTap: () => NamedNavigatorImpl.push(DrawRestaurantScreen.routeName),
+        borderRadius: BorderRadius.circular(22),
+        child: Container(
+          height: 140,
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF102F4A), Color(0xFF0A2135)],
             ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: _FeatureCard(
-              background: const Color(0xFFFFF3E5),
-              title: 'المطاعم المميزة',
-              subtitle: 'أفضل المطاعم\nوأعلى التقييمات',
-              button: 'اكتشف الآن',
-              icon: Icons.emoji_events_rounded,
-              iconColor: AppColors.mainAppColor,
-              titleColor: AppColors.blackColor,
-              subtitleColor: AppColors.greyColor,
-              onTap: () {
-                if (controller.spacialRestaurants.isNotEmpty) {
-                  NamedNavigatorImpl.push(
-                    RestaurantDetailsScreen.routeName,
-                    arguments: RestaurantDetailsArgs(
-                      id: controller.spacialRestaurants.first.id ?? 0,
-                    ),
-                  );
-                }
-              },
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: AppColors.mainAppColor.withOpacity(.28),
+              width: 1.2,
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FeatureCard extends StatelessWidget {
-  final Color background;
-  final String title;
-  final String subtitle;
-  final String button;
-  final IconData icon;
-  final Color iconColor;
-  final Color titleColor;
-  final Color subtitleColor;
-  final VoidCallback onTap;
-
-  const _FeatureCard({
-    required this.background,
-    required this.title,
-    required this.subtitle,
-    required this.button,
-    required this.icon,
-    required this.iconColor,
-    required this.titleColor,
-    required this.subtitleColor,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        height: 104,
-        padding: const EdgeInsets.fromLTRB(10, 10, 10, 9),
-        decoration: BoxDecoration(
-          color: background,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.borderColorContainer.withOpacity(.5)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 54,
-              height: 54,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(.10),
-                shape: BoxShape.circle,
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x26000000),
+                blurRadius: 14,
+                offset: Offset(0, 6),
               ),
-              child: Icon(icon, size: 34, color: iconColor),
-            ),
-            const SizedBox(width: 9),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    title,
-                    textAlign: TextAlign.right,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyle.text13BS().copyWith(color: titleColor),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    textAlign: TextAlign.right,
-                    maxLines: 2,
-                    style: AppTextStyle.text10RG().copyWith(
-                      color: subtitleColor,
-                      height: 1.25,
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 42,
+                child: Center(
+                  child: Container(
+                    width: 92,
+                    height: 92,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(.07),
+                      border: Border.all(
+                        color: AppColors.mainAppColor.withOpacity(.45),
+                        width: 1.4,
+                      ),
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(
+                          Icons.card_giftcard_rounded,
+                          size: 58,
+                          color: Color(0xFFFF8A00),
+                        ),
+                        Positioned(
+                          top: 12,
+                          right: 10,
+                          child: Icon(
+                            Icons.auto_awesome_rounded,
+                            size: 18,
+                            color: Colors.white.withOpacity(.92),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 12,
+                          left: 12,
+                          child: Icon(
+                            Icons.auto_awesome_rounded,
+                            size: 14,
+                            color: AppColors.mainAppColor,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 5),
-                  SizedBox(
-                    height: 28,
-                    child: ElevatedButton(
-                      onPressed: onTap,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.mainAppColor,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(horizontal: 11),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(9),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                flex: 58,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'المسابقة اليومية',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.right,
+                      style: AppTextStyle.text18BS().copyWith(
+                        color: Colors.white,
+                        fontSize: 19,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'اربح جوائز قيمة كل يوم',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.right,
+                      style: AppTextStyle.text13BS().copyWith(
+                        color: AppColors.mainAppColor,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      'شارك الآن وكن من الفائزين المحظوظين',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.right,
+                      style: AppTextStyle.text10RG().copyWith(
+                        color: Colors.white.withOpacity(.82),
+                        fontSize: 11,
+                        height: 1.25,
+                      ),
+                    ),
+                    const SizedBox(height: 9),
+                    SizedBox(
+                      height: 32,
+                      child: ElevatedButton.icon(
+                        onPressed: () => NamedNavigatorImpl.push(DrawRestaurantScreen.routeName),
+                        icon: const Icon(Icons.card_giftcard_rounded, size: 15),
+                        label: const Text('شارك الآن'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.mainAppColor,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(11),
+                          ),
+                          textStyle: AppTextStyle.text11BW(color: Colors.white),
                         ),
                       ),
-                      child: Text(button, style: AppTextStyle.text10BW(color: Colors.white)),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

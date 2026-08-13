@@ -56,7 +56,7 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
             SafeArea(
               bottom: false,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 22),
+                padding: const EdgeInsets.fromLTRB(12, 18, 12, 22),
                 child: Directionality(
                   textDirection: TextDirection.ltr,
                   child: Row(
@@ -139,10 +139,10 @@ class _SearchButton extends StatelessWidget {
   Widget build(BuildContext context) => GestureDetector(
         onTap: onTap,
         child: Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 12, offset: Offset(0, 6)), BoxShadow(color: Color(0x66FFFFFF), blurRadius: 2, offset: Offset(0, -1))]),
-          child: Icon(Icons.search_rounded, color: AppColors.mainAppColor, size: 29),
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 12, offset: Offset(0, 6)), BoxShadow(color: Color(0x66FFFFFF), blurRadius: 2, offset: Offset(0, -1))]),
+          child: Icon(Icons.search_rounded, color: AppColors.mainAppColor, size: 24),
         ),
       );
 }
@@ -151,10 +151,10 @@ class _LocationButton extends StatelessWidget {
   const _LocationButton();
   @override
   Widget build(BuildContext context) => Container(
-        width: 52,
-        height: 52,
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 12, offset: Offset(0, 6)), BoxShadow(color: Color(0x66FFFFFF), blurRadius: 2, offset: Offset(0, -1))]),
-        child: Icon(Icons.location_on_outlined, color: AppColors.mainAppColor, size: 29),
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 12, offset: Offset(0, 6)), BoxShadow(color: Color(0x66FFFFFF), blurRadius: 2, offset: Offset(0, -1))]),
+        child: Icon(Icons.location_on_outlined, color: AppColors.mainAppColor, size: 24),
       );
 }
 

@@ -31,49 +31,58 @@ class AdvertisementContainerWidget extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
-          colors: [
-            color,
-            color.withOpacity(.88),
-          ],
+          colors: [color, color.withOpacity(.92)],
         ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(.22), width: 1),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x26000000),
+            blurRadius: 16,
+            offset: Offset(0, 6),
+          ),
+        ],
       ),
+      clipBehavior: Clip.antiAlias,
       child: Row(
         children: [
           Expanded(
-            flex: 47,
+            flex: 54,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(18, 16, 10, 16),
+              padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: isArabic ? CrossAxisAlignment.start : CrossAxisAlignment.end,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(.16),
-                      borderRadius: BorderRadius.circular(20),
+                      color: Colors.white.withOpacity(.15),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: Colors.white.withOpacity(.16)),
                     ),
                     child: Text(
                       'FASAKHANSTA',
                       style: AppTextStyle.text12BW().copyWith(
                         color: AppColors.whiteColor,
-                        letterSpacing: 1.2,
+                        fontSize: 10,
+                        letterSpacing: 1.1,
                       ),
                     ),
                   ),
-                  10.sbH,
+                  8.sbH,
                   Text(
                     title,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: AppTextStyle.text16BS().copyWith(
-                      fontSize: 18,
-                      height: 1.35,
+                      fontSize: 16,
+                      height: 1.3,
                       color: AppColors.whiteColor,
                     ),
                     textAlign: isArabic ? TextAlign.start : TextAlign.end,
                   ),
-                  14.sbH,
+                  9.sbH,
                   if (restaurantId != 0)
                     Material(
                       color: Colors.transparent,
@@ -84,16 +93,16 @@ class AdvertisementContainerWidget extends StatelessWidget {
                         ),
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
-                          height: 42,
-                          padding: const EdgeInsets.symmetric(horizontal: 18),
+                          height: 36,
+                          padding: const EdgeInsets.symmetric(horizontal: 13),
                           decoration: BoxDecoration(
                             color: AppColors.whiteColor,
                             borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
+                            boxShadow: const [
                               BoxShadow(
-                                color: Colors.black.withOpacity(.12),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
+                                color: Color(0x26000000),
+                                blurRadius: 7,
+                                offset: Offset(0, 3),
                               ),
                             ],
                           ),
@@ -102,14 +111,15 @@ class AdvertisementContainerWidget extends StatelessWidget {
                             children: [
                               Text(
                                 'buyNow'.tr,
-                                style: AppTextStyle.text14BS().copyWith(
+                                style: AppTextStyle.text12BS().copyWith(
                                   color: AppColors.blackColor,
+                                  fontSize: 11,
                                 ),
                               ),
-                              7.sbW,
+                              6.sbW,
                               Icon(
                                 isArabic ? Icons.arrow_back_rounded : Icons.arrow_forward_rounded,
-                                size: 18,
+                                size: 16,
                                 color: AppColors.mainAppColor,
                               ),
                             ],
@@ -122,15 +132,15 @@ class AdvertisementContainerWidget extends StatelessWidget {
             ),
           ),
           Expanded(
-            flex: 53,
+            flex: 46,
             child: images.trim().isEmpty
                 ? const SizedBox.expand()
                 : ClipRRect(
                     borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(isArabic ? 0 : 18),
-                      bottomLeft: Radius.circular(isArabic ? 0 : 18),
-                      topRight: Radius.circular(isArabic ? 18 : 0),
-                      bottomRight: Radius.circular(isArabic ? 18 : 0),
+                      topLeft: Radius.circular(isArabic ? 0 : 20),
+                      bottomLeft: Radius.circular(isArabic ? 0 : 20),
+                      topRight: Radius.circular(isArabic ? 20 : 0),
+                      bottomRight: Radius.circular(isArabic ? 20 : 0),
                     ),
                     child: CustomNetworkImage(
                       imageUrl: images,

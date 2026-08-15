@@ -21,6 +21,7 @@ import '../../auth/model/profile_model.dart';
 import '../controller/home_controller.dart';
 import '../model/previous_order_home_model.dart';
 import '../model/restaurants_near_you_home_model.dart';
+import '../widgets/go_drive_card_widget.dart';
 import '../widgets/home_feature_cards.dart';
 import '../widgets/home_header.dart';
 import '../widgets/home_wallet_card.dart';
@@ -210,6 +211,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       SliderWidget(controller: controller),
                       HomeFeatureCards(controller: controller),
                       RestaurantsNearYouWidget(controller: controller),
+                      const SizedBox(height: 8),
+                      GoDriveCardWidget(controller: controller),
                       20.sbH,
                     ],
                   ),

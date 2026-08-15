@@ -139,6 +139,7 @@ class _WalletContent extends StatelessWidget {
                               child: _WalletButton(
                                 title: 'شحن المحفظة',
                                 filled: true,
+                                stitchColor: const Color(0xFF000000),
                                 icon: Icons.add_rounded,
                                 onTap: () => NamedNavigatorImpl.push(WalletScreen.routeName),
                               ),
@@ -148,6 +149,7 @@ class _WalletContent extends StatelessWidget {
                               child: _WalletButton(
                                 title: 'تفاصيل المحفظة',
                                 filled: false,
+                                stitchColor: const Color(0xFFFF8A00),
                                 icon: Icons.receipt_long_outlined,
                                 onTap: () => NamedNavigatorImpl.push(WalletScreen.routeName),
                               ),
@@ -192,7 +194,7 @@ class _OuterWalletEdgeStitchPainter extends CustomPainter {
         RRect.fromRectAndRadius(rect, Radius.circular(math.max(0, radius))),
       );
 
-    _drawDashedPath(canvas, path, 1.35, 5.0, 4.0, .98);
+    _drawDashedPath(canvas, path, 1.35, 5.0, 4.0, .98, const Color(0xFFFF8A00));
   }
 
   @override
@@ -200,6 +202,10 @@ class _OuterWalletEdgeStitchPainter extends CustomPainter {
 }
 
 class _ButtonEdgeStitchPainter extends CustomPainter {
+  final Color stitchColor;
+
+  _ButtonEdgeStitchPainter({required this.stitchColor});
+
   @override
   void paint(Canvas canvas, Size size) {
     if (size.width <= 4 || size.height <= 4) return;
@@ -211,15 +217,18 @@ class _ButtonEdgeStitchPainter extends CustomPainter {
       math.max(0, size.width - inset * 2),
       math.max(0, size.height - inset * 2),
     );
-    final radius = math.max(0, 12.0 - inset);
+    const double buttonRadius = 12.0;
+    final double radius = buttonRadius - inset;
     final path = Path()
-      ..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(radius)));
+      ..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(math.max(0, radius))));
 
-    _drawDashedPath(canvas, path, 1.2, 4.5, 4.0, .92);
+    _drawDashedPath(canvas, path, 1.2, 4.5, 4.0, .95, stitchColor);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _ButtonEdgeStitchPainter oldDelegate) {
+    return oldDelegate.stitchColor != stitchColor;
+  }
 }
 
 void _drawDashedPath(
@@ -229,12 +238,13 @@ void _drawDashedPath(
   double dashLength,
   double gapLength,
   double alpha,
+  Color color,
 ) {
   final stitchPaint = Paint()
     ..style = PaintingStyle.stroke
     ..strokeCap = StrokeCap.round
     ..strokeWidth = strokeWidth
-    ..color = const Color(0xFFFF8A00).withValues(alpha: alpha);
+    ..color = color.withValues(alpha: alpha);
 
   for (final metric in path.computeMetrics()) {
     var distance = 0.0;
@@ -420,12 +430,14 @@ class _WalletIllustrationPainter extends CustomPainter {
 class _WalletButton extends StatelessWidget {
   final String title;
   final bool filled;
+  final Color stitchColor;
   final IconData icon;
   final VoidCallback onTap;
 
   const _WalletButton({
     required this.title,
     required this.filled,
+    required this.stitchColor,
     required this.icon,
     required this.onTap,
   });
@@ -435,7 +447,7 @@ class _WalletButton extends StatelessWidget {
     return SizedBox(
       height: 40,
       child: CustomPaint(
-        foregroundPainter: _ButtonEdgeStitchPainter(),
+        foregroundPainter: _ButtonEdgeStitchPainter(stitchColor: stitchColor),
         child: OutlinedButton.icon(
           onPressed: onTap,
           icon: Icon(icon, size: 16),

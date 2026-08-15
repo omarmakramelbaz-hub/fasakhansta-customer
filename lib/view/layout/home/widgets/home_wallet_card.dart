@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -257,7 +258,7 @@ class _LeatherWalletPainter extends CustomPainter {
 
   void _drawDashedSegment(
     Canvas canvas,
-    PathMetric metric,
+    ui.PathMetric metric,
     double start,
     double end,
     Paint paint,
@@ -351,7 +352,9 @@ class _WalletIllustrationPainter extends CustomPainter {
       const Radius.circular(3),
     );
     canvas.save();
-    canvas.rotate(-.12, Offset(57, 15));
+    canvas.translate(57, 15);
+    canvas.rotate(-.12);
+    canvas.translate(-57, -15);
     canvas.drawRRect(card, Paint()..color = const Color(0xFFFF8A00));
     canvas.restore();
   }

@@ -163,8 +163,6 @@ class _WalletContent extends StatelessWidget {
   }
 }
 
-/// Adds a subtle, deterministic natural-leather grain and real-looking
-/// orange saddle stitching without requiring an image asset.
 class _LeatherWalletPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -173,10 +171,9 @@ class _LeatherWalletPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeWidth = .65
-      ..color = const Color(0xFFB9B9B9).withValues(alpha: .085);
+      ..color = const Color(0xFFB9B9B9).withValues(alpha: .075);
 
-    // Fine irregular grain: short, broken lines spread across the leather.
-    for (var i = 0; i < 135; i++) {
+    for (var i = 0; i < 120; i++) {
       final x = random.nextDouble() * size.width;
       final y = random.nextDouble() * size.height;
       final length = 2.5 + random.nextDouble() * 7.5;
@@ -188,27 +185,20 @@ class _LeatherWalletPainter extends CustomPainter {
       canvas.drawLine(Offset(x, y), end, texturePaint);
     }
 
-    // Larger natural cracks with a few small branches.
     final crackPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = 1
-      ..color = const Color(0xFF000000).withValues(alpha: .28);
-    final highlightPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = .55
-      ..color = const Color(0xFFD8D8D8).withValues(alpha: .09);
+      ..strokeWidth = .8
+      ..color = const Color(0xFF000000).withValues(alpha: .22);
 
-    for (var i = 0; i < 20; i++) {
+    for (var i = 0; i < 16; i++) {
       final start = Offset(
         8 + random.nextDouble() * (size.width - 16),
-        7 + random.nextDouble() * (size.height - 14),
+        9 + random.nextDouble() * (size.height - 18),
       );
       final angle = random.nextDouble() * math.pi * 2;
       final path = Path()..moveTo(start.dx, start.dy);
       var point = start;
-
       final segments = 2 + random.nextInt(3);
       for (var s = 0; s < segments; s++) {
         final length = 8 + random.nextDouble() * 15;
@@ -221,60 +211,75 @@ class _LeatherWalletPainter extends CustomPainter {
         path.lineTo(point.dx, point.dy);
       }
       canvas.drawPath(path, crackPaint);
-
-      if (random.nextBool()) {
-        final branch = Path()
-          ..moveTo(point.dx, point.dy)
-          ..lineTo(
-            point.dx + (random.nextDouble() - .5) * 20,
-            point.dy + (random.nextDouble() - .5) * 13,
-          );
-        canvas.drawPath(branch, crackPaint);
-      }
-
-      canvas.drawPath(
-        path.shift(const Offset(.7, .7)),
-        highlightPaint,
-      );
     }
 
-    _paintStitching(canvas, size);
+    _paintTopStitching(canvas, size);
   }
 
-  void _paintStitching(Canvas canvas, Size size) {
-    final stitchPath = Path()
-      ..addRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(5.5, 5.5, size.width - 11, size.height - 11),
-          const Radius.circular(20),
-        ),
-      );
+  void _paintTopStitching(Canvas canvas, Size size) {
+    final rect = Rect.fromLTWH(8, 6, size.width - 16, size.height - 12);
+    final radius = math.min(19.0, size.height * .35);
+    final fullPath = Path()
+      ..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(radius)));
 
+    // Main visible saddle stitching: only across the upper arc and slightly
+    // down both side edges, leaving the lower edge clean.
+    final metrics = fullPath.computeMetrics().toList();
+    if (metrics.isEmpty) return;
+
+    final metric = metrics.first;
     final stitchPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = 1.5
-      ..color = const Color(0xFFFF8A00).withValues(alpha: .9);
+      ..strokeWidth = 1.35
+      ..color = const Color(0xFFFF8A00).withValues(alpha: .92);
 
-    final innerPaint = Paint()
+    final subtleEdgePaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = .65
-      ..color = const Color(0xFFFFB04A).withValues(alpha: .45);
+      ..strokeWidth = .75
+      ..color = const Color(0xFFFFA83D).withValues(alpha: .34);
 
-    for (final metric in stitchPath.computeMetrics()) {
-      var distance = 0.0;
-      const stitchLength = 5.0;
-      const gap = 4.0;
-      while (distance < metric.length) {
-        final end = math.min(distance + stitchLength, metric.length);
-        canvas.drawPath(metric.extractPath(distance, end), stitchPaint);
-        canvas.drawPath(
-          metric.extractPath(distance + .4, math.min(end - .4, metric.length)),
-          innerPaint,
-        );
-        distance += stitchLength + gap;
+    // Draw the whole rounded path with a very subtle edge accent.
+    canvas.drawPath(fullPath, subtleEdgePaint);
+
+    // The path starts near the top-left and follows the rounded rectangle.
+    // Stitch only the top arc plus short vertical sections on both sides.
+    final topLength = metric.length * .31;
+    final leftStart = 0.0;
+    final rightEnd = metric.length;
+
+    _drawDashedSegment(canvas, metric, leftStart, topLength, stitchPaint);
+    _drawDashedSegment(
+      canvas,
+      metric,
+      math.max(0, metric.length - topLength),
+      rightEnd,
+      stitchPaint,
+    );
+
+    // Reinforce a short continuous arc across the visual top center.
+    final centerStart = metric.length * .16;
+    final centerEnd = metric.length * .84;
+    _drawDashedSegment(canvas, metric, centerStart, centerEnd, stitchPaint);
+  }
+
+  void _drawDashedSegment(
+    Canvas canvas,
+    PathMetric metric,
+    double start,
+    double end,
+    Paint paint,
+  ) {
+    var distance = start;
+    const dash = 5.0;
+    const gap = 4.0;
+    while (distance < end) {
+      final dashEnd = math.min(distance + dash, end);
+      if (dashEnd > distance) {
+        canvas.drawPath(metric.extractPath(distance, dashEnd), paint);
       }
+      distance += dash + gap;
     }
   }
 

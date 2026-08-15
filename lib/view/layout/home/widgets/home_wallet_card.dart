@@ -239,8 +239,8 @@ class _ButtonEdgeStitchPainter extends CustomPainter {
       const double phase = 1.8;
       var distance = -phase;
       while (distance < metric.length) {
-        final start = math.max(0, distance);
-        final end = math.min(distance + dash, metric.length);
+        final double start = math.max(0.0, distance).toDouble();
+        final double end = math.min(distance + dash, metric.length).toDouble();
         if (end > start) {
           canvas.drawPath(metric.extractPath(start, end), paint);
         }

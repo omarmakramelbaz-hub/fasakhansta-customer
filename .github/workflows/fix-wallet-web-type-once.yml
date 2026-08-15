@@ -1,0 +1,50 @@
+name: Fix wallet Web type once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - lib/view/layout/home/widgets/home_wallet_card.dart
+      - .github/workflows/fix-wallet-web-type-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix wallet stitch numeric types
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('lib/view/layout/home/widgets/home_wallet_card.dart')
+          s = p.read_text()
+          replacements = {
+              'final start = math.max(0, distance);': 'final double start = math.max(0.0, distance).toDouble();',
+              'final end = math.min(distance + dash, metric.length);': 'final double end = math.min(distance + dash, metric.length).toDouble();',
+          }
+          changed = False
+          for old, new in replacements.items():
+              if old in s:
+                  s = s.replace(old, new, 1)
+                  changed = True
+          if changed:
+              p.write_text(s)
+              print('Applied wallet Web numeric type fixes.')
+          else:
+              print('No matching type fixes needed.')
+          PY
+      - name: Commit fix
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/view/layout/home/widgets/home_wallet_card.dart
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git commit -m 'Fix wallet Web numeric types'
+          git push

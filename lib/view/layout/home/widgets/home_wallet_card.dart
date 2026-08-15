@@ -172,9 +172,6 @@ class _OuterWalletEdgeStitchPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (size.width <= 60 || size.height <= 14) return;
 
-    // The CustomPaint wraps a Container that has 30px horizontal and 14px
-    // bottom margin. Draw the thread against the actual decorated black card,
-    // not against the larger render box that includes that margin.
     const leftMargin = 30.0;
     const rightMargin = 30.0;
     const bottomMargin = 14.0;
@@ -195,28 +192,60 @@ class _OuterWalletEdgeStitchPainter extends CustomPainter {
         RRect.fromRectAndRadius(rect, Radius.circular(math.max(0, radius))),
       );
 
-    final stitchPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 1.35
-      ..color = const Color(0xFFFF8A00).withValues(alpha: .98);
-
-    for (final metric in path.computeMetrics()) {
-      var distance = 0.0;
-      const dashLength = 5.0;
-      const gapLength = 4.0;
-      while (distance < metric.length) {
-        final end = math.min(distance + dashLength, metric.length);
-        if (end > distance) {
-          canvas.drawPath(metric.extractPath(distance, end), stitchPaint);
-        }
-        distance += dashLength + gapLength;
-      }
-    }
+    _drawDashedPath(canvas, path, 1.35, 5.0, 4.0, .98);
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _ButtonEdgeStitchPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.width <= 4 || size.height <= 4) return;
+
+    const inset = 0.8;
+    final rect = Rect.fromLTWH(
+      inset,
+      inset,
+      math.max(0, size.width - inset * 2),
+      math.max(0, size.height - inset * 2),
+    );
+    final radius = math.max(0, 12.0 - inset);
+    final path = Path()
+      ..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(radius)));
+
+    _drawDashedPath(canvas, path, 1.2, 4.5, 4.0, .92);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+void _drawDashedPath(
+  Canvas canvas,
+  Path path,
+  double strokeWidth,
+  double dashLength,
+  double gapLength,
+  double alpha,
+) {
+  final stitchPaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeCap = StrokeCap.round
+    ..strokeWidth = strokeWidth
+    ..color = const Color(0xFFFF8A00).withValues(alpha: alpha);
+
+  for (final metric in path.computeMetrics()) {
+    var distance = 0.0;
+    while (distance < metric.length) {
+      final end = math.min(distance + dashLength, metric.length);
+      if (end > distance) {
+        canvas.drawPath(metric.extractPath(distance, end), stitchPaint);
+      }
+      distance += dashLength + gapLength;
+    }
+  }
 }
 
 class _LeatherWalletPainter extends CustomPainter {
@@ -405,30 +434,33 @@ class _WalletButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: 40,
-      child: OutlinedButton.icon(
-        onPressed: onTap,
-        icon: Icon(icon, size: 16),
-        label: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            title,
-            maxLines: 1,
-            softWrap: false,
+      child: CustomPaint(
+        foregroundPainter: _ButtonEdgeStitchPainter(),
+        child: OutlinedButton.icon(
+          onPressed: onTap,
+          icon: Icon(icon, size: 16),
+          label: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              title,
+              maxLines: 1,
+              softWrap: false,
+            ),
           ),
-        ),
-        style: OutlinedButton.styleFrom(
-          backgroundColor: filled ? const Color(0xFFFF7A00) : const Color(0xFF1B1B1B),
-          foregroundColor: filled ? Colors.white : const Color(0xFFFFA31A),
-          side: BorderSide(
-            color: filled ? const Color(0xFFFF7A00) : const Color(0xFF6A6A6A),
-            width: 1.2,
+          style: OutlinedButton.styleFrom(
+            backgroundColor: filled ? const Color(0xFFFF7A00) : const Color(0xFF1B1B1B),
+            foregroundColor: filled ? Colors.white : const Color(0xFFFFA31A),
+            side: BorderSide(
+              color: filled ? const Color(0xFFFF7A00) : const Color(0xFF6A6A6A),
+              width: 1.2,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            visualDensity: VisualDensity.compact,
+            textStyle: AppTextStyle.text12BS().copyWith(fontSize: 11),
           ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          visualDensity: VisualDensity.compact,
-          textStyle: AppTextStyle.text12BS().copyWith(fontSize: 11),
         ),
       ),
     );

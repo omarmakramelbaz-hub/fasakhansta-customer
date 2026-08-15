@@ -178,20 +178,20 @@ class _OuterWalletEdgeStitchPainter extends CustomPainter {
     const rightMargin = 30.0;
     const bottomMargin = 14.0;
     const edgeInset = 1.0;
-    final cardWidth = math.max(0.0, size.width - leftMargin - rightMargin);
-    final cardHeight = math.max(0.0, size.height - bottomMargin);
+    final cardWidth = math.max(0, size.width - leftMargin - rightMargin);
+    final cardHeight = math.max(0, size.height - bottomMargin);
 
     final rect = Rect.fromLTWH(
       leftMargin + edgeInset,
       edgeInset,
-      math.max(0.0, cardWidth - edgeInset * 2),
-      math.max(0.0, cardHeight - edgeInset * 2),
+      math.max(0, cardWidth - edgeInset * 2),
+      math.max(0, cardHeight - edgeInset * 2),
     );
 
     final double radius = 26.0 - edgeInset;
     final path = Path()
       ..addRRect(
-        RRect.fromRectAndRadius(rect, Radius.circular(math.max(0.0, radius))),
+        RRect.fromRectAndRadius(rect, Radius.circular(math.max(0, radius))),
       );
 
     _drawDashedPath(canvas, path, 1.35, 5.0, 4.0, .98, const Color(0xFFFF8A00));
@@ -210,8 +210,8 @@ class _ButtonEdgeStitchPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (size.width <= 4 || size.height <= 4) return;
 
-    const double inset = 0.65;
-    const double buttonRadius = 12.0;
+    const double inset = 1.35;
+    const double buttonRadius = 10.0;
     final double radius = buttonRadius - inset;
     final rect = Rect.fromLTWH(
       inset,
@@ -221,26 +221,24 @@ class _ButtonEdgeStitchPainter extends CustomPainter {
     );
     final path = Path()
       ..addRRect(
-        RRect.fromRectAndRadius(rect, Radius.circular(radius)),
+        RRect.fromRectAndRadius(rect, Radius.circular(math.max(4, radius))),
       );
 
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
-      ..strokeWidth = 1.15
-      ..color = stitchColor.withValues(alpha: .96);
+      ..strokeWidth = 1.0
+      ..color = stitchColor.withValues(alpha: .95);
 
-    // Start halfway through a dash so every rounded corner receives
-    // a balanced stitch instead of a visible gap at the corner.
     for (final metric in path.computeMetrics()) {
-      const double dash = 4.2;
-      const double gap = 3.6;
-      const double phase = 1.8;
+      const double dash = 3.8;
+      const double gap = 3.8;
+      const double phase = 1.9;
       var distance = -phase;
       while (distance < metric.length) {
-        final start = math.max(0, distance);
-        final end = math.min(distance + dash, metric.length);
+        final double start = math.max(0.0, distance).toDouble();
+        final double end = math.min(distance + dash, metric.length).toDouble();
         if (end > start) {
           canvas.drawPath(metric.extractPath(start, end), paint);
         }
@@ -468,13 +466,12 @@ class _WalletButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(12);
+    final radius = BorderRadius.circular(10);
     final background = filled ? const Color(0xFFFF7A00) : const Color(0xFF1B1B1B);
     final foreground = filled ? Colors.white : const Color(0xFFFFA31A);
-    final borderColor = filled ? const Color(0xFFFF7A00) : const Color(0xFF6A6A6A);
 
     return SizedBox(
-      height: 40,
+      height: 38,
       child: ClipRRect(
         borderRadius: radius,
         child: Stack(
@@ -484,29 +481,27 @@ class _WalletButton extends StatelessWidget {
               color: background,
               child: InkWell(
                 onTap: onTap,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: radius,
-                    border: Border.all(color: borderColor, width: 1.2),
-                  ),
-                  child: Center(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(icon, size: 16, color: foreground),
-                        const SizedBox(width: 5),
-                        Flexible(
-                          child: Text(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 5),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(icon, size: 13, color: foreground),
+                          const SizedBox(width: 4),
+                          Text(
                             title,
                             maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                            softWrap: false,
                             style: AppTextStyle.text12BS().copyWith(
                               color: foreground,
-                              fontSize: 11,
+                              fontSize: 9,
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

@@ -214,46 +214,37 @@ class _LeatherWalletPainter extends CustomPainter {
       canvas.drawPath(path, crackPaint);
     }
 
-    _paintTopStitching(canvas, size);
+    _paintEdgeStitching(canvas, size);
   }
 
-  void _paintTopStitching(Canvas canvas, Size size) {
+  void _paintEdgeStitching(Canvas canvas, Size size) {
+    // Stitching follows the outside edge of the leather card.
     final rect = Rect.fromLTWH(8, 6, size.width - 16, size.height - 12);
     final radius = math.min(19.0, size.height * .35);
-    final fullPath = Path()
+    final edgePath = Path()
       ..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(radius)));
 
-    final metrics = fullPath.computeMetrics().toList();
+    final metrics = edgePath.computeMetrics().toList();
     if (metrics.isEmpty) return;
 
-    final metric = metrics.first;
     final stitchPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = 1.35
-      ..color = const Color(0xFFFF8A00).withValues(alpha: .92);
+      ..strokeWidth = 1.45
+      ..color = const Color(0xFFFF8A00).withValues(alpha: .96);
 
-    final subtleEdgePaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = .75
-      ..color = const Color(0xFFFFA83D).withValues(alpha: .34);
+    final metric = metrics.first;
+    const dashLength = 5.5;
+    const gapLength = 4.5;
 
-    canvas.drawPath(fullPath, subtleEdgePaint);
-
-    final topLength = metric.length * .31;
-    _drawDashedSegment(canvas, metric, 0, topLength, stitchPaint);
-    _drawDashedSegment(
-      canvas,
-      metric,
-      math.max(0, metric.length - topLength),
-      metric.length,
-      stitchPaint,
-    );
-
-    final centerStart = metric.length * .16;
-    final centerEnd = metric.length * .84;
-    _drawDashedSegment(canvas, metric, centerStart, centerEnd, stitchPaint);
+    var distance = 0.0;
+    while (distance < metric.length) {
+      final end = math.min(distance + dashLength, metric.length);
+      if (end > distance) {
+        canvas.drawPath(metric.extractPath(distance, end), stitchPaint);
+      }
+      distance += dashLength + gapLength;
+    }
   }
 
   void _drawDashedSegment(

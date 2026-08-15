@@ -186,7 +186,7 @@ class _OuterWalletEdgeStitchPainter extends CustomPainter {
       math.max(0, cardHeight - edgeInset * 2),
     );
 
-    final radius = 26.0 - edgeInset;
+    final double radius = 26.0 - edgeInset;
     final path = Path()
       ..addRRect(
         RRect.fromRectAndRadius(rect, Radius.circular(math.max(0, radius))),

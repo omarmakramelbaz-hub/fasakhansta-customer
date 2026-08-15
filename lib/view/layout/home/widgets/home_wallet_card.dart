@@ -218,9 +218,16 @@ class _LeatherWalletPainter extends CustomPainter {
   }
 
   void _paintEdgeStitching(Canvas canvas, Size size) {
-    // Stitching follows the outside edge of the leather card.
-    final rect = Rect.fromLTWH(8, 6, size.width - 16, size.height - 12);
-    final radius = math.min(19.0, size.height * .35);
+    // Keep the thread close to the black leather edge, with only a subtle
+    // inner margin so it reads like real saddle stitching.
+    const inset = 3.5;
+    final rect = Rect.fromLTWH(
+      inset,
+      inset,
+      size.width - inset * 2,
+      size.height - inset * 2,
+    );
+    final radius = math.min(21.0, size.height * .38);
     final edgePath = Path()
       ..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(radius)));
 
@@ -230,12 +237,12 @@ class _LeatherWalletPainter extends CustomPainter {
     final stitchPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = 1.45
+      ..strokeWidth = 1.35
       ..color = const Color(0xFFFF8A00).withValues(alpha: .96);
 
     final metric = metrics.first;
-    const dashLength = 5.5;
-    const gapLength = 4.5;
+    const dashLength = 5.0;
+    const gapLength = 4.0;
 
     var distance = 0.0;
     while (distance < metric.length) {

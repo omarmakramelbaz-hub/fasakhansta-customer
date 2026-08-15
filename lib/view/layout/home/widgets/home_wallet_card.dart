@@ -222,8 +222,6 @@ class _LeatherWalletPainter extends CustomPainter {
     final fullPath = Path()
       ..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(radius)));
 
-    // Main visible saddle stitching: only across the upper arc and slightly
-    // down both side edges, leaving the lower edge clean.
     final metrics = fullPath.computeMetrics().toList();
     if (metrics.isEmpty) return;
 
@@ -240,25 +238,18 @@ class _LeatherWalletPainter extends CustomPainter {
       ..strokeWidth = .75
       ..color = const Color(0xFFFFA83D).withValues(alpha: .34);
 
-    // Draw the whole rounded path with a very subtle edge accent.
     canvas.drawPath(fullPath, subtleEdgePaint);
 
-    // The path starts near the top-left and follows the rounded rectangle.
-    // Stitch only the top arc plus short vertical sections on both sides.
     final topLength = metric.length * .31;
-    final leftStart = 0.0;
-    final rightEnd = metric.length;
-
-    _drawDashedSegment(canvas, metric, leftStart, topLength, stitchPaint);
+    _drawDashedSegment(canvas, metric, 0, topLength, stitchPaint);
     _drawDashedSegment(
       canvas,
       metric,
       math.max(0, metric.length - topLength),
-      rightEnd,
+      metric.length,
       stitchPaint,
     );
 
-    // Reinforce a short continuous arc across the visual top center.
     final centerStart = metric.length * .16;
     final centerEnd = metric.length * .84;
     _drawDashedSegment(canvas, metric, centerStart, centerEnd, stitchPaint);
@@ -292,89 +283,86 @@ class _LeatherWalletBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 68,
-      height: 68,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: const Color(0xFF191919),
-        border: Border.all(color: const Color(0xFF3D3D3D), width: 1),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x55000000),
-            blurRadius: 10,
-            offset: Offset(0, 5),
-          ),
-          BoxShadow(
-            color: Color(0x22FFFFFF),
-            blurRadius: 2,
-            offset: Offset(0, -1),
-          ),
-        ],
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          CustomPaint(
-            size: const Size(68, 68),
-            painter: _BadgeStitchPainter(),
-          ),
-          Container(
-            width: 48,
-            height: 42,
-            decoration: BoxDecoration(
-              color: const Color(0xFF0E0E0E),
-              borderRadius: BorderRadius.circular(11),
-              border: Border.all(color: const Color(0xFF5B5B5B), width: 1),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x55000000),
-                  blurRadius: 7,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-          ),
-          const Icon(
-            Icons.account_balance_wallet_rounded,
-            color: Color(0xFFFF8A00),
-            size: 28,
-          ),
-          Positioned(
-            bottom: 12,
-            right: 13,
-            child: Container(
-              width: 9,
-              height: 9,
-              decoration: const BoxDecoration(
-                color: Color(0xFFFFA000),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-        ],
+    return SizedBox(
+      width: 92,
+      height: 86,
+      child: CustomPaint(
+        painter: _WalletIllustrationPainter(),
       ),
     );
   }
 }
 
-class _BadgeStitchPainter extends CustomPainter {
+class _WalletIllustrationPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final path = Path()
-      ..addOval(Rect.fromCircle(center: size.center(Offset.zero), radius: 30));
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 1.2
-      ..color = const Color(0xFFFF8A00).withValues(alpha: .65);
+    final shadow = Paint()..color = const Color(0x33000000);
+    canvas.drawCircle(Offset(size.width * .52, size.height * .51), 38, shadow);
 
+    final leather = Paint()..color = const Color(0xFF171717);
+    final leatherHi = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4
+      ..color = const Color(0xFFFF8A00);
+
+    final walletRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(20, 18, 52, 55),
+      const Radius.circular(8),
+    );
+    canvas.drawRRect(walletRect, leather);
+    canvas.drawRRect(walletRect, leatherHi);
+
+    final flap = Path()
+      ..moveTo(19, 23)
+      ..lineTo(63, 16)
+      ..quadraticBezierTo(72, 15, 74, 24)
+      ..lineTo(73, 32)
+      ..lineTo(21, 39)
+      ..close();
+    canvas.drawPath(flap, leather);
+    canvas.drawPath(flap, leatherHi);
+
+    final tab = RRect.fromRectAndRadius(
+      Rect.fromLTWH(57, 39, 29, 16),
+      const Radius.circular(7),
+    );
+    canvas.drawRRect(tab, leather);
+    canvas.drawRRect(tab, leatherHi);
+
+    final button = Paint()..color = const Color(0xFFFF9D1A);
+    canvas.drawCircle(const Offset(66, 47), 6, button);
+
+    final stitch = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..strokeCap = StrokeCap.round
+      ..color = const Color(0xFFFFA63D);
+
+    final stitchPath = Path()
+      ..moveTo(23, 22)
+      ..lineTo(67, 17)
+      ..lineTo(70, 72)
+      ..lineTo(24, 68)
+      ..close();
+    _drawDashed(canvas, stitchPath, stitch);
+
+    final card = RRect.fromRectAndRadius(
+      Rect.fromLTWH(46, 4, 22, 22),
+      const Radius.circular(3),
+    );
+    canvas.save();
+    canvas.rotate(-.12, Offset(57, 15));
+    canvas.drawRRect(card, Paint()..color = const Color(0xFFFF8A00));
+    canvas.restore();
+  }
+
+  void _drawDashed(Canvas canvas, Path path, Paint paint) {
     for (final metric in path.computeMetrics()) {
-      var distance = 0.0;
-      while (distance < metric.length) {
-        final end = math.min(distance + 4, metric.length);
-        canvas.drawPath(metric.extractPath(distance, end), paint);
-        distance += 8;
+      var d = 0.0;
+      while (d < metric.length) {
+        final end = math.min(d + 3.5, metric.length);
+        canvas.drawPath(metric.extractPath(d, end), paint);
+        d += 7;
       }
     }
   }

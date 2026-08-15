@@ -103,120 +103,139 @@ class _NearbyRestaurantCard extends StatelessWidget {
               ],
             ),
             clipBehavior: Clip.antiAlias,
-            child: Directionality(
-              textDirection: TextDirection.rtl,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    flex: 6,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(7, 7, 7, 7),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  model.name ?? '',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.right,
-                                  style: AppTextStyle.text15BS().copyWith(fontSize: 12),
-                                ),
-                              ),
-                              const SizedBox(width: 3),
-                              const Icon(Icons.storefront_rounded, color: Color(0xFFFF7A00), size: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  height: 56,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      CustomNetworkImage(
+                        imageUrl: model.bgImage ?? model.logo ?? '',
+                        height: 56,
+                        width: width,
+                        radius: 0,
+                        fit: BoxFit.cover,
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              AppColors.blackColor.withOpacity(.16),
                             ],
                           ),
-                          const SizedBox(height: 1),
-                          Text(
-                            model.address ?? model.cityName ?? '',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.right,
-                            style: AppTextStyle.text10RG(color: AppColors.lightTextColor),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _MiniValue(
-                                  icon: Icons.star_rounded,
-                                  iconColor: const Color(0xFFFF7A00),
-                                  value: model.avgRate?.toStringAsFixed(1) ?? '0.0',
-                                ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 5,
+                        left: 5,
+                        child: _DeliveryBadge(text: model.deliveryTime ?? 'سريع'),
+                      ),
+                      Positioned(
+                        top: 5,
+                        right: 5,
+                        child: const Icon(Icons.location_on_rounded, color: Colors.white, size: 14),
+                      ),
+                      BranchLogoWidget(model: model),
+                      IsRestaurantBusyWidget(model: model),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(6, 8, 6, 5),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          textDirection: TextDirection.rtl,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                model.name ?? '',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.right,
+                                style: AppTextStyle.text15BS().copyWith(fontSize: 11.5),
                               ),
+                            ),
+                            const SizedBox(width: 2),
+                            const Icon(Icons.storefront_rounded, color: Color(0xFFFF7A00), size: 11),
+                          ],
+                        ),
+                        const SizedBox(height: 1),
+                        Row(
+                          textDirection: TextDirection.rtl,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                model.address ?? model.cityName ?? '',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.right,
+                                style: AppTextStyle.text10RG(color: AppColors.lightTextColor),
+                              ),
+                            ),
+                            if ((model.cityName ?? model.cityname ?? '').trim().isNotEmpty) ...[
                               const SizedBox(width: 3),
-                              Expanded(
-                                child: _MiniValue(
-                                  icon: Icons.delivery_dining_rounded,
-                                  iconColor: const Color(0xFF1D766B),
-                                  value: model.kmPrice != null ? '${model.kmPrice!.toStringAsFixed(0)}ج' : 'حسب المنطقة',
-                                ),
-                              ),
-                              const SizedBox(width: 3),
-                              Expanded(
-                                child: _MiniValue(
-                                  icon: Icons.account_balance_wallet_rounded,
-                                  iconColor: const Color(0xFFFF7A00),
-                                  value: _formatMoney(model.minOrderPrice),
-                                ),
-                              ),
+                              const Icon(Icons.location_on_rounded, size: 10, color: Color(0xFF145D55)),
                             ],
-                          ),
-                          const Spacer(),
-                          SizedBox(
-                            width: double.infinity,
-                            height: 24,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: canOpen ? AppColors.mainAppColor : AppColors.greyColor,
-                                borderRadius: BorderRadius.circular(8),
+                          ],
+                        ),
+                        const Spacer(),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _MiniValue(
+                                icon: Icons.star_rounded,
+                                iconColor: const Color(0xFFFF7A00),
+                                value: model.avgRate?.toStringAsFixed(1) ?? '0.0',
                               ),
-                              child: Center(
-                                child: Text(
-                                  'اطلب الآن',
-                                  style: AppTextStyle.text12BS().copyWith(color: Colors.white, fontSize: 10),
-                                ),
+                            ),
+                            const SizedBox(width: 3),
+                            Expanded(
+                              child: _MiniValue(
+                                icon: Icons.delivery_dining_rounded,
+                                iconColor: const Color(0xFF1D766B),
+                                value: model.kmPrice != null ? '${model.kmPrice!.toStringAsFixed(0)}ج' : 'حسب المنطقة',
+                              ),
+                            ),
+                            const SizedBox(width: 3),
+                            Expanded(
+                              child: _MiniValue(
+                                icon: Icons.account_balance_wallet_rounded,
+                                iconColor: const Color(0xFFFF7A00),
+                                value: _formatMoney(model.minOrderPrice),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 20,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: canOpen ? AppColors.mainAppColor : AppColors.greyColor,
+                              borderRadius: BorderRadius.circular(7),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'اطلب الآن',
+                                style: AppTextStyle.text12BS().copyWith(color: Colors.white, fontSize: 9.5),
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    width: width * .42,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        CustomNetworkImage(
-                          imageUrl: model.bgImage ?? model.logo ?? '',
-                          height: 112,
-                          width: width * .42,
-                          radius: 0,
-                          fit: BoxFit.cover,
                         ),
-                        Positioned(
-                          top: 6,
-                          right: 6,
-                          child: _DeliveryBadge(text: model.deliveryTime ?? 'سريع'),
-                        ),
-                        if ((model.cityName ?? model.cityname ?? '').trim().isNotEmpty)
-                          Positioned(
-                            bottom: 6,
-                            right: 6,
-                            child: _CityBadge(text: model.cityName ?? model.cityname ?? ''),
-                          ),
-                        BranchLogoWidget(model: model),
-                        IsRestaurantBusyWidget(model: model),
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -235,17 +254,17 @@ class _MiniValue extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 24,
-      padding: const EdgeInsets.symmetric(horizontal: 3),
+      height: 20,
+      padding: const EdgeInsets.symmetric(horizontal: 2),
       decoration: BoxDecoration(
         color: const Color(0xFFFFF5EC),
-        borderRadius: BorderRadius.circular(7),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 12, color: iconColor),
-          const SizedBox(width: 2),
+          Icon(icon, size: 10, color: iconColor),
+          const SizedBox(width: 1),
           Flexible(
             child: Text(
               value,
@@ -292,30 +311,6 @@ class _DeliveryBadge extends StatelessWidget {
   }
 }
 
-class _CityBadge extends StatelessWidget {
-  final String text;
-  const _CityBadge({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFF145D55).withOpacity(.95),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.location_on_rounded, size: 10, color: Colors.white),
-          const SizedBox(width: 2),
-          Text(text, style: AppTextStyle.text10BW(color: Colors.white)),
-        ],
-      ),
-    );
-  }
-}
-
 String _formatMoney(dynamic value) {
   if (value == null) return 'غير محدد';
   if (value is num) return '${value.toStringAsFixed(0)}ج';
@@ -332,7 +327,7 @@ class BranchLogoWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Positioned(
       left: 6,
-      bottom: -8,
+      bottom: -10,
       child: Container(
         padding: const EdgeInsets.all(2),
         decoration: const BoxDecoration(

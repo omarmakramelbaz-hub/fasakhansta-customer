@@ -44,124 +44,172 @@ class _WalletContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(30, 0, 30, 14),
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF151515),
-            Color(0xFF252525),
-            Color(0xFF0D0D0D),
+    return CustomPaint(
+      foregroundPainter: _OuterWalletEdgeStitchPainter(),
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(30, 0, 30, 14),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF151515),
+              Color(0xFF252525),
+              Color(0xFF0D0D0D),
+            ],
+            stops: [0, .52, 1],
+          ),
+          borderRadius: BorderRadius.circular(26),
+          border: Border.all(color: const Color(0xFF171717), width: 1),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x44000000),
+              blurRadius: 22,
+              offset: Offset(0, 10),
+            ),
+            BoxShadow(
+              color: Color(0x22FFFFFF),
+              blurRadius: 2,
+              offset: Offset(0, -1),
+            ),
           ],
-          stops: [0, .52, 1],
         ),
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: const Color(0xFF171717), width: 1),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x44000000),
-            blurRadius: 22,
-            offset: Offset(0, 10),
-          ),
-          BoxShadow(
-            color: Color(0x22FFFFFF),
-            blurRadius: 2,
-            offset: Offset(0, -1),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(25),
-        child: CustomPaint(
-          painter: _LeatherWalletPainter(),
-          child: Directionality(
-            textDirection: TextDirection.rtl,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const _LeatherWalletBadge(),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'المحفظة',
-                        style: AppTextStyle.text15BS().copyWith(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 1),
-                      Text(
-                        'الرصيد الحالي',
-                        style: AppTextStyle.text12BS().copyWith(
-                          color: const Color(0xFFB9B9B9),
-                          fontSize: 11,
-                        ),
-                      ),
-                      const SizedBox(height: 1),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            balance.toStringAsFixed(2),
-                            style: AppTextStyle.text20BS().copyWith(
-                              fontSize: 29,
-                              color: Colors.white,
-                              height: 1,
-                            ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(25),
+          child: CustomPaint(
+            painter: _LeatherWalletPainter(),
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const _LeatherWalletBadge(),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'المحفظة',
+                          style: AppTextStyle.text15BS().copyWith(
+                            color: Colors.white,
+                            fontSize: 16,
                           ),
-                          const SizedBox(width: 5),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 2),
-                            child: Text(
-                              'جنيه',
-                              style: AppTextStyle.text16MS().copyWith(
-                                color: const Color(0xFFD2D2D2),
-                                fontSize: 11,
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          'الرصيد الحالي',
+                          style: AppTextStyle.text12BS().copyWith(
+                            color: const Color(0xFFB9B9B9),
+                            fontSize: 11,
+                          ),
+                        ),
+                        const SizedBox(height: 1),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              balance.toStringAsFixed(2),
+                              style: AppTextStyle.text20BS().copyWith(
+                                fontSize: 29,
+                                color: Colors.white,
+                                height: 1,
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 11),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _WalletButton(
-                              title: 'شحن المحفظة',
-                              filled: true,
-                              icon: Icons.add_rounded,
-                              onTap: () => NamedNavigatorImpl.push(WalletScreen.routeName),
+                            const SizedBox(width: 5),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 2),
+                              child: Text(
+                                'جنيه',
+                                style: AppTextStyle.text16MS().copyWith(
+                                  color: const Color(0xFFD2D2D2),
+                                  fontSize: 11,
+                                ),
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _WalletButton(
-                              title: 'تفاصيل المحفظة',
-                              filled: false,
-                              icon: Icons.receipt_long_outlined,
-                              onTap: () => NamedNavigatorImpl.push(WalletScreen.routeName),
+                          ],
+                        ),
+                        const SizedBox(height: 11),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _WalletButton(
+                                title: 'شحن المحفظة',
+                                filled: true,
+                                icon: Icons.add_rounded,
+                                onTap: () => NamedNavigatorImpl.push(WalletScreen.routeName),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _WalletButton(
+                                title: 'تفاصيل المحفظة',
+                                filled: false,
+                                icon: Icons.receipt_long_outlined,
+                                onTap: () => NamedNavigatorImpl.push(WalletScreen.routeName),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
+}
+
+class _OuterWalletEdgeStitchPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.width <= 0 || size.height <= 0) return;
+
+    // This painter is attached to the full wallet card bounds, so the thread
+    // follows the actual outside edge of the black leather card rather than
+    // the smaller inner content area.
+    const inset = 0.9;
+    const radius = 26.0;
+    final rect = Rect.fromLTWH(
+      inset,
+      inset,
+      math.max(0, size.width - inset * 2),
+      math.max(0, size.height - inset * 2),
+    );
+    final path = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(rect, const Radius.circular(radius)),
+      );
+
+    final stitchPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 1.35
+      ..color = const Color(0xFFFF8A00).withValues(alpha: .98);
+
+    for (final metric in path.computeMetrics()) {
+      var distance = 0.0;
+      const dashLength = 5.0;
+      const gapLength = 4.0;
+      while (distance < metric.length) {
+        final end = math.min(distance + dashLength, metric.length);
+        if (end > distance) {
+          canvas.drawPath(metric.extractPath(distance, end), stitchPaint);
+        }
+        distance += dashLength + gapLength;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _LeatherWalletPainter extends CustomPainter {
@@ -212,46 +260,6 @@ class _LeatherWalletPainter extends CustomPainter {
         path.lineTo(point.dx, point.dy);
       }
       canvas.drawPath(path, crackPaint);
-    }
-
-    _paintEdgeStitching(canvas, size);
-  }
-
-  void _paintEdgeStitching(Canvas canvas, Size size) {
-    // Put the thread directly on the outer black leather boundary.
-    // The stroke is centered on the edge, so there is effectively no visible
-    // inner margin while the ClipRRect keeps it clean inside the rounded card.
-    const edgeOffset = 0.9;
-    final rect = Rect.fromLTWH(
-      edgeOffset,
-      edgeOffset,
-      math.max(0, size.width - edgeOffset * 2),
-      math.max(0, size.height - edgeOffset * 2),
-    );
-    final radius = math.min(24.0, math.max(0, size.height * .42));
-    final edgePath = Path()
-      ..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(radius)));
-
-    final metrics = edgePath.computeMetrics().toList();
-    if (metrics.isEmpty) return;
-
-    final stitchPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 1.45
-      ..color = const Color(0xFFFF8A00).withValues(alpha: .97);
-
-    final metric = metrics.first;
-    const dashLength = 5.0;
-    const gapLength = 4.0;
-
-    var distance = 0.0;
-    while (distance < metric.length) {
-      final end = math.min(distance + dashLength, metric.length);
-      if (end > distance) {
-        canvas.drawPath(metric.extractPath(distance, end), stitchPaint);
-      }
-      distance += dashLength + gapLength;
     }
   }
 

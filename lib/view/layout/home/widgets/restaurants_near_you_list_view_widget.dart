@@ -21,7 +21,8 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final cardWidth = ((screenWidth - 42) / 2).clamp(150.0, 170.0);
+    final baseCardWidth = ((screenWidth - 42) / 2).clamp(150.0, 170.0);
+    final cardWidth = baseCardWidth * .75;
 
     return ApiResponseWidget(
       apiResponse: context.read<HomeController>().restaurantsNearYouApiResponse,
@@ -31,13 +32,13 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
           ),
       isEmpty: restaurantsNearYou.isEmpty,
       loadingWidget: CustomShimmer(
-        height: 250,
+        height: 188,
         width: double.infinity,
         fillColor: AppColors.greyColor.withValues(alpha: .05),
         shimmerColor: AppColors.mainAppColor,
       ),
       child: SizedBox(
-        height: 250,
+        height: 188,
         child: ListView.separated(
           padding: const EdgeInsets.symmetric(horizontal: 14),
           scrollDirection: Axis.horizontal,
@@ -72,11 +73,11 @@ class _NearbyRestaurantCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(18);
+    final radius = BorderRadius.circular(14);
 
     return SizedBox(
       width: width,
-      height: 244,
+      height: 183,
       child: Material(
         color: AppColors.whiteColor,
         borderRadius: radius,
@@ -92,12 +93,12 @@ class _NearbyRestaurantCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.whiteColor,
               borderRadius: radius,
-              border: Border.all(color: AppColors.borderColorContainer.withOpacity(.65)),
+              border: Border.all(color: AppColors.borderColorContainer.withOpacity(.62)),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.blackColor.withOpacity(.065),
-                  blurRadius: 14,
-                  offset: const Offset(0, 5),
+                  color: AppColors.blackColor.withOpacity(.055),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
@@ -105,13 +106,13 @@ class _NearbyRestaurantCard extends StatelessWidget {
             child: Column(
               children: [
                 SizedBox(
-                  height: 108,
+                  height: 81,
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
                       CustomNetworkImage(
                         imageUrl: model.bgImage ?? model.logo ?? '',
-                        height: 108,
+                        height: 81,
                         width: width,
                         radius: 0,
                         fit: BoxFit.cover,
@@ -123,25 +124,25 @@ class _NearbyRestaurantCard extends StatelessWidget {
                             end: Alignment.bottomCenter,
                             colors: [
                               Colors.transparent,
-                              AppColors.blackColor.withOpacity(.18),
+                              AppColors.blackColor.withOpacity(.16),
                             ],
                           ),
                         ),
                       ),
                       Positioned(
-                        top: 8,
-                        left: 8,
+                        top: 6,
+                        left: 6,
                         child: _DeliveryBadge(text: model.deliveryTime ?? 'سريع'),
                       ),
                       Positioned(
-                        right: 8,
-                        bottom: 8,
+                        right: 6,
+                        bottom: 6,
                         child: _CityBadge(text: model.cityName ?? model.cityname ?? ''),
                       ),
                       const Positioned(
-                        right: 8,
-                        top: 8,
-                        child: Icon(Icons.location_on_rounded, color: Colors.white, size: 17),
+                        right: 6,
+                        top: 6,
+                        child: Icon(Icons.location_on_rounded, color: Colors.white, size: 14),
                       ),
                       BranchLogoWidget(model: model),
                       IsRestaurantBusyWidget(model: model),
@@ -150,7 +151,7 @@ class _NearbyRestaurantCard extends StatelessWidget {
                 ),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(9, 8, 9, 8),
+                    padding: const EdgeInsets.fromLTRB(7, 6, 7, 6),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
@@ -160,14 +161,14 @@ class _NearbyRestaurantCard extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 model.name ?? '',
-                                style: AppTextStyle.text15BS().copyWith(fontSize: 14),
+                                style: AppTextStyle.text15BS().copyWith(fontSize: 12),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.right,
                               ),
                             ),
-                            const SizedBox(width: 4),
-                            const Icon(Icons.storefront_rounded, color: Color(0xFFFF7A00), size: 14),
+                            const SizedBox(width: 3),
+                            const Icon(Icons.storefront_rounded, color: Color(0xFFFF7A00), size: 12),
                           ],
                         ),
                         const SizedBox(height: 1),
@@ -178,12 +179,12 @@ class _NearbyRestaurantCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.right,
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 4),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFFF5EC),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(color: const Color(0xFFFFE0C7)),
                           ),
                           child: Row(
@@ -197,7 +198,7 @@ class _NearbyRestaurantCard extends StatelessWidget {
                                   subtitle: 'التقييم',
                                 ),
                               ),
-                              Container(width: 1, height: 22, color: const Color(0xFFFFE0C7)),
+                              Container(width: 1, height: 18, color: const Color(0xFFFFE0C7)),
                               Expanded(
                                 child: _InfoItem(
                                   icon: Icons.delivery_dining_rounded,
@@ -206,7 +207,7 @@ class _NearbyRestaurantCard extends StatelessWidget {
                                   subtitle: 'التوصيل',
                                 ),
                               ),
-                              Container(width: 1, height: 22, color: const Color(0xFFFFE0C7)),
+                              Container(width: 1, height: 18, color: const Color(0xFFFFE0C7)),
                               Expanded(
                                 child: _InfoItem(
                                   icon: Icons.account_balance_wallet_rounded,
@@ -221,18 +222,18 @@ class _NearbyRestaurantCard extends StatelessWidget {
                         const Spacer(),
                         SizedBox(
                           width: double.infinity,
-                          height: 34,
+                          height: 27,
                           child: DecoratedBox(
                             decoration: BoxDecoration(
                               color: canOpen ? AppColors.mainAppColor : AppColors.greyColor,
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                             child: Center(
                               child: Text(
                                 'اطلب الآن',
                                 style: AppTextStyle.text12BS().copyWith(
                                   color: Colors.white,
-                                  fontSize: 12,
+                                  fontSize: 10,
                                 ),
                               ),
                             ),
@@ -258,23 +259,23 @@ class _DeliveryBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: AppColors.blackColor.withOpacity(.10),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+            color: AppColors.blackColor.withOpacity(.08),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.schedule_rounded, size: 13, color: Color(0xFFFF7A00)),
-          const SizedBox(width: 3),
+          const Icon(Icons.schedule_rounded, size: 11, color: Color(0xFFFF7A00)),
+          const SizedBox(width: 2),
           Text(text, style: AppTextStyle.text10BW(color: AppColors.blackColor)),
         ],
       ),
@@ -290,15 +291,15 @@ class _CityBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     if (text.trim().isEmpty) return const SizedBox.shrink();
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       decoration: BoxDecoration(
         color: const Color(0xFF145D55).withOpacity(.95),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.location_on_rounded, size: 12, color: Colors.white),
+          const Icon(Icons.location_on_rounded, size: 10, color: Colors.white),
           const SizedBox(width: 2),
           Text(text, style: AppTextStyle.text10BW(color: Colors.white)),
         ],
@@ -324,7 +325,7 @@ class _InfoItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Icon(icon, size: 15, color: iconColor),
+        Icon(icon, size: 13, color: iconColor),
         const SizedBox(height: 1),
         Text(
           title,
@@ -360,8 +361,8 @@ class BranchLogoWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      left: 8,
-      bottom: -16,
+      left: 6,
+      bottom: -12,
       child: Container(
         padding: const EdgeInsets.all(2),
         decoration: const BoxDecoration(
@@ -370,9 +371,9 @@ class BranchLogoWidget extends StatelessWidget {
         ),
         child: CustomNetworkImage(
           imageUrl: model.logo ?? '',
-          height: 44,
-          width: 44,
-          radius: 24,
+          height: 33,
+          width: 33,
+          radius: 18,
           fit: BoxFit.cover,
         ),
       ),

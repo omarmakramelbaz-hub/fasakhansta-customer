@@ -178,20 +178,20 @@ class _OuterWalletEdgeStitchPainter extends CustomPainter {
     const rightMargin = 30.0;
     const bottomMargin = 14.0;
     const edgeInset = 1.0;
-    final cardWidth = math.max(0, size.width - leftMargin - rightMargin);
-    final cardHeight = math.max(0, size.height - bottomMargin);
+    final cardWidth = math.max(0.0, size.width - leftMargin - rightMargin);
+    final cardHeight = math.max(0.0, size.height - bottomMargin);
 
     final rect = Rect.fromLTWH(
       leftMargin + edgeInset,
       edgeInset,
-      math.max(0, cardWidth - edgeInset * 2),
-      math.max(0, cardHeight - edgeInset * 2),
+      math.max(0.0, cardWidth - edgeInset * 2),
+      math.max(0.0, cardHeight - edgeInset * 2),
     );
 
     final double radius = 26.0 - edgeInset;
     final path = Path()
       ..addRRect(
-        RRect.fromRectAndRadius(rect, Radius.circular(math.max(0, radius))),
+        RRect.fromRectAndRadius(rect, Radius.circular(math.max(0.0, radius))),
       );
 
     _drawDashedPath(canvas, path, 1.35, 5.0, 4.0, .98, const Color(0xFFFF8A00));
@@ -210,34 +210,33 @@ class _ButtonEdgeStitchPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (size.width <= 4 || size.height <= 4) return;
 
-    const double inset = 0.65;
+    const double inset = 1.25;
     const double buttonRadius = 12.0;
     final double radius = buttonRadius - inset;
     final rect = Rect.fromLTWH(
       inset,
       inset,
-      size.width - inset * 2,
-      size.height - inset * 2,
+      math.max(0.0, size.width - inset * 2),
+      math.max(0.0, size.height - inset * 2),
     );
+
     final path = Path()
       ..addRRect(
-        RRect.fromRectAndRadius(rect, Radius.circular(radius)),
+        RRect.fromRectAndRadius(rect, Radius.circular(math.max(0.0, radius))),
       );
 
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
-      ..strokeWidth = 1.15
+      ..strokeWidth = 1.05
       ..color = stitchColor.withValues(alpha: .96);
 
-    // Start halfway through a dash so every rounded corner receives
-    // a balanced stitch instead of a visible gap at the corner.
     for (final metric in path.computeMetrics()) {
-      const double dash = 4.2;
-      const double gap = 3.6;
-      const double phase = 1.8;
-      var distance = -phase;
+      const double dash = 4.0;
+      const double gap = 4.0;
+      const double phase = 2.0;
+      double distance = -phase;
       while (distance < metric.length) {
         final double start = math.max(0.0, distance).toDouble();
         final double end = math.min(distance + dash, metric.length).toDouble();
@@ -273,7 +272,7 @@ void _drawDashedPath(
   for (final metric in path.computeMetrics()) {
     var distance = 0.0;
     while (distance < metric.length) {
-      final end = math.min(distance + dashLength, metric.length);
+      final end = math.min(distance + dashLength, metric.length).toDouble();
       if (end > distance) {
         canvas.drawPath(metric.extractPath(distance, end), stitchPaint);
       }
@@ -344,7 +343,7 @@ class _LeatherWalletPainter extends CustomPainter {
     const dash = 5.0;
     const gap = 4.0;
     while (distance < end) {
-      final dashEnd = math.min(distance + dash, end);
+      final dashEnd = math.min(distance + dash, end).toDouble();
       if (dashEnd > distance) {
         canvas.drawPath(metric.extractPath(distance, dashEnd), paint);
       }
@@ -440,7 +439,7 @@ class _WalletIllustrationPainter extends CustomPainter {
     for (final metric in path.computeMetrics()) {
       var d = 0.0;
       while (d < metric.length) {
-        final end = math.min(d + 3.5, metric.length);
+        final end = math.min(d + 3.5, metric.length).toDouble();
         canvas.drawPath(metric.extractPath(d, end), paint);
         d += 7;
       }
@@ -468,35 +467,56 @@ class _WalletButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(12);
+    final background = filled ? const Color(0xFFFF7A00) : const Color(0xFF1B1B1B);
+    final foreground = filled ? Colors.white : const Color(0xFFFFA31A);
+    final borderColor = filled ? const Color(0xFFFF7A00) : const Color(0xFF6A6A6A);
+
     return SizedBox(
       height: 40,
-      child: CustomPaint(
-        foregroundPainter: _ButtonEdgeStitchPainter(stitchColor: stitchColor),
-        child: OutlinedButton.icon(
-          onPressed: onTap,
-          icon: Icon(icon, size: 16),
-          label: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              title,
-              maxLines: 1,
-              softWrap: false,
+      child: ClipRRect(
+        borderRadius: radius,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Material(
+              color: background,
+              child: InkWell(
+                onTap: onTap,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: radius,
+                    border: Border.all(color: borderColor, width: 1.2),
+                  ),
+                  child: Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(icon, size: 16, color: foreground),
+                        const SizedBox(width: 5),
+                        Flexible(
+                          child: Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyle.text12BS().copyWith(
+                              color: foreground,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
-          style: OutlinedButton.styleFrom(
-            backgroundColor: filled ? const Color(0xFFFF7A00) : const Color(0xFF1B1B1B),
-            foregroundColor: filled ? Colors.white : const Color(0xFFFFA31A),
-            side: BorderSide(
-              color: filled ? const Color(0xFFFF7A00) : const Color(0xFF6A6A6A),
-              width: 1.2,
+            IgnorePointer(
+              child: CustomPaint(
+                painter: _ButtonEdgeStitchPainter(stitchColor: stitchColor),
+              ),
             ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            visualDensity: VisualDensity.compact,
-            textStyle: AppTextStyle.text12BS().copyWith(fontSize: 11),
-          ),
+          ],
         ),
       ),
     );

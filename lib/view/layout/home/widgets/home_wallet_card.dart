@@ -170,22 +170,29 @@ class _WalletContent extends StatelessWidget {
 class _OuterWalletEdgeStitchPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    if (size.width <= 0 || size.height <= 0) return;
+    if (size.width <= 60 || size.height <= 14) return;
 
-    // This painter is attached to the full wallet card bounds, so the thread
-    // follows the actual outside edge of the black leather card rather than
-    // the smaller inner content area.
-    const inset = 0.9;
-    const radius = 26.0;
+    // The CustomPaint wraps a Container that has 30px horizontal and 14px
+    // bottom margin. Draw the thread against the actual decorated black card,
+    // not against the larger render box that includes that margin.
+    const leftMargin = 30.0;
+    const rightMargin = 30.0;
+    const bottomMargin = 14.0;
+    const edgeInset = 1.0;
+    final cardWidth = math.max(0, size.width - leftMargin - rightMargin);
+    final cardHeight = math.max(0, size.height - bottomMargin);
+
     final rect = Rect.fromLTWH(
-      inset,
-      inset,
-      math.max(0, size.width - inset * 2),
-      math.max(0, size.height - inset * 2),
+      leftMargin + edgeInset,
+      edgeInset,
+      math.max(0, cardWidth - edgeInset * 2),
+      math.max(0, cardHeight - edgeInset * 2),
     );
+
+    final radius = 26.0 - edgeInset;
     final path = Path()
       ..addRRect(
-        RRect.fromRectAndRadius(rect, const Radius.circular(radius)),
+        RRect.fromRectAndRadius(rect, Radius.circular(math.max(0, radius))),
       );
 
     final stitchPaint = Paint()

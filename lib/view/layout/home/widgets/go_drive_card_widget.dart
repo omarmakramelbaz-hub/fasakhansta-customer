@@ -129,7 +129,7 @@ class GoDriveCardWidget extends StatelessWidget {
                                   ),
                                   child: Text(
                                     'سريع • آمن • مباشر',
-                                    style: AppTextStyle.text10MS().copyWith(color: AppColors.darkTextColor),
+                                    style: AppTextStyle.text10RG().copyWith(color: AppColors.darkTextColor),
                                     textAlign: TextAlign.center,
                                   ),
                                 ),

@@ -210,19 +210,43 @@ class _ButtonEdgeStitchPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (size.width <= 4 || size.height <= 4) return;
 
-    const inset = 0.8;
+    const double inset = 0.65;
+    const double buttonRadius = 12.0;
+    final double radius = buttonRadius - inset;
     final rect = Rect.fromLTWH(
       inset,
       inset,
-      math.max(0, size.width - inset * 2),
-      math.max(0, size.height - inset * 2),
+      size.width - inset * 2,
+      size.height - inset * 2,
     );
-    const double buttonRadius = 12.0;
-    final double radius = buttonRadius - inset;
     final path = Path()
-      ..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(math.max(0, radius))));
+      ..addRRect(
+        RRect.fromRectAndRadius(rect, Radius.circular(radius)),
+      );
 
-    _drawDashedPath(canvas, path, 1.2, 4.5, 4.0, .95, stitchColor);
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..strokeWidth = 1.15
+      ..color = stitchColor.withValues(alpha: .96);
+
+    // Start halfway through a dash so every rounded corner receives
+    // a balanced stitch instead of a visible gap at the corner.
+    for (final metric in path.computeMetrics()) {
+      const double dash = 4.2;
+      const double gap = 3.6;
+      const double phase = 1.8;
+      var distance = -phase;
+      while (distance < metric.length) {
+        final start = math.max(0, distance);
+        final end = math.min(distance + dash, metric.length);
+        if (end > start) {
+          canvas.drawPath(metric.extractPath(start, end), paint);
+        }
+        distance += dash + gap;
+      }
+    }
   }
 
   @override

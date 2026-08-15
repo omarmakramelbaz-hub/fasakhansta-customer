@@ -36,3 +36,5 @@ jobs:
           fi
           git commit -m 'Fix wallet web radius type'
           git push
+
+# Trigger Web Preview from the corrected main branch.

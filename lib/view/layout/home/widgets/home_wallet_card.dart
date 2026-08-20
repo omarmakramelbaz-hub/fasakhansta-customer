@@ -74,7 +74,7 @@ class _WalletContent extends StatelessWidget {
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(25),
+          borderRadius: BorderRadius.zero,
           child: CustomPaint(
             painter: _LeatherWalletPainter(),
             child: Directionality(

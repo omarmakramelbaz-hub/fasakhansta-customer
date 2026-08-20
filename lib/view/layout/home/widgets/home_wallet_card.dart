@@ -214,73 +214,6 @@ class _OuterWalletEdgeStitchPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-class _ButtonEdgeStitchPainter extends CustomPainter {
-  final Color stitchColor;
-
-  _ButtonEdgeStitchPainter({required this.stitchColor});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (size.width <= 6 || size.height <= 6) return;
-
-    const inset = 1.5;
-    const buttonRadius = 10.0;
-    final radius = math.max(0.0, buttonRadius - inset);
-    final rect = Rect.fromLTWH(
-      inset,
-      inset,
-      math.max(0.0, size.width - inset * 2),
-      math.max(0.0, size.height - inset * 2),
-    );
-    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(radius));
-    final path = Path()..addRRect(rrect);
-
-    final basePaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0
-      ..strokeJoin = StrokeJoin.round
-      ..color = stitchColor.withValues(alpha: .88);
-    canvas.drawRRect(rrect, basePaint);
-
-    final stitchPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round
-      ..strokeWidth = 1.2
-      ..color = stitchColor.withValues(alpha: .98);
-
-    for (final metric in path.computeMetrics()) {
-      const dash = 4.2;
-      const preferredGap = 3.6;
-      final segmentCount = math.max(
-        1,
-        (metric.length / (dash + preferredGap)).floor(),
-      );
-      final gap = math.max(
-        1.8,
-        (metric.length - (segmentCount * dash)) / segmentCount,
-      );
-      final cycle = dash + gap;
-      final phase = gap / 2;
-      var distance = -phase;
-
-      while (distance < metric.length) {
-        final start = math.max(0.0, distance);
-        final end = math.min(distance + dash, metric.length);
-        if (end > start) {
-          canvas.drawPath(metric.extractPath(start, end), stitchPaint);
-        }
-        distance += cycle;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _ButtonEdgeStitchPainter oldDelegate) {
-    return oldDelegate.stitchColor != stitchColor;
-  }
-}
-
 void _drawDashedPath(
   Canvas canvas,
   Path path,
@@ -476,60 +409,58 @@ class _WalletButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(11);
     final background =
         filled ? const Color(0xFFFF7A00) : const Color(0xFF1B1B1B);
     final foreground = filled ? Colors.white : const Color(0xFFFFA31A);
     final borderColor =
         filled ? const Color(0xFF111111) : const Color(0xFFFF8A00);
 
-    return SizedBox(
-      height: 38,
-      child: Material(
-        color: Colors.transparent,
-        child: Ink(
-          decoration: BoxDecoration(
-            color: background,
-            borderRadius: radius,
-            border: Border.all(
-              color: borderColor,
-              width: filled ? 1.0 : 1.6,
-            ),
-            boxShadow: filled
-                ? const [
-                    BoxShadow(
-                      color: Color(0x33000000),
-                      blurRadius: 3,
-                      offset: Offset(0, 1),
-                    ),
-                  ]
-                : null,
-          ),
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: radius,
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 7),
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(icon, size: 13, color: foreground),
-                      const SizedBox(width: 4),
-                      Text(
-                        title,
-                        maxLines: 1,
-                        softWrap: false,
-                        style: AppTextStyle.text12BS().copyWith(
-                          color: foreground,
-                          fontSize: 9,
-                        ),
+    return Semantics(
+      button: true,
+      label: title,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Container(
+            height: 38,
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 7),
+            decoration: BoxDecoration(
+              color: background,
+              borderRadius: BorderRadius.circular(11),
+              border: Border.all(
+                color: borderColor,
+                width: filled ? 1.0 : 1.8,
+              ),
+              boxShadow: filled
+                  ? const [
+                      BoxShadow(
+                        color: Color(0x33000000),
+                        blurRadius: 3,
+                        offset: Offset(0, 1),
                       ),
-                    ],
+                    ]
+                  : null,
+            ),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icon, size: 13, color: foreground),
+                  const SizedBox(width: 4),
+                  Text(
+                    title,
+                    maxLines: 1,
+                    softWrap: false,
+                    style: AppTextStyle.text12BS().copyWith(
+                      color: foreground,
+                      fontSize: 9,
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),

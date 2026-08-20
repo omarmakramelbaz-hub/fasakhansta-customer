@@ -190,12 +190,12 @@ class _OuterWalletEdgeStitchPainter extends CustomPainter {
       math.max(0, cardHeight - edgeInset * 2),
     );
 
-    final radius = 26.0 - edgeInset;
+    final double radius = 26.0 - edgeInset;
     final path = Path()
       ..addRRect(
         RRect.fromRectAndRadius(
           rect,
-          Radius.circular(math.max(0, radius)),
+          Radius.circular(math.max(0.0, radius)),
         ),
       );
 
@@ -221,43 +221,58 @@ class _ButtonEdgeStitchPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (size.width <= 4 || size.height <= 4) return;
+    if (size.width <= 6 || size.height <= 6) return;
 
-    const double inset = 0.65;
-    const double buttonRadius = 12.0;
-    final double radius = buttonRadius - inset;
+    const inset = 1.5;
+    const buttonRadius = 10.0;
+    final radius = math.max(0.0, buttonRadius - inset);
     final rect = Rect.fromLTWH(
       inset,
       inset,
-      size.width - inset * 2,
-      size.height - inset * 2,
+      math.max(0.0, size.width - inset * 2),
+      math.max(0.0, size.height - inset * 2),
     );
-    final path = Path()
-      ..addRRect(
-        RRect.fromRectAndRadius(rect, Radius.circular(radius)),
-      );
+    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(radius));
+    final path = Path()..addRRect(rrect);
 
-    final paint = Paint()
+    // Continuous base outline guarantees that all four sides and corners
+    // are always visible. The dashed stitch is painted above it.
+    final basePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0
+      ..strokeJoin = StrokeJoin.round
+      ..color = stitchColor.withValues(alpha: .88);
+    canvas.drawRRect(rrect, basePaint);
+
+    final stitchPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
-      ..strokeWidth = 1.15
-      ..color = stitchColor.withValues(alpha: .96);
+      ..strokeWidth = 1.2
+      ..color = stitchColor.withValues(alpha: .98);
 
-    // Start halfway through a dash so every rounded corner receives
-    // a balanced stitch instead of a visible gap at the corner.
     for (final metric in path.computeMetrics()) {
-      const double dash = 4.2;
-      const double gap = 3.6;
-      const double phase = 1.8;
+      const dash = 4.2;
+      const preferredGap = 3.6;
+      final segmentCount = math.max(
+        1,
+        (metric.length / (dash + preferredGap)).floor(),
+      );
+      final gap = math.max(
+        1.8,
+        (metric.length - (segmentCount * dash)) / segmentCount,
+      );
+      final cycle = dash + gap;
+      final phase = gap / 2;
       var distance = -phase;
+
       while (distance < metric.length) {
-        final start = math.max(0, distance);
+        final start = math.max(0.0, distance);
         final end = math.min(distance + dash, metric.length);
         if (end > start) {
-          canvas.drawPath(metric.extractPath(start, end), paint);
+          canvas.drawPath(metric.extractPath(start, end), stitchPaint);
         }
-        distance += dash + gap;
+        distance += cycle;
       }
     }
   }

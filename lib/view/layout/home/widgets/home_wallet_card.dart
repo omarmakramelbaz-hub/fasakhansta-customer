@@ -235,8 +235,6 @@ class _ButtonEdgeStitchPainter extends CustomPainter {
     final rrect = RRect.fromRectAndRadius(rect, Radius.circular(radius));
     final path = Path()..addRRect(rrect);
 
-    // Continuous base outline guarantees that all four sides and corners
-    // are always visible. The dashed stitch is painted above it.
     final basePaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0
@@ -478,54 +476,63 @@ class _WalletButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(10);
+    final radius = BorderRadius.circular(11);
     final background =
         filled ? const Color(0xFFFF7A00) : const Color(0xFF1B1B1B);
     final foreground = filled ? Colors.white : const Color(0xFFFFA31A);
+    final borderColor =
+        filled ? const Color(0xFF111111) : const Color(0xFFFF8A00);
 
     return SizedBox(
       height: 38,
-      child: ClipRRect(
-        borderRadius: radius,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Material(
-              color: background,
-              child: InkWell(
-                onTap: onTap,
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 5),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(icon, size: 13, color: foreground),
-                          const SizedBox(width: 4),
-                          Text(
-                            title,
-                            maxLines: 1,
-                            softWrap: false,
-                            style: AppTextStyle.text12BS().copyWith(
-                              color: foreground,
-                              fontSize: 9,
-                            ),
-                          ),
-                        ],
-                      ),
+      child: Material(
+        color: Colors.transparent,
+        child: Ink(
+          decoration: BoxDecoration(
+            color: background,
+            borderRadius: radius,
+            border: Border.all(
+              color: borderColor,
+              width: filled ? 1.0 : 1.6,
+            ),
+            boxShadow: filled
+                ? const [
+                    BoxShadow(
+                      color: Color(0x33000000),
+                      blurRadius: 3,
+                      offset: Offset(0, 1),
                     ),
+                  ]
+                : null,
+          ),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: radius,
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 7),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(icon, size: 13, color: foreground),
+                      const SizedBox(width: 4),
+                      Text(
+                        title,
+                        maxLines: 1,
+                        softWrap: false,
+                        style: AppTextStyle.text12BS().copyWith(
+                          color: foreground,
+                          fontSize: 9,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-            IgnorePointer(
-              child: CustomPaint(
-                painter: _ButtonEdgeStitchPainter(stitchColor: stitchColor),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

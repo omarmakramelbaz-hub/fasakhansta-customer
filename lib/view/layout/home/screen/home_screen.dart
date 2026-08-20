@@ -197,29 +197,43 @@ class _HomeScreenState extends State<HomeScreen> {
     return Consumer<HomeController>(
       builder: (context, controller, _) {
         return Scaffold(
-          body: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Positioned(top: 0, left: 0, right: 0, child: HomeHeader(controller: controller)),
-              Positioned.fill(
-                child: SingleChildScrollView(
-                  physics: const ClampingScrollPhysics(),
-                  padding: const EdgeInsets.only(top: 238),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SliderWidget(controller: controller),
-                      HomeFeatureCards(controller: controller),
-                      RestaurantsNearYouWidget(controller: controller),
-                      const SizedBox(height: 8),
-                      GoDriveCardWidget(controller: controller),
-                      20.sbH,
-                    ],
+          body: SingleChildScrollView(
+            physics: const ClampingScrollPhysics(),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Reserve the same top area previously used by the fixed
+                    // header/wallet. Because this spacer is inside the scroll
+                    // view, the whole top section now scrolls away naturally.
+                    const SizedBox(height: 238),
+                    SliderWidget(controller: controller),
+                    HomeFeatureCards(controller: controller),
+                    RestaurantsNearYouWidget(controller: controller),
+                    const SizedBox(height: 8),
+                    GoDriveCardWidget(controller: controller),
+                    20.sbH,
+                  ],
+                ),
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: HomeHeader(controller: controller),
+                ),
+                const Positioned(
+                  top: 112,
+                  left: 0,
+                  right: 0,
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: HomeWalletCard(),
                   ),
                 ),
-              ),
-              const Positioned(top: 112, left: 0, right: 0, child: Align(alignment: Alignment.topCenter, child: HomeWalletCard())),
-            ],
+              ],
+            ),
           ),
         );
       },

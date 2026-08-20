@@ -1,11 +1,9 @@
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../helpers/routes/app_routers_import.dart';
-import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/theme/app_text_style.dart';
 import '../../wallet/controller/wallet_controller.dart';
 import '../../wallet/screen/wallet_screen.dart';
@@ -141,7 +139,9 @@ class _WalletContent extends StatelessWidget {
                                 filled: true,
                                 stitchColor: const Color(0xFF000000),
                                 icon: Icons.add_rounded,
-                                onTap: () => NamedNavigatorImpl.push(WalletScreen.routeName),
+                                onTap: () => NamedNavigatorImpl.push(
+                                  WalletScreen.routeName,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -151,7 +151,9 @@ class _WalletContent extends StatelessWidget {
                                 filled: false,
                                 stitchColor: const Color(0xFFFF8A00),
                                 icon: Icons.receipt_long_outlined,
-                                onTap: () => NamedNavigatorImpl.push(WalletScreen.routeName),
+                                onTap: () => NamedNavigatorImpl.push(
+                                  WalletScreen.routeName,
+                                ),
                               ),
                             ),
                           ],
@@ -188,13 +190,24 @@ class _OuterWalletEdgeStitchPainter extends CustomPainter {
       math.max(0, cardHeight - edgeInset * 2),
     );
 
-    final double radius = 26.0 - edgeInset;
+    final radius = 26.0 - edgeInset;
     final path = Path()
       ..addRRect(
-        RRect.fromRectAndRadius(rect, Radius.circular(math.max(0, radius))),
+        RRect.fromRectAndRadius(
+          rect,
+          Radius.circular(math.max(0, radius)),
+        ),
       );
 
-    _drawDashedPath(canvas, path, 1.35, 5.0, 4.0, .98, const Color(0xFFFF8A00));
+    _drawDashedPath(
+      canvas,
+      path,
+      1.35,
+      5.0,
+      4.0,
+      .98,
+      const Color(0xFFFF8A00),
+    );
   }
 
   @override
@@ -208,43 +221,61 @@ class _ButtonEdgeStitchPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (size.width <= 4 || size.height <= 4) return;
+    if (size.width <= 6 || size.height <= 6) return;
 
-    const double inset = 0.65;
-    const double buttonRadius = 12.0;
-    final double radius = buttonRadius - inset;
+    // Keep the stitch comfortably inside the ClipRRect. The old painter
+    // used a 12px radius while the button itself uses 10px, which clipped
+    // parts of the outline on some device widths.
+    const inset = 1.25;
+    const buttonRadius = 10.0;
+    final radius = math.max(0.0, buttonRadius - inset);
     final rect = Rect.fromLTWH(
       inset,
       inset,
-      size.width - inset * 2,
-      size.height - inset * 2,
+      math.max(0.0, size.width - inset * 2),
+      math.max(0.0, size.height - inset * 2),
     );
-    final path = Path()
-      ..addRRect(
-        RRect.fromRectAndRadius(rect, Radius.circular(radius)),
-      );
+    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(radius));
+    final path = Path()..addRRect(rrect);
 
-    final paint = Paint()
+    // A very light continuous base line guarantees that all four sides and
+    // rounded corners remain visually complete, while the dashed stitch on
+    // top preserves the leather-wallet styling.
+    final basePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = .55
+      ..color = stitchColor.withValues(alpha: .34);
+    canvas.drawRRect(rrect, basePaint);
+
+    final stitchPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
-      ..strokeWidth = 1.15
-      ..color = stitchColor.withValues(alpha: .96);
+      ..strokeWidth = 1.2
+      ..color = stitchColor.withValues(alpha: .98);
 
-    // Start halfway through a dash so every rounded corner receives
-    // a balanced stitch instead of a visible gap at the corner.
     for (final metric in path.computeMetrics()) {
-      const double dash = 4.2;
-      const double gap = 3.6;
-      const double phase = 1.8;
+      const dash = 4.2;
+      const preferredGap = 3.6;
+      final segmentCount = math.max(
+        1,
+        (metric.length / (dash + preferredGap)).floor(),
+      );
+      final gap = math.max(
+        1.8,
+        (metric.length - (segmentCount * dash)) / segmentCount,
+      );
+      final cycle = dash + gap;
+      final phase = gap / 2;
       var distance = -phase;
+
       while (distance < metric.length) {
-        final start = math.max(0, distance);
+        final start = math.max(0.0, distance);
         final end = math.min(distance + dash, metric.length);
         if (end > start) {
-          canvas.drawPath(metric.extractPath(start, end), paint);
+          canvas.drawPath(metric.extractPath(start, end), stitchPaint);
         }
-        distance += dash + gap;
+        distance += cycle;
       }
     }
   }
@@ -319,6 +350,7 @@ class _LeatherWalletPainter extends CustomPainter {
       final path = Path()..moveTo(start.dx, start.dy);
       var point = start;
       final segments = 2 + random.nextInt(3);
+
       for (var s = 0; s < segments; s++) {
         final length = 8 + random.nextDouble() * 15;
         final turn = (random.nextDouble() - .5) * .9;
@@ -330,25 +362,6 @@ class _LeatherWalletPainter extends CustomPainter {
         path.lineTo(point.dx, point.dy);
       }
       canvas.drawPath(path, crackPaint);
-    }
-  }
-
-  void _drawDashedSegment(
-    Canvas canvas,
-    ui.PathMetric metric,
-    double start,
-    double end,
-    Paint paint,
-  ) {
-    var distance = start;
-    const dash = 5.0;
-    const gap = 4.0;
-    while (distance < end) {
-      final dashEnd = math.min(distance + dash, end).toDouble();
-      if (dashEnd > distance) {
-        canvas.drawPath(metric.extractPath(distance, dashEnd), paint);
-      }
-      distance += dash + gap;
     }
   }
 
@@ -469,7 +482,8 @@ class _WalletButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(10);
-    final background = filled ? const Color(0xFFFF7A00) : const Color(0xFF1B1B1B);
+    final background =
+        filled ? const Color(0xFFFF7A00) : const Color(0xFF1B1B1B);
     final foreground = filled ? Colors.white : const Color(0xFFFFA31A);
 
     return SizedBox(

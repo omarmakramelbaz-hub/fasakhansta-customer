@@ -190,12 +190,12 @@ class _OuterWalletEdgeStitchPainter extends CustomPainter {
       math.max(0, cardHeight - edgeInset * 2),
     );
 
-    final radius = 26.0 - edgeInset;
+    final double radius = 26.0 - edgeInset;
     final path = Path()
       ..addRRect(
         RRect.fromRectAndRadius(
           rect,
-          Radius.circular(math.max(0, radius)),
+          Radius.circular(math.max(0.0, radius)),
         ),
       );
 
@@ -223,10 +223,7 @@ class _ButtonEdgeStitchPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (size.width <= 6 || size.height <= 6) return;
 
-    // Keep the stitch comfortably inside the ClipRRect. The old painter
-    // used a 12px radius while the button itself uses 10px, which clipped
-    // parts of the outline on some device widths.
-    const inset = 1.25;
+    const inset = 1.5;
     const buttonRadius = 10.0;
     final radius = math.max(0.0, buttonRadius - inset);
     final rect = Rect.fromLTWH(
@@ -238,13 +235,13 @@ class _ButtonEdgeStitchPainter extends CustomPainter {
     final rrect = RRect.fromRectAndRadius(rect, Radius.circular(radius));
     final path = Path()..addRRect(rrect);
 
-    // A very light continuous base line guarantees that all four sides and
-    // rounded corners remain visually complete, while the dashed stitch on
-    // top preserves the leather-wallet styling.
+    // Continuous base outline guarantees that all four sides and corners
+    // are always visible. The dashed stitch is painted above it.
     final basePaint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = .55
-      ..color = stitchColor.withValues(alpha: .34);
+      ..strokeWidth = 1.0
+      ..strokeJoin = StrokeJoin.round
+      ..color = stitchColor.withValues(alpha: .88);
     canvas.drawRRect(rrect, basePaint);
 
     final stitchPaint = Paint()

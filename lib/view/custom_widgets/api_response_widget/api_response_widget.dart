@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../helpers/networking/api_helper.dart';
@@ -63,11 +64,14 @@ class ApiResponseWidget extends StatelessWidget {
           return child;
         }
       case ResponseState.error:
+        if (kIsWeb) return child;
         return errorWidget ?? Center(child: ExceptionWidget(message: exceptionMessage, axis: axis, onReload: onReload));
       case ResponseState.unauthorized:
+        if (kIsWeb) return child;
         return unauthorizedWidget ??
             Center(child: ExceptionWidget(message: exceptionMessage, axis: axis, onReload: onReload));
       case ResponseState.offline:
+        if (kIsWeb) return child;
         return offlineWidget ?? Center(child: OfflineWidget(axis: axis, onReload: onReload));
     }
   }

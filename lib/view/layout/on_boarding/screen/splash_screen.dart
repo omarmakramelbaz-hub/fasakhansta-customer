@@ -119,7 +119,7 @@ class _SplashScreenState extends State<SplashScreen> {
       onSuccess: () async {
         if (!mounted || _isNavigationPending) return;
 
-        await Future.delayed(const Duration(milliseconds: 5500));
+        await Future.delayed(Duration(milliseconds: kIsWeb ? 500 : 5500));
         if (!mounted) return;
 
         final authController = context.read<AuthController>();
@@ -141,9 +141,25 @@ class _SplashScreenState extends State<SplashScreen> {
         if (!mounted || _isNavigationPending || _isBiometricCheckComplete) {
           return;
         }
+
+        if (kIsWeb) {
+          _navigateToLogin();
+          return;
+        }
+
         _delayedNavigation(LoginScreen.routeName, seconds: 4);
       },
     );
+
+    // Web is used only as a visual review build. If the browser cannot
+    // complete the profile request (for example because of a web-only
+    // networking restriction), do not leave the preview stuck on Splash.
+    if (kIsWeb) {
+      Future.delayed(const Duration(seconds: 3), () {
+        if (!mounted || _isNavigationPending) return;
+        _navigateToHome();
+      });
+    }
   }
 
   void _delayedNavigation(String routeName, {int seconds = 0}) {

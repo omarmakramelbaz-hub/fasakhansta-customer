@@ -162,7 +162,7 @@ class _RaffleHero extends StatelessWidget {
     final prize = _displayPrize(drawAmount, displayTitle);
 
     return SizedBox(
-      height: 315,
+      height: 360,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -170,137 +170,173 @@ class _RaffleHero extends StatelessWidget {
             top: 0,
             left: 0,
             right: 0,
-            height: 254,
+            height: 300,
             child: Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(26),
-                gradient: const LinearGradient(
-                  begin: Alignment.topRight,
-                  end: Alignment.bottomLeft,
-                  colors: [Color(0xFF0D6070), Color(0xFF082F43)],
-                ),
+                borderRadius: BorderRadius.circular(28),
+                color: const Color(0xFF073F46),
                 boxShadow: const [
                   BoxShadow(
-                    color: Color(0x22000000),
-                    blurRadius: 22,
-                    offset: Offset(0, 9),
+                    color: Color(0x2A052B35),
+                    blurRadius: 24,
+                    offset: Offset(0, 10),
                   ),
                 ],
               ),
               clipBehavior: Clip.antiAlias,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final artWidth = constraints.maxWidth * .44;
-                  return Stack(
-                    children: [
-                      Positioned(
-                        left: 0,
-                        top: 0,
-                        bottom: 0,
-                        width: artWidth,
-                        child: Image.memory(
-                          raffleHeroArtBytes,
-                          fit: BoxFit.cover,
-                          alignment: Alignment.center,
-                          gaplessPlayback: true,
-                        ),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.memory(
+                    raffleHeroArtBytes,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.center,
+                    gaplessPlayback: true,
+                  ),
+                  const DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.centerRight,
+                        end: Alignment.centerLeft,
+                        stops: [0.0, .48, 1.0],
+                        colors: [
+                          Color(0xE6073940),
+                          Color(0xB8073940),
+                          Color(0x18073940),
+                        ],
                       ),
-                      Positioned(
-                        left: artWidth * .55,
-                        top: 0,
-                        bottom: 0,
-                        width: artWidth * .75,
-                        child: const DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                              colors: [Color(0x00082F43), Color(0xFF082F43)],
+                    ),
+                  ),
+                  const DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0x05000000), Color(0x61021D24)],
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: -52,
+                    left: -40,
+                    child: Container(
+                      width: 150,
+                      height: 150,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.mainAppColor.withValues(alpha: .12),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: 18,
+                    bottom: 26,
+                    child: Container(
+                      width: 68,
+                      height: 68,
+                      decoration: BoxDecoration(
+                        color: AppColors.mainAppColor.withValues(alpha: .94),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.white.withValues(alpha: .28)),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x35000000),
+                            blurRadius: 14,
+                            offset: Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Icons.card_giftcard_rounded, color: Colors.white, size: 36),
+                    ),
+                  ),
+                  Positioned(
+                    top: 18,
+                    right: 18,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: AppColors.mainAppColor,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: const [
+                          BoxShadow(color: Color(0x25000000), blurRadius: 8, offset: Offset(0, 3)),
+                        ],
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.star_rounded, color: Colors.white, size: 15),
+                          SizedBox(width: 5),
+                          Text(
+                            'المسابقة الحالية',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
-                        ),
+                        ],
                       ),
-                      Positioned(
-                        right: 16,
-                        left: artWidth - 4,
-                        top: 15,
-                        bottom: 20,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: AppColors.mainAppColor,
-                                  borderRadius: BorderRadius.circular(11),
-                                ),
-                                child: const Text(
-                                  'المسابقة الحالية',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              displayTitle,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTextStyle.text22BS(color: Colors.white).copyWith(height: 1.12),
-                            ),
-                            const SizedBox(height: 5),
-                            Text(
-                              'كل طلب مؤهل يقربك من الفوز',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTextStyle.text12RG(color: Colors.white.withValues(alpha: .86)),
-                            ),
-                            const Spacer(),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _HeroStat(
-                                    label: 'الحد الأدنى للطلب',
-                                    value: _formatPrice(price),
-                                  ),
-                                ),
-                                Container(
-                                  width: 1,
-                                  height: 52,
-                                  margin: const EdgeInsets.symmetric(horizontal: 10),
-                                  color: Colors.white.withValues(alpha: .32),
-                                ),
-                                Expanded(
-                                  child: _HeroStat(
-                                    label: 'قيمة السحب',
-                                    value: prize,
-                                  ),
-                                ),
-                                const SizedBox(width: 7),
-                                Icon(
-                                  Icons.card_giftcard_rounded,
-                                  color: AppColors.mainAppColor,
-                                  size: 34,
-                                ),
-                              ],
-                            ),
-                          ],
+                    ),
+                  ),
+                  Positioned(
+                    top: 64,
+                    right: 20,
+                    left: 112,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          displayTitle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyle.text22BS(color: Colors.white).copyWith(
+                            height: 1.15,
+                            fontSize: 27,
+                          ),
                         ),
-                      ),
-                    ],
-                  );
-                },
+                        const SizedBox(height: 8),
+                        Text(
+                          'كل طلب مؤهل يقربك من الفوز',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyle.text13RG(
+                            color: Colors.white.withValues(alpha: .88),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    right: 18,
+                    left: 98,
+                    bottom: 24,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _GlassStat(
+                            icon: Icons.emoji_events_rounded,
+                            label: 'قيمة السحب',
+                            value: prize,
+                          ),
+                        ),
+                        const SizedBox(width: 9),
+                        Expanded(
+                          child: _GlassStat(
+                            icon: Icons.shopping_bag_outlined,
+                            label: 'الحد الأدنى للطلب',
+                            value: _formatPrice(price),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
           Positioned(
-            left: 26,
-            right: 26,
+            left: 24,
+            right: 24,
             bottom: 0,
             child: _CountdownCard(endDate: endDate),
           ),
@@ -310,31 +346,58 @@ class _RaffleHero extends StatelessWidget {
   }
 }
 
-class _HeroStat extends StatelessWidget {
-  const _HeroStat({required this.label, required this.value});
+class _GlassStat extends StatelessWidget {
+  const _GlassStat({required this.icon, required this.label, required this.value});
+
+  final IconData icon;
   final String label;
   final String value;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: AppTextStyle.text10RG(color: Colors.white.withValues(alpha: .78)),
-        ),
-        const SizedBox(height: 3),
-        Text(
-          value,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: AppTextStyle.text18BS(color: Colors.white),
-        ),
-      ],
+    return Container(
+      height: 68,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xD9FFFFFF),
+        borderRadius: BorderRadius.circular(17),
+        border: Border.all(color: Colors.white.withValues(alpha: .48)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: AppColors.mainAppColor.withValues(alpha: .12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: AppColors.mainAppColor, size: 19),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyle.text10RG(color: const Color(0xFF6E7475)),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyle.text14BS(color: const Color(0xFF132C31)),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -346,39 +409,39 @@ class _CountdownCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 76,
+      height: 82,
       padding: const EdgeInsets.symmetric(horizontal: 18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: const Color(0xFFF1F1F1)),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x1A000000),
-            blurRadius: 18,
-            offset: Offset(0, 7),
+            color: Color(0x1D000000),
+            blurRadius: 20,
+            offset: Offset(0, 8),
           ),
         ],
       ),
       child: Row(
         children: [
           Container(
-            width: 46,
-            height: 46,
+            width: 50,
+            height: 50,
             decoration: const BoxDecoration(
-              color: Color(0xFFF0FAF9),
+              color: Color(0xFFEAF8F6),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.schedule_rounded, color: Color(0xFF0B7F77), size: 25),
+            child: const Icon(Icons.schedule_rounded, color: Color(0xFF0B7F77), size: 27),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 13),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('الوقت المتبقي للسحب', style: AppTextStyle.text13BS()),
-                const SizedBox(height: 4),
+                const SizedBox(height: 5),
                 Text(
                   _remainingText(endDate),
                   style: AppTextStyle.text15BS(color: AppColors.mainAppColor),
@@ -508,9 +571,7 @@ class _SectionHeader extends StatelessWidget {
             children: [
               const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF0B7F77)),
               const SizedBox(width: 3),
-              Text('عرض الكل', style: AppTextStyle.text11BS(color: const Color(0xFF0B7F77))),
-              const SizedBox(width: 3),
-              const Icon(Icons.chevron_left_rounded, size: 18, color: Color(0xFF0B7F77)),
+              Text('عرض الكل', style: AppTextStyle.text12BS(color: const Color(0xFF0B7F77))),
             ],
           ),
         ),
@@ -519,32 +580,22 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-String _displayPrize(String? drawAmount, String title) {
-  final direct = drawAmount?.trim() ?? '';
-  if (direct.isNotEmpty) return _formatPrice(direct);
-
-  final normalized = _normalizeArabicDigits(title);
-  final match = RegExp(r'(\d[\d,.]*)').firstMatch(normalized);
-  if (match == null) return '-';
-  return _formatPrice(match.group(1));
-}
-
-String _normalizeArabicDigits(String value) {
-  const arabic = '٠١٢٣٤٥٦٧٨٩';
-  const western = '0123456789';
-  var output = value;
-  for (var i = 0; i < arabic.length; i++) {
-    output = output.replaceAll(arabic[i], western[i]);
-  }
-  return output;
-}
-
 String _formatPrice(String? value) {
-  final text = _normalizeArabicDigits(value?.trim() ?? '').replaceAll(',', '');
+  final text = value?.trim() ?? '';
   if (text.isEmpty) return '-';
-  final number = num.tryParse(text);
-  if (number == null) return value?.trim().isNotEmpty == true ? value!.trim() : '-';
-  return '${number.toStringAsFixed(number % 1 == 0 ? 0 : 2)} ج';
+  final number = num.tryParse(text.replaceAll(',', ''));
+  if (number == null) return text;
+  final formatted = number.toStringAsFixed(number % 1 == 0 ? 0 : 2);
+  return '$formatted ج';
+}
+
+String _displayPrize(String? drawAmount, String title) {
+  final raw = drawAmount?.trim() ?? '';
+  if (raw.isNotEmpty) return _formatPrice(raw);
+
+  final match = RegExp(r'([0-9٠-٩][0-9٠-٩,.]*)').firstMatch(title);
+  if (match != null) return '${match.group(1)} ج';
+  return title;
 }
 
 String _remainingText(String? value) {

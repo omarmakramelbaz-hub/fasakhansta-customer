@@ -106,60 +106,86 @@ class _HomeScreenState extends State<HomeScreen> {
     final selectedCity = HiveMethods.getSelectedCity();
     if (selectedCity == null && mounted) {
       await context.read<AuthController>().getProfile();
-      _showCitySelectionSheet();
+      if (mounted) _showCitySelectionSheet();
     }
   }
 
   void _showCitySelectionSheet() {
+    if (!mounted) return;
+
     final authProvider = context.read<AuthController>();
     final userAddresses = authProvider.profile?.userAddresses ?? [];
 
-    if (userAddresses.isEmpty) return;
+    if (userAddresses.isEmpty) {
+      NamedNavigatorImpl.push(
+        AddAddressScreen.routeName,
+        arguments: AddAddressArgs(
+          onSuccess: () async {
+            await context.read<AuthController>().getProfile();
+            if (mounted) setState(() {});
+          },
+        ),
+      );
+      return;
+    }
 
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      BottomSheetHelper.gShowModalBottomSheet(
-        context: context,
-        maxHeight: context.height * 0.8,
-        barrierDismissible: false,
-        content: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('deliveryAddresses'.tr, style: AppTextStyle.text16MS().copyWith(color: AppColors.blackColor)),
-              SizedBox(
-                height: context.height * 0.65,
-                child: ListView.builder(
-                  itemCount: userAddresses.length,
-                  itemBuilder: (context, index) {
-                    final address = userAddresses[index];
-                    return ListTile(
-                      leading: CustomImage(path: AppImages.addressIcon, type: ImageType.svg, color: AppColors.blackColor),
-                      title: Text(
-                        "${address.countryName ?? ""} - ${address.cityName ?? ""} - ${address.streetName ?? ""}",
-                        style: AppTextStyle.text16BS(),
-                      ),
-                      onTap: () => _onAddressSelected(address),
-                    );
-                  },
-                ),
-              ),
-              ListTile(
-                title: Text('deliveryToAnotherAddress'.tr, style: AppTextStyle.text16BS()),
-                trailing: Icon(Icons.arrow_forward_ios, color: AppColors.blackColor),
-                onTap: () {
-                  NamedNavigatorImpl.push(
-                    AddAddressScreen.routeName,
-                    arguments: AddAddressArgs(onSuccess: () {}),
+    BottomSheetHelper.gShowModalBottomSheet(
+      context: context,
+      maxHeight: context.height * 0.8,
+      barrierDismissible: true,
+      content: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'deliveryAddresses'.tr,
+              style: AppTextStyle.text16MS().copyWith(color: AppColors.blackColor),
+            ),
+            SizedBox(
+              height: context.height * 0.65,
+              child: ListView.builder(
+                itemCount: userAddresses.length,
+                itemBuilder: (context, index) {
+                  final address = userAddresses[index];
+                  return ListTile(
+                    leading: CustomImage(
+                      path: AppImages.addressIcon,
+                      type: ImageType.svg,
+                      color: AppColors.blackColor,
+                    ),
+                    title: Text(
+                      "${address.countryName ?? ""} - ${address.cityName ?? ""} - ${address.streetName ?? ""}",
+                      style: AppTextStyle.text16BS(),
+                    ),
+                    onTap: () => _onAddressSelected(address),
                   );
                 },
               ),
-            ],
-          ),
+            ),
+            ListTile(
+              title: Text(
+                'deliveryToAnotherAddress'.tr,
+                style: AppTextStyle.text16BS(),
+              ),
+              trailing: Icon(Icons.arrow_forward_ios, color: AppColors.blackColor),
+              onTap: () {
+                Navigator.pop(context);
+                NamedNavigatorImpl.push(
+                  AddAddressScreen.routeName,
+                  arguments: AddAddressArgs(
+                    onSuccess: () async {
+                      await context.read<AuthController>().getProfile();
+                      if (mounted) setState(() {});
+                    },
+                  ),
+                );
+              },
+            ),
+          ],
         ),
-      );
-    });
+      ),
+    );
   }
 
   void _onAddressSelected(UserAddresses address) {
@@ -182,9 +208,14 @@ class _HomeScreenState extends State<HomeScreen> {
     HiveMethods.updateCity(address.streetName ?? '');
     HiveMethods.updateSelectedCityAreaId(address.cityId ?? 0);
 
+    if (mounted) setState(() {});
+
     Future.wait([
       homeController.getHeaderImage(),
-      homeController.getRestaurantsNearYou(lat: double.tryParse(address.lat ?? '') ?? HiveMethods.getLat(), lng: double.tryParse(address.lng ?? '') ?? HiveMethods.getLan()),
+      homeController.getRestaurantsNearYou(
+        lat: double.tryParse(address.lat ?? '') ?? HiveMethods.getLat(),
+        lng: double.tryParse(address.lng ?? '') ?? HiveMethods.getLan(),
+      ),
       homeController.getCoupon(lat: HiveMethods.getLat(), lng: HiveMethods.getLan()),
       homeController.getPreviousOrder(),
       homeController.getSpacialRestaurants(lat: HiveMethods.getLat(), lng: HiveMethods.getLan()),
@@ -205,13 +236,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Reserve the same top area previously used by the fixed
-                    // header/wallet. Because this spacer is inside the scroll
-                    // view, the whole top section now scrolls away naturally.
-                    const SizedBox(height: 238),
-                    SliderWidget(controller: controller),
-                    HomeFeatureCards(controller: controller),
+                    const SizedBox(height: 228),
                     RestaurantsNearYouWidget(controller: controller),
+                    SliderWidget(controller: controller),
+                    const SizedBox(height: 8),
+                    HomeFeatureCards(controller: controller),
                     const SizedBox(height: 8),
                     GoDriveCardWidget(controller: controller),
                     20.sbH,
@@ -221,10 +250,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   top: 0,
                   left: 0,
                   right: 0,
-                  child: HomeHeader(controller: controller),
+                  child: HomeHeader(
+                    controller: controller,
+                    onAddressTap: _showCitySelectionSheet,
+                  ),
                 ),
                 const Positioned(
-                  top: 112,
+                  top: 93,
                   left: 0,
                   right: 0,
                   child: Align(

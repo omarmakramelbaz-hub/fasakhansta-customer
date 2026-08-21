@@ -34,18 +34,7 @@ jobs:
         run: flutter create . --platforms web --no-pub
 
       - name: Build Flutter Web
-        run: flutter build web --release --dart-define=API_BASE_URL=/api/
-
-      - name: Install Firebase Functions dependencies
-        run: npm --prefix functions install --omit=dev
-
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_FASAKHANINJATEST }}
-
-      - name: Deploy Firebase API Proxy
-        run: npx firebase-tools@latest deploy --only functions:apiProxy --project fasakhaninjatest --non-interactive
+        run: flutter build web --release
 
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0

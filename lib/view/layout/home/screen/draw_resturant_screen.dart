@@ -8,10 +8,9 @@ import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/theme/app_text_style.dart';
 import '../../../../helpers/translation/all_translation.dart';
 import '../../../custom_widgets/api_response_widget/api_response_widget.dart';
-import '../../../custom_widgets/custom_image/custom_image.dart';
-import '../../my_account/account_app_bar/account_app_bar.dart';
 import '../controller/home_controller.dart';
 import '../widgets/draw_widget.dart';
+import '../widgets/raffle_hero_art.dart';
 
 class DrawRestaurantScreen extends StatefulWidget {
   static const String routeName = 'DrawRestaurantScreen';
@@ -58,75 +57,51 @@ class _DrawRestaurantScreenState extends State<DrawRestaurantScreen> {
         final restaurantsCount = data?.resturants?.length ?? 0;
 
         return Scaffold(
-          backgroundColor: const Color(0xFFF8F9FB),
+          backgroundColor: const Color(0xFFFBFBFB),
           body: SafeArea(
-            child: Column(
-              children: [
-                CustomAccountAppBar(title: 'restaurantRaffle'.tr),
-                Expanded(
-                  child: ApiResponseWidget(
-                    apiResponse: homeController.couponResponse,
-                    onReload: () => homeController.getCoupon(
-                      lat: HiveMethods.getLat(),
-                      lng: HiveMethods.getLan(),
-                    ),
-                    isEmpty: homeController.coupon == null,
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
-                      child: Directionality(
-                        textDirection: TextDirection.rtl,
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: Column(
+                children: [
+                  _TopBar(title: 'restaurantRaffle'.tr),
+                  Expanded(
+                    child: ApiResponseWidget(
+                      apiResponse: homeController.couponResponse,
+                      onReload: () => homeController.getCoupon(
+                        lat: HiveMethods.getLat(),
+                        lng: HiveMethods.getLan(),
+                      ),
+                      isEmpty: homeController.coupon == null,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 30),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
+                            Text(
+                              'كل طلب مؤهل يأخذك لفرصة ربح رائعة!',
+                              textAlign: TextAlign.right,
+                              style: AppTextStyle.text13RG(color: const Color(0xFF777777)),
+                            ),
+                            const SizedBox(height: 14),
                             _RaffleHero(
                               title: data?.name ?? '',
-                              image: data?.image ?? '',
+                              drawAmount: data?.drawAmount,
                               price: data?.price ?? '',
                               endDate: data?.endDate,
                             ),
-                            const SizedBox(height: 14),
+                            const SizedBox(height: 18),
                             _SubscriptionInfoCard(price: data?.price ?? ''),
-                            const SizedBox(height: 22),
-                            Row(
-                              children: [
-                                Container(
-                                  width: 42,
-                                  height: 42,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.mainAppColor.withValues(alpha: .10),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    Icons.groups_rounded,
-                                    color: AppColors.mainAppColor,
-                                    size: 23,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text('المطاعم المشاركة في السحب', style: AppTextStyle.text18BS()),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        '$restaurantsCount مطعم مشارك',
-                                        style: AppTextStyle.text12RG(color: const Color(0xFF858585)),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 24),
+                            _SectionHeader(count: restaurantsCount),
+                            const SizedBox(height: 14),
                             RestaurantsDrawWidget(homeController: homeController),
                           ],
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -135,117 +110,278 @@ class _DrawRestaurantScreenState extends State<DrawRestaurantScreen> {
   }
 }
 
+class _TopBar extends StatelessWidget {
+  const _TopBar({required this.title});
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 7, 16, 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.right,
+              style: AppTextStyle.text22BS(),
+            ),
+          ),
+          IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: AppColors.mainAppColor,
+              size: 23,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _RaffleHero extends StatelessWidget {
   const _RaffleHero({
     required this.title,
-    required this.image,
+    required this.drawAmount,
     required this.price,
     required this.endDate,
   });
 
   final String title;
-  final String image;
+  final String? drawAmount;
   final String price;
   final String? endDate;
 
   @override
   Widget build(BuildContext context) {
-    final hasImage = image.trim().isNotEmpty;
     final displayTitle = title.trim().isEmpty ? 'سحب على المطاعم' : title.trim();
+    final prize = _displayPrize(drawAmount, displayTitle);
 
-    return Container(
-      height: 220,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x22000000),
-            blurRadius: 20,
-            offset: Offset(0, 8),
+    return SizedBox(
+      height: 315,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 254,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(26),
+                gradient: const LinearGradient(
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomLeft,
+                  colors: [Color(0xFF0D6070), Color(0xFF082F43)],
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x22000000),
+                    blurRadius: 22,
+                    offset: Offset(0, 9),
+                  ),
+                ],
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final artWidth = constraints.maxWidth * .44;
+                  return Stack(
+                    children: [
+                      Positioned(
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        width: artWidth,
+                        child: Image.memory(
+                          raffleHeroArtBytes,
+                          fit: BoxFit.cover,
+                          alignment: Alignment.center,
+                          gaplessPlayback: true,
+                        ),
+                      ),
+                      Positioned(
+                        left: artWidth * .55,
+                        top: 0,
+                        bottom: 0,
+                        width: artWidth * .75,
+                        child: const DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                              colors: [Color(0x00082F43), Color(0xFF082F43)],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 16,
+                        left: artWidth - 4,
+                        top: 15,
+                        bottom: 20,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: AppColors.mainAppColor,
+                                  borderRadius: BorderRadius.circular(11),
+                                ),
+                                child: const Text(
+                                  'المسابقة الحالية',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              displayTitle,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyle.text22BS(color: Colors.white).copyWith(height: 1.12),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              'كل طلب مؤهل يقربك من الفوز',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyle.text12RG(color: Colors.white.withValues(alpha: .86)),
+                            ),
+                            const Spacer(),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _HeroStat(
+                                    label: 'الحد الأدنى للطلب',
+                                    value: _formatPrice(price),
+                                  ),
+                                ),
+                                Container(
+                                  width: 1,
+                                  height: 52,
+                                  margin: const EdgeInsets.symmetric(horizontal: 10),
+                                  color: Colors.white.withValues(alpha: .32),
+                                ),
+                                Expanded(
+                                  child: _HeroStat(
+                                    label: 'قيمة السحب',
+                                    value: prize,
+                                  ),
+                                ),
+                                const SizedBox(width: 7),
+                                Icon(
+                                  Icons.card_giftcard_rounded,
+                                  color: AppColors.mainAppColor,
+                                  size: 34,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+          Positioned(
+            left: 26,
+            right: 26,
+            bottom: 0,
+            child: _CountdownCard(endDate: endDate),
           ),
         ],
       ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        fit: StackFit.expand,
+    );
+  }
+}
+
+class _HeroStat extends StatelessWidget {
+  const _HeroStat({required this.label, required this.value});
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppTextStyle.text10RG(color: Colors.white.withValues(alpha: .78)),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          value,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: AppTextStyle.text18BS(color: Colors.white),
+        ),
+      ],
+    );
+  }
+}
+
+class _CountdownCard extends StatelessWidget {
+  const _CountdownCard({required this.endDate});
+  final String? endDate;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 76,
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFF1F1F1)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x1A000000),
+            blurRadius: 18,
+            offset: Offset(0, 7),
+          ),
+        ],
+      ),
+      child: Row(
         children: [
-          if (hasImage)
-            CustomImage(
-              path: image.trim(),
-              type: ImageType.network,
-              fit: BoxFit.cover,
-              radius: 0,
-              width: double.infinity,
-              height: 220,
-            )
-          else
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topRight,
-                  end: Alignment.bottomLeft,
-                  colors: [Color(0xFF0A5460), Color(0xFF062F44)],
-                ),
-              ),
+          Container(
+            width: 46,
+            height: 46,
+            decoration: const BoxDecoration(
+              color: Color(0xFFF0FAF9),
+              shape: BoxShape.circle,
             ),
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0x33000000), Color(0xCC061D2A)],
-              ),
-            ),
+            child: const Icon(Icons.schedule_rounded, color: Color(0xFF0B7F77), size: 25),
           ),
-          Positioned(
-            top: 16,
-            right: 16,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
-              decoration: BoxDecoration(
-                color: AppColors.mainAppColor,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Text(
-                'المسابقة الحالية',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            right: 18,
-            left: 18,
-            bottom: 16,
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text('الوقت المتبقي للسحب', style: AppTextStyle.text13BS()),
+                const SizedBox(height: 4),
                 Text(
-                  displayTitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyle.text24BS(color: Colors.white).copyWith(height: 1.15),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _HeroChip(
-                      icon: Icons.shopping_bag_outlined,
-                      label: 'مبلغ الاشتراك',
-                      value: _formatPrice(price),
-                    ),
-                    if ((endDate ?? '').trim().isNotEmpty)
-                      _HeroChip(
-                        icon: Icons.schedule_rounded,
-                        label: 'الوقت المتبقي',
-                        value: _remainingText(endDate),
-                      ),
-                  ],
+                  _remainingText(endDate),
+                  style: AppTextStyle.text15BS(color: AppColors.mainAppColor),
                 ),
               ],
             ),
@@ -256,85 +392,76 @@ class _RaffleHero extends StatelessWidget {
   }
 }
 
-class _HeroChip extends StatelessWidget {
-  const _HeroChip({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: .94),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 17, color: AppColors.mainAppColor),
-          const SizedBox(width: 6),
-          Text('$label: ', style: AppTextStyle.text10RG(color: const Color(0xFF6C6C6C))),
-          Text(value, style: AppTextStyle.text12BS()),
-        ],
-      ),
-    );
-  }
-}
-
 class _SubscriptionInfoCard extends StatelessWidget {
   const _SubscriptionInfoCard({required this.price});
-
   final String price;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      padding: const EdgeInsets.fromLTRB(15, 15, 15, 15),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF8F2),
-        borderRadius: BorderRadius.circular(20),
+        color: const Color(0xFFFFF9F4),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: const Color(0xFFFFDFC5)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Container(
-            width: 46,
-            height: 46,
+            width: 49,
+            height: 49,
             decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFFFE0C7)),
+              border: Border.all(color: const Color(0xFFFFDFC5)),
             ),
-            child: Icon(Icons.info_outline_rounded, color: AppColors.mainAppColor, size: 25),
+            child: Icon(Icons.info_outline_rounded, color: AppColors.mainAppColor, size: 27),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text.rich(
-              TextSpan(
-                children: [
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text.rich(
                   TextSpan(
-                    text: 'للاشتراك في المسابقة يرجى الطلب بمبلغ ',
-                    style: AppTextStyle.text14BS(),
+                    children: [
+                      TextSpan(
+                        text: 'للاشتراك في المسابقة يرجى الطلب بمبلغ ',
+                        style: AppTextStyle.text14BS(),
+                      ),
+                      TextSpan(
+                        text: _formatPrice(price),
+                        style: AppTextStyle.text15BS(color: AppColors.mainAppColor),
+                      ),
+                      TextSpan(text: ' أو أكثر', style: AppTextStyle.text14BS()),
+                    ],
                   ),
-                  TextSpan(
-                    text: _formatPrice(price),
-                    style: AppTextStyle.text15BS(color: AppColors.mainAppColor),
-                  ),
-                  TextSpan(
-                    text: ' أو أكثر',
-                    style: AppTextStyle.text14BS(),
-                  ),
-                ],
-              ),
-              textAlign: TextAlign.right,
+                  textAlign: TextAlign.right,
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  'كل طلب مؤهل يمنحك فرصة واحدة للدخول في السحب',
+                  style: AppTextStyle.text11RG(color: const Color(0xFF7A7A7A)),
+                ),
+              ],
             ),
+          ),
+          const SizedBox(width: 10),
+          Container(
+            width: 45,
+            height: 45,
+            decoration: BoxDecoration(
+              color: AppColors.mainAppColor.withValues(alpha: .10),
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: Icon(Icons.shopping_bag_outlined, color: AppColors.mainAppColor, size: 24),
           ),
         ],
       ),
@@ -342,11 +469,81 @@ class _SubscriptionInfoCard extends StatelessWidget {
   }
 }
 
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.count});
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 45,
+          height: 45,
+          decoration: BoxDecoration(
+            color: AppColors.mainAppColor.withValues(alpha: .10),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(Icons.groups_rounded, color: AppColors.mainAppColor, size: 24),
+        ),
+        const SizedBox(width: 11),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('المطاعم المشاركة في السحب', style: AppTextStyle.text19BS()),
+              const SizedBox(height: 2),
+              Text('$count مطعم مشارك', style: AppTextStyle.text12RG(color: const Color(0xFF858585))),
+            ],
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF0FAF9),
+            borderRadius: BorderRadius.circular(13),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF0B7F77)),
+              const SizedBox(width: 3),
+              Text('عرض الكل', style: AppTextStyle.text11BS(color: const Color(0xFF0B7F77))),
+              const SizedBox(width: 3),
+              const Icon(Icons.chevron_left_rounded, size: 18, color: Color(0xFF0B7F77)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+String _displayPrize(String? drawAmount, String title) {
+  final direct = drawAmount?.trim() ?? '';
+  if (direct.isNotEmpty) return _formatPrice(direct);
+
+  final normalized = _normalizeArabicDigits(title);
+  final match = RegExp(r'(\d[\d,.]*)').firstMatch(normalized);
+  if (match == null) return '-';
+  return _formatPrice(match.group(1));
+}
+
+String _normalizeArabicDigits(String value) {
+  const arabic = '٠١٢٣٤٥٦٧٨٩';
+  const western = '0123456789';
+  var output = value;
+  for (var i = 0; i < arabic.length; i++) {
+    output = output.replaceAll(arabic[i], western[i]);
+  }
+  return output;
+}
+
 String _formatPrice(String? value) {
-  final text = value?.trim() ?? '';
+  final text = _normalizeArabicDigits(value?.trim() ?? '').replaceAll(',', '');
   if (text.isEmpty) return '-';
   final number = num.tryParse(text);
-  if (number == null) return text;
+  if (number == null) return value?.trim().isNotEmpty == true ? value!.trim() : '-';
   return '${number.toStringAsFixed(number % 1 == 0 ? 0 : 2)} ج';
 }
 
@@ -364,7 +561,7 @@ String _remainingText(String? value) {
   final hours = difference.inHours.remainder(24);
   final minutes = difference.inMinutes.remainder(60);
 
-  if (days > 0) return '$days يوم $hours ساعة';
-  if (hours > 0) return '$hours ساعة $minutes دقيقة';
+  if (days > 0) return '$days يوم  $hours ساعة  $minutes دقيقة';
+  if (hours > 0) return '$hours ساعة  $minutes دقيقة';
   return '$minutes دقيقة';
 }

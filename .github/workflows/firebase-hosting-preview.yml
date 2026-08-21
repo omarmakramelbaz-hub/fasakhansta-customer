@@ -3,6 +3,8 @@ name: Flutter Web Preview Deploy
 on:
   push:
     branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -22,7 +24,7 @@ jobs:
 
       - name: Install Dependencies
         run: flutter pub get
-        
+
       - name: Configure Flutter Web platform
         run: flutter create . --platforms web --no-pub
 
@@ -35,4 +37,4 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_FASAKHANINJATEST }}
           projectId: fasakhaninjatest
-          channelId: live
+          channelId: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'live' }}

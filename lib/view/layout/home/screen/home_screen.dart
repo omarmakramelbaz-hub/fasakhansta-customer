@@ -106,17 +106,31 @@ class _HomeScreenState extends State<HomeScreen> {
     final selectedCity = HiveMethods.getSelectedCity();
     if (selectedCity == null && mounted) {
       await context.read<AuthController>().getProfile();
-      _showCitySelectionSheet();
+      if (!mounted) return;
+      _showCitySelectionSheet(delayed: true);
     }
   }
 
-  void _showCitySelectionSheet() {
+  void _showCitySelectionSheet({bool delayed = false}) {
     final authProvider = context.read<AuthController>();
     final userAddresses = authProvider.profile?.userAddresses ?? [];
+    final previousIds = userAddresses.map((address) => address.id).whereType<int>().toSet();
 
-    if (userAddresses.isEmpty) return;
+    void openAddAddress() {
+      if (!mounted) return;
+      _openAddAddressScreen(previousIds);
+    }
 
-    Future.delayed(const Duration(milliseconds: 500), () {
+    if (userAddresses.isEmpty) {
+      if (delayed) {
+        Future.delayed(const Duration(milliseconds: 500), openAddAddress);
+      } else {
+        openAddAddress();
+      }
+      return;
+    }
+
+    void showSheet() {
       if (!mounted) return;
       BottomSheetHelper.gShowModalBottomSheet(
         context: context,
@@ -149,23 +163,59 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: Text('deliveryToAnotherAddress'.tr, style: AppTextStyle.text16BS()),
                 trailing: Icon(Icons.arrow_forward_ios, color: AppColors.blackColor),
                 onTap: () {
-                  NamedNavigatorImpl.push(
-                    AddAddressScreen.routeName,
-                    arguments: AddAddressArgs(onSuccess: () {}),
-                  );
+                  Navigator.pop(context);
+                  _openAddAddressScreen(previousIds);
                 },
               ),
             ],
           ),
         ),
       );
-    });
+    }
+
+    if (delayed) {
+      Future.delayed(const Duration(milliseconds: 500), showSheet);
+    } else {
+      showSheet();
+    }
   }
 
-  void _onAddressSelected(UserAddresses address) {
-    Navigator.pop(context);
+  void _openAddAddressScreen(Set<int> previousIds) {
+    NamedNavigatorImpl.push(
+      AddAddressScreen.routeName,
+      arguments: AddAddressArgs(
+        onSuccess: () {
+          _handleAddressAdded(previousIds);
+        },
+      ),
+    );
+  }
 
+  Future<void> _handleAddressAdded(Set<int> previousIds) async {
+    final authProvider = context.read<AuthController>();
+    await authProvider.getProfile();
+    if (!mounted) return;
+
+    final refreshedAddresses = authProvider.profile?.userAddresses ?? [];
+    if (refreshedAddresses.isEmpty) return;
+
+    final newAddress = refreshedAddresses.firstWhere(
+      (address) => address.id != null && !previousIds.contains(address.id),
+      orElse: () => refreshedAddresses.last,
+    );
+
+    _onAddressSelected(newAddress, closeSheet: false);
+  }
+
+  void _onAddressSelected(UserAddresses address, {bool closeSheet = true}) {
+    if (closeSheet) {
+      Navigator.pop(context);
+    }
+
+    final authProvider = context.read<AuthController>();
     final homeController = context.read<HomeController>();
+
+    authProvider.setSelectedAddressId(address.id);
 
     homeController.initialCountCart();
     homeController.initialHeaderImage();
@@ -176,7 +226,9 @@ class _HomeScreenState extends State<HomeScreen> {
     homeController.initialCoupon();
     homeController.initialSpacialRestaurants();
 
-    HiveMethods.updateSelectedCity(address.id!);
+    if (address.id != null) {
+      HiveMethods.updateSelectedCity(address.id!);
+    }
     HiveMethods.updateLat(double.tryParse(address.lat.toString()) ?? 0);
     HiveMethods.updateLan(double.tryParse(address.lng.toString()) ?? 0);
     HiveMethods.updateCity(address.streetName ?? '');
@@ -221,7 +273,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   top: 0,
                   left: 0,
                   right: 0,
-                  child: HomeHeader(controller: controller),
+                  child: HomeHeader(
+                    controller: controller,
+                    onLocationTap: () => _showCitySelectionSheet(),
+                  ),
                 ),
                 const Positioned(
                   top: 112,

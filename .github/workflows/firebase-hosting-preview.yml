@@ -5,8 +5,6 @@ on:
     branches:
       - "main"
       - "fix/home-delivery-address-selector"
-  pull_request:
-    branches: [ "main" ]
   workflow_dispatch:
 
 permissions:
@@ -44,4 +42,4 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_FASAKHANINJATEST }}
           projectId: fasakhaninjatest
-          channelId: ${{ github.ref == 'refs/heads/main' && 'live' || 'review-address-selector' }}
+          channelId: live

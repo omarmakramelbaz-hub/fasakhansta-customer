@@ -706,6 +706,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text('السلة', style: AppTextStyle.text13BS()),

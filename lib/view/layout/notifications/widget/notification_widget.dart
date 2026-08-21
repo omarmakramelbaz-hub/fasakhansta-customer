@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../helpers/extensions/extensions.dart';
 import '../../../../helpers/routes/app_routers_import.dart';
 import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/theme/app_text_style.dart';
@@ -15,114 +14,154 @@ class NotificationWidget extends StatelessWidget {
   final NotificationsModel notification;
   final int? orderId;
 
-  const NotificationWidget({super.key, required this.notification, required this.orderId});
+  const NotificationWidget({
+    super.key,
+    required this.notification,
+    required this.orderId,
+  });
 
   @override
   Widget build(BuildContext context) {
     final type = notification.data?.data?.notificationType;
-    final isOrder = type == 1;
-    final isWallet = type == 3;
-    final accent = isWallet ? const Color(0xff7B4FD6) : isOrder ? AppColors.mainAppColor : const Color(0xffE3A21A);
-    final icon = isWallet ? Icons.account_balance_wallet_outlined : isOrder ? Icons.inventory_2_outlined : Icons.card_giftcard_outlined;
+    final visual = _visualFor(type);
+    final logo = (notification.data?.logo ?? '').trim();
+    final showRestaurantLogo = type == 1 && logo.isNotEmpty;
 
     return Material(
-      color: AppColors.whiteColor,
-      borderRadius: BorderRadius.circular(22),
+      color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(22),
-        onTap: () {
-          if (isWallet) {
-            NamedNavigatorImpl.push(WalletScreen.routeName);
-          } else if (isOrder) {
-            if (notification.data?.data?.orderType == 'shipping') {
-              NamedNavigatorImpl.push(RequestDelegateScreen.routeName);
-            } else if (orderId != null) {
-              NamedNavigatorImpl.push(
-                TrackingYourOrderScreen.routeName,
-                arguments: TrackingYourOrderArgs(id: orderId!),
-              );
-            }
-          }
-        },
+        borderRadius: BorderRadius.circular(24),
+        onTap: () => _handleTap(type),
         child: Container(
-          padding: const EdgeInsets.all(13),
           decoration: BoxDecoration(
             color: AppColors.whiteColor,
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: const Color(0xffEEEEEE)),
-            boxShadow: [
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFFECEFF2)),
+            boxShadow: const [
               BoxShadow(
-                color: Colors.black.withValues(alpha: .045),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+                color: Color(0x0C000000),
+                blurRadius: 18,
+                offset: Offset(0, 6),
               ),
             ],
           ),
-          child: Row(
-            textDirection: TextDirection.rtl,
-            crossAxisAlignment: CrossAxisAlignment.start,
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(15),
-                child: CustomNetworkImage(
-                  imageUrl: notification.data?.logo ?? '',
-                  width: 70,
-                  height: 70,
-                  radius: 15,
-                  fit: BoxFit.cover,
+              Positioned(
+                left: 0,
+                top: 14,
+                bottom: 14,
+                child: Container(
+                  width: 4,
+                  decoration: BoxDecoration(
+                    color: visual.accent,
+                    borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+                  ),
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 15, 14, 14),
+                child: Row(
+                  textDirection: TextDirection.rtl,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      textDirection: TextDirection.rtl,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            notification.data?.title ?? '',
-                            maxLines: 1,
+                    _NotificationAvatar(
+                      visual: visual,
+                      logo: logo,
+                      showRestaurantLogo: showRestaurantLogo,
+                    ),
+                    const SizedBox(width: 13),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Row(
+                            textDirection: TextDirection.rtl,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  notification.data?.title ?? '',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.right,
+                                  style: AppTextStyle.text16BS().copyWith(
+                                    color: const Color(0xFF151515),
+                                    height: 1.25,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: visual.accent,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: visual.accent.withValues(alpha: .22),
+                                      blurRadius: 6,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 7),
+                          Text(
+                            notification.data?.text ?? '',
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             textAlign: TextAlign.right,
-                            style: AppTextStyle.text16BS(),
+                            style: AppTextStyle.text13RM().copyWith(
+                              color: const Color(0xFF666B70),
+                              height: 1.5,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 7),
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 7),
-                    Text(
-                      notification.data?.text ?? '',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.right,
-                      style: AppTextStyle.text13RM().copyWith(color: const Color(0xff666666), height: 1.45),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      textDirection: TextDirection.rtl,
-                      children: [
-                        Container(
-                          width: 28,
-                          height: 28,
-                          decoration: BoxDecoration(color: accent.withValues(alpha: .10), shape: BoxShape.circle),
-                          child: Icon(icon, size: 16, color: accent),
-                        ),
-                        const Spacer(),
-                        Icon(Icons.access_time_rounded, size: 15, color: const Color(0xffA0A0A0)),
-                        const SizedBox(width: 4),
-                        Text(
-                          DateMethods.timeAgo(notification.createdAt ?? '', context),
-                          style: AppTextStyle.text12RM().copyWith(color: const Color(0xff999999)),
-                        ),
-                      ],
+                          const SizedBox(height: 13),
+                          Row(
+                            textDirection: TextDirection.rtl,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: visual.softBackground,
+                                  borderRadius: BorderRadius.circular(13),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(visual.icon, size: 15, color: visual.accent),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      visual.label,
+                                      style: AppTextStyle.text12RM().copyWith(
+                                        color: visual.accent,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Spacer(),
+                              const Icon(
+                                Icons.access_time_rounded,
+                                size: 15,
+                                color: Color(0xFFA2A5A9),
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                DateMethods.timeAgo(notification.createdAt ?? '', context),
+                                style: AppTextStyle.text12RM().copyWith(
+                                  color: const Color(0xFF969A9F),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -133,4 +172,123 @@ class NotificationWidget extends StatelessWidget {
       ),
     );
   }
+
+  void _handleTap(int? type) {
+    if (type == 3) {
+      NamedNavigatorImpl.push(WalletScreen.routeName);
+      return;
+    }
+
+    if (type != 1) return;
+
+    if (notification.data?.data?.orderType == 'shipping') {
+      NamedNavigatorImpl.push(RequestDelegateScreen.routeName);
+      return;
+    }
+
+    if ((orderId ?? 0) > 0) {
+      NamedNavigatorImpl.push(
+        TrackingYourOrderScreen.routeName,
+        arguments: TrackingYourOrderArgs(id: orderId!),
+      );
+    }
+  }
+
+  _NotificationVisual _visualFor(int? type) {
+    if (type == 1) {
+      return _NotificationVisual(
+        label: 'طلب',
+        icon: Icons.shopping_bag_outlined,
+        accent: AppColors.mainAppColor,
+        softBackground: const Color(0xFFFFF1E6),
+      );
+    }
+
+    if (type == 2) {
+      return const _NotificationVisual(
+        label: 'عرض',
+        icon: Icons.local_offer_outlined,
+        accent: Color(0xFFF29D14),
+        softBackground: Color(0xFFFFF6E8),
+      );
+    }
+
+    if (type == 3) {
+      return const _NotificationVisual(
+        label: 'محفظة',
+        icon: Icons.account_balance_wallet_outlined,
+        accent: Color(0xFF0B8C84),
+        softBackground: Color(0xFFEAF8F6),
+      );
+    }
+
+    return const _NotificationVisual(
+      label: 'تنبيه',
+      icon: Icons.notifications_none_rounded,
+      accent: Color(0xFF7456D8),
+      softBackground: Color(0xFFF2EEFF),
+    );
+  }
+}
+
+class _NotificationAvatar extends StatelessWidget {
+  const _NotificationAvatar({
+    required this.visual,
+    required this.logo,
+    required this.showRestaurantLogo,
+  });
+
+  final _NotificationVisual visual;
+  final String logo;
+  final bool showRestaurantLogo;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 70,
+      height: 70,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white,
+        border: Border.all(color: visual.accent.withValues(alpha: .34)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0D000000),
+            blurRadius: 10,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: ClipOval(
+        child: showRestaurantLogo
+            ? CustomNetworkImage(
+                imageUrl: logo,
+                width: 64,
+                height: 64,
+                radius: 0,
+                fit: BoxFit.cover,
+              )
+            : Container(
+                color: visual.softBackground,
+                alignment: Alignment.center,
+                child: Icon(visual.icon, color: visual.accent, size: 30),
+              ),
+      ),
+    );
+  }
+}
+
+class _NotificationVisual {
+  const _NotificationVisual({
+    required this.label,
+    required this.icon,
+    required this.accent,
+    required this.softBackground,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color accent;
+  final Color softBackground;
 }

@@ -31,6 +31,7 @@ class Data {
   int? id;
   String? name;
   String? price;
+  String? drawAmount;
   String? startDate;
   String? endDate;
   String? status;
@@ -42,6 +43,7 @@ class Data {
     this.id,
     this.name,
     this.price,
+    this.drawAmount,
     this.startDate,
     this.endDate,
     this.status,
@@ -53,7 +55,14 @@ class Data {
   Data.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     name = json['name'];
-    price = json['price'];
+    price = json['price']?.toString();
+    drawAmount = (json['draw_amount'] ??
+            json['raffle_amount'] ??
+            json['prize_amount'] ??
+            json['prize'] ??
+            json['reward'] ??
+            json['amount'])
+        ?.toString();
     startDate = json['start_date'];
     endDate = json['end_date'];
     status = json['status'];
@@ -72,6 +81,7 @@ class Data {
     data['id'] = id;
     data['name'] = name;
     data['price'] = price;
+    if (drawAmount != null) data['draw_amount'] = drawAmount;
     data['start_date'] = startDate;
     data['end_date'] = endDate;
     data['status'] = status;

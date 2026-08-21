@@ -1,10 +1,10 @@
-name: Flutter Web Preview Deploy
+name: Flutter Web Review Deploy
 
 on:
   push:
-    branches:
-      - "main"
-      - "fix/home-delivery-address-selector"
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
 
 permissions:

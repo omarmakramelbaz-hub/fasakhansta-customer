@@ -31,7 +31,7 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
     return ClipPath(
       clipper: const _FiveAngleHeaderClipper(),
       child: Container(
-        height: 195,
+        height: 160,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -122,7 +122,7 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(195);
+  Size get preferredSize => const Size.fromHeight(160);
 }
 
 class _LocationButton extends StatelessWidget {

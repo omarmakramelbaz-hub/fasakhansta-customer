@@ -213,7 +213,7 @@ class HeaderCoverAndImageRestaurantDetailsWidget extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             isClosed ? 'مغلق الآن' : 'مفتوح الآن',
-            style: AppTextStyle.text10BS(),
+            style: AppTextStyle.text12BS().copyWith(fontSize: 10),
           ),
         ],
       ),

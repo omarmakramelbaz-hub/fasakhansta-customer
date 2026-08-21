@@ -3,6 +3,8 @@ name: Flutter Web Review Deploy
 on:
   push:
     branches: [ "main", "fix/home-delivery-address-selector" ]
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
 
 permissions:
@@ -41,5 +43,3 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_FASAKHANINJATEST }}
           projectId: fasakhaninjatest
           channelId: live
-
-# Redeploy trigger for the 18:38 review snapshot

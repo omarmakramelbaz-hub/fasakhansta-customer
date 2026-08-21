@@ -57,9 +57,9 @@ class RestaurantsController extends ChangeNotifier {
         if (mostReviewed != null) 'most_reviewed': mostReviewed,
         if (mostResearched != null) 'most_researched': mostResearched,
         if (search != null) 'search': search,
-        if (HiveMethods.getLat() != null && HiveMethods.getLan() != null) ...{
-          'lat': HiveMethods.getLat(),
-          'lng': HiveMethods.getLan(),
+        if (lat != null && lng != null) ...{
+          'lat': lat,
+          'lng': lng,
         },
         if (cityName != null) 'area_id': cityName,
       },

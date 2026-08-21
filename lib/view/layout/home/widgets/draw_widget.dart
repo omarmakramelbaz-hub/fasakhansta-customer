@@ -19,22 +19,29 @@ class RestaurantsDrawWidget extends StatelessWidget {
     if (restaurants.isEmpty) {
       return Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 26),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(22),
           border: Border.all(color: const Color(0xFFF0F0F0)),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0D000000),
+              blurRadius: 16,
+              offset: Offset(0, 6),
+            ),
+          ],
         ),
         child: Column(
           children: [
             Container(
-              width: 54,
-              height: 54,
+              width: 58,
+              height: 58,
               decoration: BoxDecoration(
                 color: AppColors.mainAppColor.withValues(alpha: .10),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.storefront_rounded, color: AppColors.mainAppColor, size: 28),
+              child: Icon(Icons.storefront_rounded, color: AppColors.mainAppColor, size: 30),
             ),
             const SizedBox(height: 12),
             Text('لا توجد مطاعم مشاركة حالياً', style: AppTextStyle.text14BS()),
@@ -48,11 +55,10 @@ class RestaurantsDrawWidget extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: restaurants.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, __) => const SizedBox(height: 14),
       itemBuilder: (context, index) {
-        final restaurant = restaurants[index];
         return RestaurantCard(
-          restaurant: restaurant,
+          restaurant: restaurants[index],
           couponId: couponId,
           homeController: homeController,
         );
@@ -75,9 +81,9 @@ class RestaurantCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final image = (restaurant.bgImage ?? '').trim().isNotEmpty
-        ? restaurant.bgImage!.trim()
-        : (restaurant.logo ?? '').trim();
+    final logo = (restaurant.logo ?? '').trim();
+    final fallbackImage = (restaurant.bgImage ?? '').trim();
+    final image = logo.isNotEmpty ? logo : fallbackImage;
     final address = (restaurant.address ?? '').trim().isNotEmpty
         ? restaurant.address!.trim()
         : (restaurant.cityName ?? restaurant.cityname ?? '').trim();
@@ -95,7 +101,7 @@ class RestaurantCard extends StatelessWidget {
                 )
             : null,
         child: Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.fromLTRB(13, 13, 13, 12),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(22),
@@ -103,8 +109,8 @@ class RestaurantCard extends StatelessWidget {
             boxShadow: const [
               BoxShadow(
                 color: Color(0x12000000),
-                blurRadius: 16,
-                offset: Offset(0, 6),
+                blurRadius: 18,
+                offset: Offset(0, 7),
               ),
             ],
           ),
@@ -113,32 +119,10 @@ class RestaurantCard extends StatelessWidget {
             child: Column(
               children: [
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(17),
-                      child: image.isEmpty
-                          ? Container(
-                              width: 92,
-                              height: 92,
-                              color: const Color(0xFFFFF4EA),
-                              alignment: Alignment.center,
-                              child: Icon(
-                                Icons.storefront_rounded,
-                                color: AppColors.mainAppColor,
-                                size: 34,
-                              ),
-                            )
-                          : CustomImage(
-                              path: image,
-                              type: ImageType.network,
-                              fit: BoxFit.cover,
-                              radius: 0,
-                              height: 92,
-                              width: 92,
-                            ),
-                    ),
-                    const SizedBox(width: 12),
+                    _RestaurantImage(image: image),
+                    const SizedBox(width: 13),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,35 +137,19 @@ class RestaurantCard extends StatelessWidget {
                                   style: AppTextStyle.text17BS(),
                                 ),
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFE9F7F3),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.check_circle_rounded, size: 14, color: Color(0xFF0A857A)),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      'مشارك',
-                                      style: TextStyle(
-                                        color: Color(0xFF0A857A),
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                              const SizedBox(width: 7),
+                              const _ParticipatingBadge(),
                             ],
                           ),
-                          if (address.isNotEmpty) ...[
-                            const SizedBox(height: 7),
+                          const SizedBox(height: 6),
+                          if (address.isNotEmpty)
                             Row(
                               children: [
-                                const Icon(Icons.location_on_outlined, size: 15, color: Color(0xFF7B8589)),
+                                const Icon(
+                                  Icons.location_on_outlined,
+                                  size: 15,
+                                  color: Color(0xFF7B8589),
+                                ),
                                 const SizedBox(width: 4),
                                 Expanded(
                                   child: Text(
@@ -193,63 +161,62 @@ class RestaurantCard extends StatelessWidget {
                                 ),
                               ],
                             ),
-                          ],
                           const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFFF5EC),
-                                  borderRadius: BorderRadius.circular(12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF5EC),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.star_rounded, size: 17, color: Color(0xFFFF7A00)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  restaurant.avgRate?.toStringAsFixed(1) ?? '0.0',
+                                  style: AppTextStyle.text13BS(),
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.star_rounded, size: 17, color: Color(0xFFFF7A00)),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      restaurant.avgRate?.toStringAsFixed(1) ?? '0.0',
-                                      style: AppTextStyle.text13BS(),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Spacer(),
-                              Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: AppColors.mainAppColor),
-                            ],
+                              ],
+                            ),
                           ),
                         ],
                       ),
                     ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      size: 17,
+                      color: AppColors.mainAppColor,
+                    ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 13),
                 const Divider(height: 1, color: Color(0xFFF0F0F0)),
-                const SizedBox(height: 10),
+                const SizedBox(height: 11),
                 Row(
                   children: [
-                    Expanded(
-                      child: _MetricItem(
-                        icon: Icons.shopping_bag_outlined,
-                        label: 'الحد الأدنى',
-                        value: _formatMoney(restaurant.minOrderPrice),
-                      ),
-                    ),
-                    _divider(),
-                    Expanded(
-                      child: _MetricItem(
-                        icon: Icons.delivery_dining_rounded,
-                        label: 'رسوم التوصيل',
-                        value: _formatMoney(restaurant.serviceFees),
-                      ),
-                    ),
-                    _divider(),
                     Expanded(
                       child: _MetricItem(
                         icon: Icons.schedule_rounded,
                         label: 'وقت التوصيل',
                         value: _formatDeliveryTime(restaurant.deliveryTime),
+                      ),
+                    ),
+                    _metricDivider(),
+                    Expanded(
+                      child: _MetricItem(
+                        icon: Icons.star_rounded,
+                        label: 'التقييم',
+                        value: restaurant.avgRate?.toStringAsFixed(1) ?? '0.0',
+                      ),
+                    ),
+                    _metricDivider(),
+                    Expanded(
+                      child: _MetricItem(
+                        icon: Icons.delivery_dining_rounded,
+                        label: 'رسوم التوصيل',
+                        value: _formatMoney(restaurant.serviceFees),
                       ),
                     ),
                   ],
@@ -262,11 +229,70 @@ class RestaurantCard extends StatelessWidget {
     );
   }
 
-  Widget _divider() => Container(
+  Widget _metricDivider() => Container(
         width: 1,
-        height: 42,
+        height: 46,
         color: const Color(0xFFEDEDED),
       );
+}
+
+class _RestaurantImage extends StatelessWidget {
+  const _RestaurantImage({required this.image});
+
+  final String image;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: image.isEmpty
+          ? Container(
+              width: 94,
+              height: 94,
+              color: const Color(0xFFFFF4EA),
+              alignment: Alignment.center,
+              child: Icon(Icons.storefront_rounded, color: AppColors.mainAppColor, size: 36),
+            )
+          : CustomImage(
+              path: image,
+              type: ImageType.network,
+              fit: BoxFit.cover,
+              radius: 0,
+              height: 94,
+              width: 94,
+            ),
+    );
+  }
+}
+
+class _ParticipatingBadge extends StatelessWidget {
+  const _ParticipatingBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8F7F3),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.check_circle_rounded, size: 14, color: Color(0xFF0A857A)),
+          SizedBox(width: 4),
+          Text(
+            'مشارك',
+            style: TextStyle(
+              color: Color(0xFF0A857A),
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _MetricItem extends StatelessWidget {

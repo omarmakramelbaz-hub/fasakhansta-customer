@@ -15,7 +15,6 @@ class CustomButtonBottomNavigation extends StatefulWidget {
   final String productFeature;
   final int? featureId;
   final int qty;
-
   final String? productClean;
   final String? total;
   final VoidCallback? onSuccessAddItems;
@@ -39,153 +38,203 @@ class _CustomButtonBottomNavigationState extends State<CustomButtonBottomNavigat
   bool addToCartSelected = false;
   int count = 1;
 
+  int get _baseTotal => int.tryParse(widget.total ?? '0') ?? 0;
+
+  int _displayPrice(CartController controller) {
+    final currentTotal = int.tryParse(controller.totalCountAddTCart ?? '') ?? (_baseTotal * count);
+    final divider = widget.qty <= 0 ? 1 : widget.qty;
+    return (currentTotal / divider).round();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 74,
-      decoration: BoxDecoration(
-        color: AppColors.whiteColor,
-        boxShadow: [BoxShadow(color: Colors.grey.withValues(alpha: 0.5), blurRadius: 10, offset: const Offset(0, 0))],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 15),
-      child: Row(
-        children: [
-          Builder(
-            builder: (context) {
-              return Flexible(
-                child: InkWell(
-                  onTap: () {
-                    if (HiveMethods.getToken() == null) {
-                      CommonMethods.showChooseDialog(
-                        context,
-                        onPressed: () {
-                          Navigator.pop(context);
-                          NamedNavigatorImpl.push(RegisterScreen.routeName);
-                        },
-                        message: 'youMustLoginFirst'.tr,
-                      );
-                    } else if (addToCartSelected) {
-                      context.read<CartController>().addToCart(
-                            restaurantProductId: widget.restaurantProductId,
-                            productFeature: widget.featureId,
-                            productClean: widget.productClean,
-                            qty: count,
-                            onSuccess: () {
-                              widget.onSuccessAddItems?.call();
-                              context.read<CartController>().getCart();
-                            },
-                            anotherCart: () {
-                              CommonMethods.showChooseDialog(
-                                context,
-                                title: 'didYouWantToDeleteCart'.tr,
-                                message: '',
-                                onPressed: () {
-                                  context.read<CartController>().emptyCart(
-                                    onSuccess: () {
-                                      Navigator.pop(context);
-                                      widget.onSuccessAddItems?.call();
-                                      context.read<CartController>().addToCart(
-                                            restaurantProductId: widget.restaurantProductId,
-                                            productFeature: widget.featureId,
-                                            productClean: widget.productClean,
-                                            qty: count,
-                                            onSuccess: () {
-                                              widget.onSuccessAddItems?.call();
-                                              context.read<CartController>().getCart();
-                                            },
-                                            anotherCart: () {},
-                                          );
-                                    },
-                                  );
-                                },
-                              );
-                            },
-                          );
-                    }
-                    setState(() {
-                      addToCartSelected = true;
-                    });
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    // height: 45,
-                    padding: const EdgeInsets.symmetric(horizontal: 29, vertical: 10),
-                    decoration: BoxDecoration(color: AppColors.mainAppColor, borderRadius: BorderRadius.circular(23)),
-                    child: Row(
-                      children: [
-                        Flexible(child: Text('addToCart'.tr, style: AppTextStyle.buttonStyle)),
-                        const SizedBox(width: 10),
-                        if (context.read<CartController>().totalCountAddTCart != null)
-                          Text(
-                            (int.tryParse(context.read<CartController>().totalCountAddTCart!)! / widget.qty).toString(),
-                            style: AppTextStyle.buttonStyle,
-                          ),
-                        if (context.read<CartController>().totalCountAddTCart == null) ...[
-                          Text((int.tryParse(widget.total!)! / widget.qty).toString(), style: AppTextStyle.buttonStyle),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
+    final cartController = context.watch<CartController>();
+
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
           ),
-          if (addToCartSelected)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(width: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: AppColors.whiteColor,
-                    borderRadius: BorderRadius.circular(23),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withValues(alpha: 0.5),
-                        blurRadius: 7,
-                        offset: const Offset(0, 0),
-                      ),
-                    ],
+          boxShadow: [
+            BoxShadow(color: Color(0x18000000), blurRadius: 22, offset: Offset(0, -6)),
+          ],
+        ),
+        child: Row(
+          children: [
+            if (!addToCartSelected)
+              SizedBox(
+                width: 92,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${_displayPrice(cartController)} ج',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyle.text20BS(color: AppColors.mainAppColor),
+                    ),
+                    const SizedBox(height: 2),
+                    Text('السعر الإجمالي', style: AppTextStyle.text11RG()),
+                  ],
+                ),
+              )
+            else
+              _buildQuantityStepper(cartController),
+            const SizedBox(width: 12),
+            Expanded(
+              child: SizedBox(
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: () => _handleAddTap(context, cartController),
+                  style: ElevatedButton.styleFrom(
+                    elevation: 0,
+                    backgroundColor: AppColors.mainAppColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                   ),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      InkWell(
-                        onTap: () {
-                          context.read<CartController>().totalCountAddTCart == null ? count = 1 : count;
-                          setState(() {
-                            count++;
-                            context.read<CartController>().totalCountAddTCart =
-                                (int.parse(widget.total ?? '1') * count).toString();
-                          });
-                        },
-                        child: Icon(Icons.add, color: AppColors.yellowColor, size: 20),
-                      ),
-                      const SizedBox(width: 15),
-                      Text(context.read<CartController>().totalCountAddTCart == null ? '1' : count.toString()),
-                      const SizedBox(width: 20),
-                      InkWell(
-                        onTap: () {
-                          context.read<CartController>().totalCountAddTCart == null ? count = 1 : count;
-                          if (count > 1) {
-                            setState(() {
-                              count--;
-                              context.read<CartController>().totalCountAddTCart =
-                                  (int.parse(widget.total ?? '1') * count).toString();
-                            });
-                          }
-                        },
-                        child: Icon(Icons.remove, color: AppColors.secondAppColor, size: 12),
+                      const Icon(Icons.shopping_cart_outlined, size: 22),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          'addToCart'.tr,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyle.text16BW(),
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            )
-          else
-            const SizedBox(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuantityStepper(CartController controller) {
+    return Container(
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F7F7),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE8E8E8)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _stepperButton(
+            icon: Icons.add_rounded,
+            onTap: () {
+              setState(() {
+                count++;
+                controller.totalCountAddTCart = (_baseTotal * count).toString();
+              });
+            },
+          ),
+          SizedBox(
+            width: 30,
+            child: Text(
+              '$count',
+              textAlign: TextAlign.center,
+              style: AppTextStyle.text15BS(),
+            ),
+          ),
+          _stepperButton(
+            icon: Icons.remove_rounded,
+            onTap: () {
+              if (count <= 1) return;
+              setState(() {
+                count--;
+                controller.totalCountAddTCart = (_baseTotal * count).toString();
+              });
+            },
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _stepperButton({required IconData icon, required VoidCallback onTap}) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: onTap,
+      child: SizedBox(
+        width: 30,
+        height: 36,
+        child: Icon(icon, size: 19, color: AppColors.mainAppColor),
+      ),
+    );
+  }
+
+  void _handleAddTap(BuildContext context, CartController cartController) {
+    if (HiveMethods.getToken() == null) {
+      CommonMethods.showChooseDialog(
+        context,
+        onPressed: () {
+          Navigator.pop(context);
+          NamedNavigatorImpl.push(RegisterScreen.routeName);
+        },
+        message: 'youMustLoginFirst'.tr,
+      );
+      return;
+    }
+
+    if (!addToCartSelected) {
+      setState(() {
+        addToCartSelected = true;
+        count = 1;
+        cartController.totalCountAddTCart = null;
+      });
+      return;
+    }
+
+    cartController.addToCart(
+      restaurantProductId: widget.restaurantProductId,
+      productFeature: widget.featureId,
+      productClean: widget.productClean,
+      qty: count,
+      onSuccess: () {
+        widget.onSuccessAddItems?.call();
+        cartController.getCart();
+      },
+      anotherCart: () {
+        CommonMethods.showChooseDialog(
+          context,
+          title: 'didYouWantToDeleteCart'.tr,
+          message: '',
+          onPressed: () {
+            cartController.emptyCart(
+              onSuccess: () {
+                Navigator.pop(context);
+                widget.onSuccessAddItems?.call();
+                cartController.addToCart(
+                  restaurantProductId: widget.restaurantProductId,
+                  productFeature: widget.featureId,
+                  productClean: widget.productClean,
+                  qty: count,
+                  onSuccess: () {
+                    widget.onSuccessAddItems?.call();
+                    cartController.getCart();
+                  },
+                  anotherCart: () {},
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 }

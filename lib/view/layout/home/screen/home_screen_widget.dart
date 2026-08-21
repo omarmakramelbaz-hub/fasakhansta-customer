@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../../../helpers/extensions/extensions.dart';
 import '../../../../helpers/hive/hive_methods.dart';
+import '../../../../helpers/routes/app_routers_import.dart';
 import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/theme/app_text_style.dart';
 import '../../../../helpers/translation/all_translation.dart';
 import '../../../custom_widgets/custom_slider/custom_slider.dart';
+import '../../restaurants/screen/restaurants_screen.dart';
 import '../controller/home_controller.dart';
 import '../widgets/advertisement_container_widget.dart';
 import '../widgets/restaurants_near_you_list_view_widget.dart';
@@ -78,12 +80,24 @@ class RestaurantsNearYouWidget extends StatelessWidget {
                     textAlign: TextAlign.right,
                   ),
                 ),
-                Text(
-                  'عرض الكل',
-                  style: AppTextStyle.text13BS().copyWith(color: AppColors.mainAppColor),
+                InkWell(
+                  borderRadius: BorderRadius.circular(18),
+                  onTap: () => NamedNavigatorImpl.push(RestaurantsScreen.routeName),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'عرض الكل',
+                          style: AppTextStyle.text13BS().copyWith(color: AppColors.mainAppColor),
+                        ),
+                        const SizedBox(width: 3),
+                        Icon(Icons.chevron_left_rounded, size: 22, color: AppColors.mainAppColor),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(width: 3),
-                Icon(Icons.chevron_left_rounded, size: 22, color: AppColors.mainAppColor),
               ],
             ),
           ),

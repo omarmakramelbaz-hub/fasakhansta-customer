@@ -261,9 +261,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     // header/wallet. Because this spacer is inside the scroll
                     // view, the whole top section now scrolls away naturally.
                     const SizedBox(height: 238),
+                    RestaurantsNearYouWidget(controller: controller),
                     SliderWidget(controller: controller),
                     HomeFeatureCards(controller: controller),
-                    RestaurantsNearYouWidget(controller: controller),
                     const SizedBox(height: 8),
                     GoDriveCardWidget(controller: controller),
                     20.sbH,

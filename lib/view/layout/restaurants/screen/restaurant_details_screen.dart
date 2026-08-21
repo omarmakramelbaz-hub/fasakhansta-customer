@@ -649,6 +649,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
           top: false,
           child: Container(
             margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            constraints: const BoxConstraints.tightFor(height: 64),
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: AppColors.whiteColor,

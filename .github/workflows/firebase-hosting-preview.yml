@@ -34,7 +34,7 @@ jobs:
         run: flutter create . --platforms web --no-pub
 
       - name: Build Flutter Web
-        run: flutter build web --release
+        run: flutter build web --release --dart-define=API_BASE_URL=https://test.fasakhaninja.com/api/
 
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0

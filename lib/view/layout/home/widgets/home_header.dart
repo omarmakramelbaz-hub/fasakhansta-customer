@@ -32,12 +32,12 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
     return ClipPath(
       clipper: const _FiveAngleHeaderClipper(),
       child: Container(
-        height: 118,
+        height: 100,
         color: AppColors.mainAppColor,
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 18, 12, 22),
+            padding: const EdgeInsets.fromLTRB(12, 18, 12, 10),
             child: Directionality(
               textDirection: TextDirection.ltr,
               child: GestureDetector(
@@ -116,7 +116,7 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(118);
+  Size get preferredSize => const Size.fromHeight(100);
 }
 
 class _LocationButton extends StatelessWidget {

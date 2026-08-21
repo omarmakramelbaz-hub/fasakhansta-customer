@@ -43,3 +43,5 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_FASAKHANINJATEST }}
           projectId: fasakhaninjatest
           channelId: live
+
+# Keep the fixed Web Preview synced from the active review branch.

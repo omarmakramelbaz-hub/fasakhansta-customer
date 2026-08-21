@@ -585,18 +585,29 @@ class _TopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: 58,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Text('مطاعم', style: AppTextStyle.text20BS()),
-          Positioned(
-            left: 4,
-            child: IconButton(
-              onPressed: onBack,
-              icon: const Icon(Icons.arrow_forward_ios_rounded, size: 22),
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: Row(
+          children: [
+            SizedBox(
+              width: 52,
+              child: IconButton(
+                onPressed: onBack,
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 21),
+              ),
             ),
-          ),
-        ],
+            Expanded(
+              child: Center(
+                child: Text(
+                  'مطاعم',
+                  textDirection: TextDirection.rtl,
+                  style: AppTextStyle.text20BS(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 52),
+          ],
+        ),
       ),
     );
   }

@@ -87,6 +87,12 @@ class CommonMethods {
     Color? textColor,
     int seconds = 3,
   }) {
+    final isAddToCartSuccess = type == ToastType.success && message.contains('إضاف') && message.contains('السلة');
+    if (isAddToCartSuccess) {
+      showCartSuccess(message: message, seconds: seconds);
+      return;
+    }
+
     BotToast.showCustomText(
       duration: Duration(seconds: seconds),
       toastBuilder: (cancelFunc) => SizedBox(

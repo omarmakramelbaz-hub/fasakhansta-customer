@@ -2,7 +2,7 @@ name: Flutter Web Review Deploy
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "fix/home-delivery-address-selector" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:

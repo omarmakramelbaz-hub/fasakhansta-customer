@@ -2,7 +2,9 @@ name: Flutter Web Preview Deploy
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - "main"
+      - "fix/home-delivery-address-selector"
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
@@ -37,4 +39,4 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_FASAKHANINJATEST }}
           projectId: fasakhaninjatest
-          channelId: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'live' }}
+          channelId: ${{ github.ref == 'refs/heads/main' && 'live' || 'review-address-selector' }}

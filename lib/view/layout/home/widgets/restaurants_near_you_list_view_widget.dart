@@ -21,8 +21,8 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final cardWidth = ((screenWidth - 38) / 2).clamp(154.0, 172.0);
-    const cardHeight = 112.0;
+    final cardWidth = ((screenWidth - 38) / 2).clamp(164.0, 184.0);
+    const cardHeight = 188.0;
 
     return ApiResponseWidget(
       apiResponse: context.read<HomeController>().restaurantsNearYouApiResponse,
@@ -73,11 +73,16 @@ class _NearbyRestaurantCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(16);
+    const orange = Color(0xFFFF6B00);
+    const teal = Color(0xFF0A6F6A);
+    final radius = BorderRadius.circular(18);
+    final subtitle = (model.address ?? '').trim().isNotEmpty
+        ? model.address!.trim()
+        : (model.cityName ?? model.cityname ?? '').trim();
 
     return SizedBox(
       width: width,
-      height: 112,
+      height: 188,
       child: Material(
         color: AppColors.whiteColor,
         borderRadius: radius,
@@ -93,12 +98,12 @@ class _NearbyRestaurantCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.whiteColor,
               borderRadius: radius,
-              border: Border.all(color: AppColors.borderColorContainer.withOpacity(.62)),
-              boxShadow: [
+              border: Border.all(color: const Color(0xFFF0F0F0)),
+              boxShadow: const [
                 BoxShadow(
-                  color: AppColors.blackColor.withOpacity(.055),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+                  color: Color(0x14000000),
+                  blurRadius: 16,
+                  offset: Offset(0, 6),
                 ),
               ],
             ),
@@ -107,129 +112,128 @@ class _NearbyRestaurantCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(
-                  height: 56,
+                  height: 88,
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
                       CustomNetworkImage(
                         imageUrl: model.bgImage ?? model.logo ?? '',
-                        height: 56,
+                        height: 88,
                         width: width,
                         radius: 0,
                         fit: BoxFit.cover,
                       ),
-                      Container(
+                      const DecoratedBox(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              AppColors.blackColor.withOpacity(.16),
-                            ],
+                            colors: [Color(0x12000000), Color(0x4D000000)],
                           ),
                         ),
                       ),
                       Positioned(
-                        top: 5,
-                        left: 5,
+                        top: 8,
+                        left: 8,
                         child: _DeliveryBadge(text: model.deliveryTime ?? 'سريع'),
                       ),
                       Positioned(
-                        top: 5,
-                        right: 5,
-                        child: const Icon(Icons.location_on_rounded, color: Colors.white, size: 14),
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          width: 30,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: .94),
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: const [
+                              BoxShadow(color: Color(0x18000000), blurRadius: 5, offset: Offset(0, 2)),
+                            ],
+                          ),
+                          child: const Icon(Icons.location_on_rounded, color: orange, size: 18),
+                        ),
                       ),
-                      BranchLogoWidget(model: model),
+                      Positioned(
+                        right: 9,
+                        bottom: 7,
+                        child: _AvailabilityPill(canOpen: canOpen),
+                      ),
                       IsRestaurantBusyWidget(model: model),
                     ],
                   ),
                 ),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(6, 8, 6, 5),
+                    padding: const EdgeInsets.fromLTRB(9, 8, 9, 8),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Row(
                           textDirection: TextDirection.rtl,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
+                            Container(
+                              width: 27,
+                              height: 27,
+                              decoration: BoxDecoration(
+                                color: orange.withValues(alpha: .09),
+                                borderRadius: BorderRadius.circular(9),
+                              ),
+                              child: const Icon(Icons.storefront_rounded, size: 16, color: orange),
+                            ),
+                            const SizedBox(width: 6),
                             Expanded(
                               child: Text(
                                 model.name ?? '',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.right,
-                                style: AppTextStyle.text15BS().copyWith(fontSize: 11.5),
+                                style: AppTextStyle.text13BS(),
                               ),
                             ),
-                            const SizedBox(width: 2),
-                            const Icon(Icons.storefront_rounded, color: Color(0xFFFF7A00), size: 11),
                           ],
                         ),
-                        const SizedBox(height: 1),
+                        const SizedBox(height: 3),
+                        Text(
+                          subtitle.isEmpty ? 'مأكولات بحرية طازجة بأعلى جودة' : subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.right,
+                          style: AppTextStyle.text10RG(color: AppColors.lightTextColor),
+                        ),
+                        const SizedBox(height: 7),
+                        Container(height: 1, color: const Color(0xFFF1F1F1)),
+                        const Spacer(),
                         Row(
                           textDirection: TextDirection.rtl,
                           children: [
                             Expanded(
-                              child: Text(
-                                model.address ?? model.cityName ?? '',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.right,
-                                style: AppTextStyle.text10RG(color: AppColors.lightTextColor),
-                              ),
-                            ),
-                            if ((model.cityName ?? model.cityname ?? '').trim().isNotEmpty) ...[
-                              const SizedBox(width: 3),
-                              const Icon(Icons.location_on_rounded, size: 10, color: Color(0xFF145D55)),
-                            ],
-                          ],
-                        ),
-                        const Spacer(),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _MiniValue(
-                                icon: Icons.star_rounded,
-                                iconColor: const Color(0xFFFF7A00),
+                              child: _MetricTile(
+                                icon: Icons.star_outline_rounded,
+                                iconColor: orange,
+                                label: 'التقييم',
                                 value: model.avgRate?.toStringAsFixed(1) ?? '0.0',
                               ),
                             ),
-                            const SizedBox(width: 3),
+                            const SizedBox(width: 4),
                             Expanded(
-                              child: _MiniValue(
-                                icon: Icons.delivery_dining_rounded,
-                                iconColor: const Color(0xFF1D766B),
-                                value: model.kmPrice != null ? '${model.kmPrice!.toStringAsFixed(0)}ج' : 'حسب المنطقة',
+                              child: _MetricTile(
+                                icon: Icons.location_on_outlined,
+                                iconColor: orange,
+                                label: 'المسافة',
+                                value: _formatKm(model.kmPrice),
                               ),
                             ),
-                            const SizedBox(width: 3),
+                            const SizedBox(width: 4),
                             Expanded(
-                              child: _MiniValue(
-                                icon: Icons.account_balance_wallet_rounded,
-                                iconColor: const Color(0xFFFF7A00),
-                                value: _formatMoney(model.minOrderPrice),
+                              child: _MetricTile(
+                                icon: Icons.delivery_dining_rounded,
+                                iconColor: teal,
+                                label: 'التوصيل',
+                                value: _formatMoney(model.serviceFees),
                               ),
                             ),
                           ],
-                        ),
-                        const SizedBox(height: 4),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 20,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: canOpen ? AppColors.mainAppColor : AppColors.greyColor,
-                              borderRadius: BorderRadius.circular(7),
-                            ),
-                            child: Center(
-                              child: Text(
-                                'اطلب الآن',
-                                style: AppTextStyle.text12BS().copyWith(color: Colors.white, fontSize: 9.5),
-                              ),
-                            ),
-                          ),
                         ),
                       ],
                     ),
@@ -244,35 +248,52 @@ class _NearbyRestaurantCard extends StatelessWidget {
   }
 }
 
-class _MiniValue extends StatelessWidget {
+class _MetricTile extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
+  final String label;
   final String value;
 
-  const _MiniValue({required this.icon, required this.iconColor, required this.value});
+  const _MetricTile({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 20,
-      padding: const EdgeInsets.symmetric(horizontal: 2),
+      height: 42,
+      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF5EC),
-        borderRadius: BorderRadius.circular(6),
+        color: const Color(0xFFFFF8F2),
+        borderRadius: BorderRadius.circular(10),
       ),
-      child: Row(
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 10, color: iconColor),
-          const SizedBox(width: 1),
-          Flexible(
-            child: Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: AppTextStyle.text10BW(color: AppColors.blackColor),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 12, color: iconColor),
+              const SizedBox(width: 2),
+              Flexible(
+                child: Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyle.text10BW(color: AppColors.blackColor),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 1),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyle.text9RG(color: AppColors.greyColor),
           ),
         ],
       ),
@@ -282,68 +303,71 @@ class _MiniValue extends StatelessWidget {
 
 class _DeliveryBadge extends StatelessWidget {
   final String text;
+
   const _DeliveryBadge({required this.text});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.blackColor.withOpacity(.08),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          ),
+        color: Colors.white.withValues(alpha: .96),
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: const [
+          BoxShadow(color: Color(0x18000000), blurRadius: 6, offset: Offset(0, 2)),
         ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.schedule_rounded, size: 11, color: Color(0xFFFF7A00)),
-          const SizedBox(width: 2),
-          Text(text, style: AppTextStyle.text10BW(color: AppColors.blackColor)),
+          const Icon(Icons.schedule_rounded, size: 12, color: Color(0xFFFF6B00)),
+          const SizedBox(width: 3),
+          Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyle.text10BW(color: AppColors.blackColor),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _AvailabilityPill extends StatelessWidget {
+  final bool canOpen;
+
+  const _AvailabilityPill({required this.canOpen});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+      decoration: BoxDecoration(
+        color: canOpen ? const Color(0xFF0A6F6A) : const Color(0xFF6D6D6D),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        canOpen ? 'مفتوح' : 'غير متاح',
+        style: AppTextStyle.text9BW(),
       ),
     );
   }
 }
 
 String _formatMoney(dynamic value) {
-  if (value == null) return 'غير محدد';
+  if (value == null) return 'حسب المنطقة';
   if (value is num) return '${value.toStringAsFixed(0)}ج';
   final parsed = num.tryParse(value.toString());
-  return parsed == null ? 'غير محدد' : '${parsed.toStringAsFixed(0)}ج';
+  return parsed == null ? 'حسب المنطقة' : '${parsed.toStringAsFixed(0)}ج';
 }
 
-class BranchLogoWidget extends StatelessWidget {
-  const BranchLogoWidget({super.key, required this.model});
-
-  final RestaurantsNearYouHomeModel model;
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      left: 6,
-      bottom: -10,
-      child: Container(
-        padding: const EdgeInsets.all(2),
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.white,
-        ),
-        child: CustomNetworkImage(
-          imageUrl: model.logo ?? '',
-          height: 30,
-          width: 30,
-          radius: 16,
-          fit: BoxFit.cover,
-        ),
-      ),
-    );
-  }
+String _formatKm(dynamic value) {
+  if (value == null) return '-';
+  if (value is num) return '${value.toStringAsFixed(value % 1 == 0 ? 0 : 1)} كم';
+  final parsed = num.tryParse(value.toString());
+  if (parsed == null) return '-';
+  return '${parsed.toStringAsFixed(parsed % 1 == 0 ? 0 : 1)} كم';
 }
 
 class IsRestaurantBusyWidget extends StatelessWidget {
@@ -358,7 +382,7 @@ class IsRestaurantBusyWidget extends StatelessWidget {
 
     return Positioned.fill(
       child: Container(
-        color: AppColors.blackColor.withOpacity(.48),
+        color: AppColors.blackColor.withValues(alpha: .48),
         alignment: Alignment.center,
         child: Text(
           model.underContract == 'yes'

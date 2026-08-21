@@ -1,7 +1,9 @@
 class Urls {
   //! ===================> Live Api <=================== !//
-  static const String baseUrl = 'https://fasakhaninja.com/api/';
-  // static const String baseUrl = 'https://test.fasakhaninja.com/api/';
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://fasakhaninja.com/api/',
+  );
   static const String login = '${baseUrl}user/login';
   static const String codeActivate = '${baseUrl}user/code_activate';
   static const String loginWithGoogle = '${baseUrl}auth/google/callback';

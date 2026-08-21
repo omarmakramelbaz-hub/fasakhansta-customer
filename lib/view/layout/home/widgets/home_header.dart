@@ -161,16 +161,17 @@ class _FiveAngleHeaderClipper extends CustomClipper<Path> {
     final h = size.height;
     final w = size.width;
 
+    // Five light, sharp broken angles across the lower orange edge.
     return Path()
       ..moveTo(0, 0)
       ..lineTo(w, 0)
-      ..lineTo(w, h - 18)
-      ..lineTo(w * .86, h - 7)
-      ..lineTo(w * .68, h - 16)
-      ..lineTo(w * .50, h - 5)
-      ..lineTo(w * .32, h - 15)
-      ..lineTo(w * .14, h - 7)
-      ..lineTo(0, h - 18)
+      ..lineTo(w, h - 15)
+      ..lineTo(w * .82, h - 3)
+      ..lineTo(w * .64, h - 15)
+      ..lineTo(w * .50, h - 3)
+      ..lineTo(w * .36, h - 15)
+      ..lineTo(w * .18, h - 3)
+      ..lineTo(0, h - 15)
       ..close();
   }
 

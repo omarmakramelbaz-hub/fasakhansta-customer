@@ -219,7 +219,6 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
                         children: [
                           _buildBranchStats(restaurantsController),
                           _buildSpecialOffer(),
-                          _buildSearchField(),
                           _buildCategoryTabs(restaurantsController),
                           _buildBestSellers(restaurantsController),
                           _buildOfferBanner(),
@@ -303,31 +302,6 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
             const SizedBox(width: 8),
             Text('التفاصيل', style: AppTextStyle.text12BS().copyWith(color: AppColors.mainAppColor)),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSearchField() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
-      child: TextField(
-        textAlign: TextAlign.right,
-        decoration: InputDecoration(
-          hintText: 'ابحث عن منتج داخل الفرع...',
-          hintStyle: AppTextStyle.text14RG(),
-          prefixIcon: const Icon(Icons.search_rounded),
-          filled: true,
-          fillColor: AppColors.whiteColor,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(18),
-            borderSide: const BorderSide(color: Color(0xFFEDEDED)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(18),
-            borderSide: const BorderSide(color: Color(0xFFEDEDED)),
-          ),
         ),
       ),
     );
@@ -706,6 +680,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text('السلة', style: AppTextStyle.text13BS()),

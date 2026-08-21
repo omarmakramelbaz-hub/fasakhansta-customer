@@ -76,6 +76,13 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _initial() {
+    // Web is used only as a UI review preview. Do not block navigation on
+    // profile/network requests that are required by the native app flow.
+    if (kIsWeb) {
+      _delayedNavigation(BottomNavigationBarScreen.routeName, seconds: 2);
+      return;
+    }
+
     if (HiveMethods.isFirstTime()) {
       _delayedNavigation(OnBoardingScreen.routeName, seconds: 2);
     } else if (HiveMethods.getToken() != null) {

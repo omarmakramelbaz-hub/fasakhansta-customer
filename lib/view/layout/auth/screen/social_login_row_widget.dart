@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -46,10 +46,12 @@ class SocialLoginRowWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final showAppleLogin = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        if (Platform.isIOS) ...[
+        if (showAppleLogin) ...[
           SocialBtn(
             image: AppImages.appleLoginIcon,
             onTap: () {

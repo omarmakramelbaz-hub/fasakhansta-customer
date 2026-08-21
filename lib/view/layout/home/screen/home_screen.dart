@@ -236,7 +236,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 228),
+                    const SizedBox(height: 325),
                     RestaurantsNearYouWidget(controller: controller),
                     SliderWidget(controller: controller),
                     const SizedBox(height: 8),
@@ -256,7 +256,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const Positioned(
-                  top: 93,
+                  top: 198,
                   left: 0,
                   right: 0,
                   child: Align(

@@ -40,7 +40,7 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
       context.read<RestaurantsController>().initialRestPreviousOrder();
       context.read<RestaurantsController>().getPreviousRestOrder();
       context.read<RestaurantsController>().initialRestaurants();
-      context.read<RestaurantsController>().getRestaurants(lat: HiveMethods.getLat(), lng: HiveMethods.getLan());
+      context.read<RestaurantsController>().getRestaurants();
     });
     super.initState();
   }

@@ -88,7 +88,7 @@ class AppImages {
   static const String shapeOnBoardingImage = 'assets/images/shapeOnBoardingImage.png';
   static const String shapeContactUs = 'assets/images/shapeContactUs.png';
   static const String freeDeliveryImage = 'assets/images/freeDeliveryImage.png';
-  static const String gooDriveImage = 'assets/images/gooDriveImage.gif';
+  static const String gooDriveImage = 'assets/images/delivery_bike.png';
   static const String appLogo = 'assets/images/logo.png';
   static const String fastDeliveryImage = 'assets/images/fastDeliveryImage.png';
   static const String restAnotherHomeBG = 'assets/images/restAnotherHomeBG.jpg';

@@ -15,12 +15,12 @@ class GoDriveCardWidget extends StatelessWidget {
 
   const GoDriveCardWidget({super.key, required this.controller});
 
-  void _openRequestDelegate() {
+  void _openRequestDelegate(BuildContext context) {
     if (HiveMethods.getToken() == null) {
       CommonMethods.showError(message: 'youMustLoginFirst'.tr);
       return;
     }
-    NamedNavigatorImpl.push(RequestDelegateScreen.routeName);
+    Navigator.of(context).pushNamed(RequestDelegateScreen.routeName);
   }
 
   @override
@@ -29,7 +29,7 @@ class GoDriveCardWidget extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(14, 4, 14, 16),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: _openRequestDelegate,
+        onTap: () => _openRequestDelegate(context),
         child: Container(
           height: 210,
           decoration: BoxDecoration(
@@ -156,56 +156,52 @@ class GoDriveCardWidget extends StatelessWidget {
                             ],
                           ),
                           9.sbH,
-                          GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: _openRequestDelegate,
-                            child: Container(
-                              width: double.infinity,
-                              height: 43,
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    AppColors.mainAppColor,
-                                    const Color(0xFFFF871B),
-                                  ],
+                          Container(
+                            width: double.infinity,
+                            height: 43,
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  AppColors.mainAppColor,
+                                  const Color(0xFFFF871B),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.mainAppColor
+                                      .withValues(alpha: .18),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 5),
                                 ),
-                                borderRadius: BorderRadius.circular(14),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.mainAppColor
-                                        .withValues(alpha: .18),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 5),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 27,
+                                  height: 27,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: .20),
+                                    shape: BoxShape.circle,
                                   ),
-                                ],
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    width: 27,
-                                    height: 27,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: .20),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.arrow_forward_rounded,
-                                      size: 17,
-                                      color: Colors.white,
-                                    ),
+                                  child: const Icon(
+                                    Icons.arrow_forward_rounded,
+                                    size: 17,
+                                    color: Colors.white,
                                   ),
-                                  8.sbW,
-                                  Text(
-                                    'اطلب مندوب',
-                                    style: AppTextStyle.text14BS().copyWith(
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                    ),
+                                ),
+                                8.sbW,
+                                Text(
+                                  'اطلب مندوب',
+                                  style: AppTextStyle.text14BS().copyWith(
+                                    color: Colors.white,
+                                    fontSize: 15,
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
                         ],

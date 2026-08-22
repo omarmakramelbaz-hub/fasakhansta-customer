@@ -77,6 +77,7 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen> with Widg
     final requestDelegateController = Provider.of<RequestDelegateController>(context, listen: false);
     requestDelegateController.reset();
 
+    if (!mounted) return;
     setState(() {
       currentLat = lat;
       currentLng = lng;
@@ -132,23 +133,40 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen> with Widg
             ),
           );
           markers.addAll(myMarker!);
-          setState(() {});
+          if (mounted) setState(() {});
         }
       });
     });
     requestDelegateController.reset();
-    // Updating map camera and placemarks
+
     if (gmc != null) {
       gmc!.animateCamera(CameraUpdate.newLatLng(LatLng(lat, lng)));
     }
 
-    placemarks = await placemarkFromCoordinates(lat, lng);
     requestDelegateController.setFromLat(lat.toString());
     requestDelegateController.setFromLan(lng.toString());
-    requestDelegateController.setFromAddress(
-      '${placemarks![0].locality}, ${placemarks![0].country} ${placemarks![0].street}',
-    );
 
+    // Reverse geocoding is not available on every Flutter Web runtime.
+    // Never keep the whole Go Drive page blocked on the loading spinner if it fails.
+    try {
+      placemarks = await placemarkFromCoordinates(lat, lng);
+      if (placemarks != null && placemarks!.isNotEmpty) {
+        requestDelegateController.setFromAddress(
+          '${placemarks![0].locality}, ${placemarks![0].country} ${placemarks![0].street}',
+        );
+      } else {
+        requestDelegateController.setFromAddress(
+          '${lat.toStringAsFixed(5)}, ${lng.toStringAsFixed(5)}',
+        );
+      }
+    } catch (e) {
+      log('Reverse geocoding failed: $e');
+      requestDelegateController.setFromAddress(
+        '${lat.toStringAsFixed(5)}, ${lng.toStringAsFixed(5)}',
+      );
+    }
+
+    if (!mounted) return;
     setState(() {
       isLocationLoaded = true;
     });
@@ -177,7 +195,7 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen> with Widg
           ),
         );
         markers.addAll(myMarker!);
-        setState(() {});
+        if (mounted) setState(() {});
       }
     });
 
@@ -185,6 +203,7 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen> with Widg
       gmc!.animateCamera(CameraUpdate.newLatLng(LatLng(latLng.latitude, latLng.longitude)));
     }
 
+    if (!mounted) return;
     setState(() {
       markers.clear();
     });
@@ -200,6 +219,7 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen> with Widg
 
   void initMapStyle() async {
     var mapStyle = await DefaultAssetBundle.of(context).loadString('assets/map_styles/dark_map_style.json');
+    if (!mounted) return;
     setState(() {
       _mapStyle = mapStyle;
     });
@@ -220,6 +240,7 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen> with Widg
   }
 
   Future<void> _recheckLocationServices() async {
+    if (!mounted) return;
     setState(() {
       isCheckingLocation = true;
     });
@@ -232,12 +253,14 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen> with Widg
       log('Location services are still disabled.');
     }
 
+    if (!mounted) return;
     setState(() {
       isCheckingLocation = false;
     });
   }
 
   void _setContainerHeight(double height) {
+    if (!mounted) return;
     setState(() {
       containerHeight = height;
     });
@@ -444,7 +467,9 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen> with Widg
     } else if (controller.descriptionEC.text.isEmpty) {
       Utils.showAppBottomSheet(
         ChangeNotifierProvider.value(
-            value: controller, child: RDDetailsBottomSheet(requestDelegateController: controller)),
+          value: controller,
+          child: RDDetailsBottomSheet(requestDelegateController: controller),
+        ),
       );
     } else {
       CommonMethods.showToast(message: 'confirmDataNotEmpty'.tr);

@@ -283,7 +283,10 @@ class _FeatureChip extends StatelessWidget {
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTextStyle.text10BS().copyWith(color: const Color(0xFF313131)),
+                style: AppTextStyle.text10RG().copyWith(
+                  color: const Color(0xFF313131),
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ],

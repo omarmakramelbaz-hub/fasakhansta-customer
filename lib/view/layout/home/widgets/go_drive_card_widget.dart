@@ -33,19 +33,19 @@ class GoDriveCardWidget extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: _openRequestDelegate,
         child: Container(
-          height: 205,
+          height: 210,
           decoration: BoxDecoration(
-            color: AppColors.whiteColor,
+            color: Colors.white,
             borderRadius: BorderRadius.circular(26),
             border: Border.all(
-              color: AppColors.mainAppColor.withValues(alpha: .42),
+              color: AppColors.mainAppColor.withValues(alpha: .52),
               width: 1.15,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: .07),
-                blurRadius: 22,
-                offset: const Offset(0, 8),
+                color: const Color(0xFF102033).withValues(alpha: .07),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
@@ -53,26 +53,14 @@ class GoDriveCardWidget extends StatelessWidget {
           child: Stack(
             children: [
               Positioned(
-                left: -20,
-                top: -30,
-                child: Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.mainAppColor.withValues(alpha: .035),
-                  ),
-                ),
-              ),
-              Positioned(
-                right: -28,
-                bottom: -38,
+                left: -36,
+                top: -48,
                 child: Container(
                   width: 150,
                   height: 150,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.mainAppColor.withValues(alpha: .045),
+                    color: AppColors.mainAppColor.withValues(alpha: .035),
                   ),
                 ),
               ),
@@ -80,31 +68,31 @@ class GoDriveCardWidget extends StatelessWidget {
                 textDirection: TextDirection.ltr,
                 children: [
                   Expanded(
-                    flex: 58,
+                    flex: 59,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(17, 16, 10, 14),
+                      padding: const EdgeInsets.fromLTRB(14, 14, 8, 13),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              Text(
-                                'Go Drive',
-                                style: AppTextStyle.text18BS().copyWith(
-                                  color: const Color(0xFF102033),
-                                  fontSize: 24,
-                                  letterSpacing: -.25,
-                                ),
-                              ),
-                              8.sbW,
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.mainAppColor,
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      AppColors.mainAppColor,
+                                      const Color(0xFFFF8A1F),
+                                    ],
+                                  ),
                                   borderRadius: BorderRadius.circular(999),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.mainAppColor.withValues(alpha: .22),
+                                      color: AppColors.mainAppColor
+                                          .withValues(alpha: .20),
                                       blurRadius: 10,
                                       offset: const Offset(0, 4),
                                     ),
@@ -112,15 +100,29 @@ class GoDriveCardWidget extends StatelessWidget {
                                 ),
                                 child: Text(
                                   'جديد',
-                                  style: AppTextStyle.text11BS().copyWith(color: Colors.white),
+                                  style: AppTextStyle.text11BS().copyWith(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              8.sbW,
+                              Expanded(
+                                child: Text(
+                                  'Go Drive',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTextStyle.text18BS().copyWith(
+                                    color: const Color(0xFF102033),
+                                    fontSize: 22,
+                                    letterSpacing: -.25,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
-                          4.sbH,
+                          3.sbH,
                           Text(
                             'خدمة توصيل',
-                            textAlign: TextAlign.left,
                             style: AppTextStyle.text16BS().copyWith(
                               color: AppColors.mainAppColor,
                               fontSize: 18,
@@ -131,62 +133,77 @@ class GoDriveCardWidget extends StatelessWidget {
                             'اطلب مندوب في أي وقت ومن أي مكان',
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.left,
                             style: AppTextStyle.text12MS().copyWith(
-                              color: const Color(0xFF73777D),
-                              height: 1.45,
+                              color: const Color(0xFF747A82),
+                              height: 1.35,
                             ),
                           ),
                           const Spacer(),
-                          Row(
+                          const Row(
                             children: [
-                              const _FeatureChip(
+                              _FeatureChip(
                                 icon: Icons.bolt_rounded,
                                 label: 'سريع',
                               ),
-                              6.sbW,
-                              const _FeatureChip(
+                              SizedBox(width: 5),
+                              _FeatureChip(
                                 icon: Icons.shield_outlined,
                                 label: 'آمن',
                               ),
-                              6.sbW,
-                              const _FeatureChip(
+                              SizedBox(width: 5),
+                              _FeatureChip(
                                 icon: Icons.near_me_outlined,
                                 label: 'مباشر',
                               ),
                             ],
                           ),
-                          10.sbH,
+                          9.sbH,
                           GestureDetector(
                             behavior: HitTestBehavior.opaque,
                             onTap: _openRequestDelegate,
                             child: Container(
                               width: double.infinity,
-                              height: 42,
+                              height: 43,
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
-                                color: AppColors.mainAppColor,
+                                gradient: LinearGradient(
+                                  colors: [
+                                    AppColors.mainAppColor,
+                                    const Color(0xFFFF871B),
+                                  ],
+                                ),
                                 borderRadius: BorderRadius.circular(14),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.mainAppColor
+                                        .withValues(alpha: .18),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
                               ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text(
-                                    'اطلب الآن',
-                                    style: AppTextStyle.text14BS().copyWith(color: Colors.white),
-                                  ),
-                                  8.sbW,
                                   Container(
-                                    width: 26,
-                                    height: 26,
+                                    width: 27,
+                                    height: 27,
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: .18),
+                                      color: Colors.white.withValues(alpha: .20),
                                       shape: BoxShape.circle,
                                     ),
                                     child: const Icon(
-                                      Icons.arrow_back_ios_new_rounded,
-                                      size: 13,
+                                      Icons.arrow_forward_rounded,
+                                      size: 17,
                                       color: Colors.white,
+                                    ),
+                                  ),
+                                  8.sbW,
+                                  Text(
+                                    'اطلب مندوب',
+                                    style: AppTextStyle.text14BS().copyWith(
+                                      color: Colors.white,
+                                      fontSize: 15,
                                     ),
                                   ),
                                 ],
@@ -198,40 +215,77 @@ class GoDriveCardWidget extends StatelessWidget {
                     ),
                   ),
                   Expanded(
-                    flex: 42,
+                    flex: 41,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(3, 12, 10, 12),
+                      padding: const EdgeInsets.fromLTRB(3, 10, 10, 10),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFF7EF),
+                          gradient: const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Color(0xFFFFF8F1),
+                              Color(0xFFFFF3E7),
+                            ],
+                          ),
                           borderRadius: BorderRadius.circular(23),
                           border: Border.all(
-                            color: AppColors.mainAppColor.withValues(alpha: .08),
+                            color: AppColors.mainAppColor.withValues(alpha: .10),
                           ),
                         ),
+                        clipBehavior: Clip.antiAlias,
                         child: Stack(
                           children: [
-                            Positioned(
-                              top: 14,
-                              right: 14,
-                              child: Icon(
-                                Icons.location_on_rounded,
-                                color: AppColors.mainAppColor,
-                                size: 27,
-                              ),
-                            ),
                             const Positioned(
-                              left: 11,
                               top: 17,
+                              left: 14,
                               child: Icon(
                                 Icons.cloud_rounded,
-                                color: Color(0xFFFFE7D1),
-                                size: 37,
+                                color: Color(0xFFFFE2C7),
+                                size: 36,
+                              ),
+                            ),
+                            Positioned(
+                              top: 13,
+                              right: 13,
+                              child: Container(
+                                width: 34,
+                                height: 34,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: .05),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  Icons.location_on_rounded,
+                                  color: AppColors.mainAppColor,
+                                  size: 22,
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              left: 10,
+                              bottom: 43,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _SpeedLine(width: 32),
+                                  6.sbH,
+                                  _SpeedLine(width: 24),
+                                  6.sbH,
+                                  _SpeedLine(width: 16),
+                                ],
                               ),
                             ),
                             Positioned.fill(
                               child: Padding(
-                                padding: const EdgeInsets.fromLTRB(8, 29, 8, 7),
+                                padding: const EdgeInsets.fromLTRB(6, 31, 5, 4),
                                 child: CustomImage(
                                   path: AppImages.gooDriveImage,
                                   type: ImageType.asset,
@@ -265,32 +319,50 @@ class _FeatureChip extends StatelessWidget {
     return Expanded(
       child: Container(
         height: 31,
-        padding: const EdgeInsets.symmetric(horizontal: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFF8F1),
+          color: const Color(0xFFFFF9F3),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: AppColors.mainAppColor.withValues(alpha: .10),
+            color: AppColors.mainAppColor.withValues(alpha: .12),
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 14, color: AppColors.mainAppColor),
-            4.sbW,
+            3.sbW,
             Flexible(
               child: Text(
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTextStyle.text10RG().copyWith(
-                  color: const Color(0xFF313131),
+                  color: const Color(0xFF303640),
                   fontWeight: FontWeight.w700,
                 ),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _SpeedLine extends StatelessWidget {
+  const _SpeedLine({required this.width});
+
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: 3,
+      decoration: BoxDecoration(
+        color: AppColors.mainAppColor.withValues(alpha: .32),
+        borderRadius: BorderRadius.circular(99),
       ),
     );
   }

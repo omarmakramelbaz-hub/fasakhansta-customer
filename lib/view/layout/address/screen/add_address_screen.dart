@@ -651,7 +651,7 @@ class _AddAddressScreenState extends State<AddAddressScreen>
     final gap = compact ? 5.0 : 7.0;
 
     return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
         _fieldRow(
           _field(
@@ -738,13 +738,16 @@ class _AddAddressScreenState extends State<AddAddressScreen>
   }
 
   Widget _fieldRow(Widget first, Widget second, double gap) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(child: first),
-        SizedBox(width: gap),
-        Expanded(child: second),
-      ],
+    return Padding(
+      padding: EdgeInsets.only(bottom: gap),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: first),
+          SizedBox(width: gap),
+          Expanded(child: second),
+        ],
+      ),
     );
   }
 

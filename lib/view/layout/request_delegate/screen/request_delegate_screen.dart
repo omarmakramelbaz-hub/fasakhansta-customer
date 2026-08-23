@@ -19,6 +19,7 @@ import '../../../custom_widgets/api_response_widget/api_response_widget.dart';
 import '../../../custom_widgets/custom_loading/custom_loading.dart';
 import '../../../custom_widgets/custom_loading/custom_shimmer.dart';
 import '../../../custom_widgets/custom_payment_web_view/custom_payment_web_view.dart';
+import '../../map/utils/map_services.dart';
 import '../bottom_sheet/payment_rd_bottom_sheet.dart';
 import '../bottom_sheet/rd_details_bottom_sheet.dart';
 import '../controller/request_delegate_controller.dart';
@@ -45,7 +46,9 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
   BitmapDescriptor? _orangePinIcon;
   BitmapDescriptor? _pickupRiderIcon;
   BitmapDescriptor? _pickupGoDriveIcon;
-  String? _lastCameraFitKey;
+  late final MapServices _mapServices;
+  Set<Polyline> _deliveryRoutePolylines = {};
+  String? _routeRequestKey;
   Set<Marker> markers = {};
   bool isLocationLoaded = false;
   bool isCheckingLocation = false;
@@ -271,16 +274,24 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
               'assets/images/motorcycleImage.png',
               height: 50,
             );
-            final delegateMarkers = delegatesOnMap!.userData!.map(
-              (userModel) => Marker(
-                icon: customMarkerIcon,
-                markerId: MarkerId(userModel.id.toString()),
-                position: LatLng(
-                  double.parse(userModel.lat!),
-                  double.parse(userModel.lng!),
-                ),
-              ),
-            );
+            final delegateMarkers = delegatesOnMap!.userData!
+                .where((userModel) {
+                  final lat = double.tryParse(userModel.lat ?? '');
+                  final lng = double.tryParse(userModel.lng ?? '');
+                  return lat != null &&
+                      lng != null &&
+                      _isEgyptPoint(LatLng(lat, lng));
+                })
+                .map(
+                  (userModel) => Marker(
+                    icon: customMarkerIcon,
+                    markerId: MarkerId(userModel.id.toString()),
+                    position: LatLng(
+                      double.parse(userModel.lat!),
+                      double.parse(userModel.lng!),
+                    ),
+                  ),
+                );
             markers.addAll(delegateMarkers);
             if (mounted) setState(() {});
           } catch (e) {
@@ -341,21 +352,44 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
     }
   }
 
-  Set<Marker> _visibleMarkers(RequestDelegateController controller) {
-    final result = Set<Marker>.from(markers);
-    final fromLat = double.tryParse(controller.fromLat ?? '');
-    final fromLng = double.tryParse(controller.fromLan ?? '');
-    final toLat = double.tryParse(controller.toLat ?? '');
-    final toLng = double.tryParse(controller.toLan ?? '');
+  bool _isEgyptPoint(LatLng point) {
+    return point.latitude >= 21.0 &&
+        point.latitude <= 32.5 &&
+        point.longitude >= 24.0 &&
+        point.longitude <= 37.5;
+  }
 
-    if (fromLat != null && fromLng != null) {
+  LatLng? _pickupPoint(RequestDelegateController controller) {
+    final lat = double.tryParse(controller.fromLat ?? '');
+    final lng = double.tryParse(controller.fromLan ?? '');
+    if (lat == null || lng == null) return null;
+    final point = LatLng(lat, lng);
+    return _isEgyptPoint(point) ? point : null;
+  }
+
+  LatLng? _deliveryPoint(RequestDelegateController controller) {
+    final lat = double.tryParse(controller.toLat ?? '');
+    final lng = double.tryParse(controller.toLan ?? '');
+    if (lat == null || lng == null) return null;
+    final point = LatLng(lat, lng);
+    return _isEgyptPoint(point) ? point : null;
+  }
+
+  Set<Marker> _visibleMarkers(RequestDelegateController controller) {
+    final result = markers
+        .where((marker) => _isEgyptPoint(marker.position))
+        .toSet();
+    final pickup = _pickupPoint(controller);
+    final delivery = _deliveryPoint(controller);
+
+    if (pickup != null) {
       result.removeWhere(
         (marker) => marker.markerId.value == 'currentLocation',
       );
       result.add(
         Marker(
           markerId: const MarkerId('pickupLocation'),
-          position: LatLng(fromLat, fromLng),
+          position: pickup,
           icon: _pickupGoDriveIcon ??
               _pickupRiderIcon ??
               BitmapDescriptor.defaultMarkerWithHue(
@@ -373,11 +407,11 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
       );
     }
 
-    if (toLat != null && toLng != null) {
+    if (delivery != null) {
       result.add(
         Marker(
           markerId: const MarkerId('deliveryDestination'),
-          position: LatLng(toLat, toLng),
+          position: delivery,
           icon: _orangePinIcon ??
               BitmapDescriptor.defaultMarkerWithHue(
                 BitmapDescriptor.hueOrange,
@@ -394,80 +428,127 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
     return result;
   }
 
-  Set<Polyline> _selectedLocationPolyline(
-    RequestDelegateController controller,
-  ) {
-    final fromLat = double.tryParse(controller.fromLat ?? '');
-    final fromLng = double.tryParse(controller.fromLan ?? '');
-    final toLat = double.tryParse(controller.toLat ?? '');
-    final toLng = double.tryParse(controller.toLan ?? '');
+  void _syncSelectedRoute(RequestDelegateController controller) {
+    final pickup = _pickupPoint(controller);
+    final delivery = _deliveryPoint(controller);
 
-    if (fromLat == null ||
-        fromLng == null ||
-        toLat == null ||
-        toLng == null) {
-      return const <Polyline>{};
-    }
-
-    return {
-      Polyline(
-        polylineId: const PolylineId('selectedDeliveryRoute'),
-        points: [
-          LatLng(fromLat, fromLng),
-          LatLng(toLat, toLng),
-        ],
-        color: AppColors.mainAppColor,
-        width: 5,
-        startCap: Cap.roundCap,
-        endCap: Cap.roundCap,
-        geodesic: true,
-      ),
-    };
-  }
-
-  void _fitSelectedLocations(
-    RequestDelegateController controller, {
-    bool force = false,
-  }) {
-    final fromLat = double.tryParse(controller.fromLat ?? '');
-    final fromLng = double.tryParse(controller.fromLan ?? '');
-    final toLat = double.tryParse(controller.toLat ?? '');
-    final toLng = double.tryParse(controller.toLan ?? '');
-
-    if (fromLat == null ||
-        fromLng == null ||
-        toLat == null ||
-        toLng == null ||
-        gmc == null) {
+    if (pickup == null || delivery == null) {
+      if (_routeRequestKey != null || _deliveryRoutePolylines.isNotEmpty) {
+        _routeRequestKey = null;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted || _deliveryRoutePolylines.isEmpty) return;
+          setState(() => _deliveryRoutePolylines = {});
+        });
+      }
       return;
     }
 
-    final key = '$fromLat,$fromLng|$toLat,$toLng';
-    if (!force && _lastCameraFitKey == key) return;
-    _lastCameraFitKey = key;
+    final key =
+        '${pickup.latitude},${pickup.longitude}|${delivery.latitude},${delivery.longitude}';
+    if (_routeRequestKey == key) return;
+    _routeRequestKey = key;
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await Future.delayed(const Duration(milliseconds: 120));
-      if (!mounted || gmc == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _loadSelectedRoute(pickup, delivery, key);
+    });
+  }
 
-      final almostSamePoint =
-          (fromLat - toLat).abs() < .00005 &&
-          (fromLng - toLng).abs() < .00005;
-      if (almostSamePoint) {
-        await gmc!.animateCamera(
-          CameraUpdate.newLatLngZoom(
-            LatLng(fromLat, fromLng),
-            15.5,
-          ),
-        );
-        return;
+  Future<void> _loadSelectedRoute(
+    LatLng pickup,
+    LatLng delivery,
+    String key,
+  ) async {
+    try {
+      final points = await _mapServices.getRouteData(
+        originFrom: pickup,
+        desintation: delivery,
+      );
+
+      if (!mounted || _routeRequestKey != key) return;
+      final validPoints = points.where(_isEgyptPoint).toList(growable: false);
+      if (validPoints.length < 2) {
+        throw StateError('Route has no valid points');
       }
 
-      final south = fromLat < toLat ? fromLat : toLat;
-      final north = fromLat > toLat ? fromLat : toLat;
-      final west = fromLng < toLng ? fromLng : toLng;
-      final east = fromLng > toLng ? fromLng : toLng;
+      setState(() {
+        _deliveryRoutePolylines = {
+          Polyline(
+            polylineId: const PolylineId('selectedDeliveryRoute'),
+            points: validPoints,
+            color: AppColors.mainAppColor,
+            width: 5,
+            startCap: Cap.roundCap,
+            endCap: Cap.roundCap,
+            jointType: JointType.round,
+          ),
+        };
+      });
 
+      await _fitRoutePoints(validPoints);
+    } catch (e) {
+      log('Failed to load selected delivery route: $e');
+      if (!mounted || _routeRequestKey != key) return;
+      if (_deliveryRoutePolylines.isNotEmpty) {
+        setState(() => _deliveryRoutePolylines = {});
+      }
+      await _fitSafeEndpoints(pickup, delivery);
+    }
+  }
+
+  Future<void> _fitRoutePoints(List<LatLng> points) async {
+    if (gmc == null || points.length < 2) return;
+    try {
+      final bounds = _mapServices.getLatLngBounds(points);
+      await gmc!.animateCamera(
+        CameraUpdate.newLatLngBounds(bounds, 70),
+      );
+    } catch (e) {
+      log('Failed to fit delivery route: $e');
+    }
+  }
+
+  Future<void> _fitSafeEndpoints(LatLng pickup, LatLng delivery) async {
+    if (gmc == null) return;
+
+    final distanceKm = Geolocator.distanceBetween(
+          pickup.latitude,
+          pickup.longitude,
+          delivery.latitude,
+          delivery.longitude,
+        ) /
+        1000;
+
+    if (distanceKm > 350) {
+      await gmc!.animateCamera(
+        CameraUpdate.newLatLngZoom(pickup, 12.5),
+      );
+      return;
+    }
+
+    final south = pickup.latitude < delivery.latitude
+        ? pickup.latitude
+        : delivery.latitude;
+    final north = pickup.latitude > delivery.latitude
+        ? pickup.latitude
+        : delivery.latitude;
+    final west = pickup.longitude < delivery.longitude
+        ? pickup.longitude
+        : delivery.longitude;
+    final east = pickup.longitude > delivery.longitude
+        ? pickup.longitude
+        : delivery.longitude;
+
+    final almostSamePoint =
+        (pickup.latitude - delivery.latitude).abs() < .00005 &&
+        (pickup.longitude - delivery.longitude).abs() < .00005;
+    if (almostSamePoint) {
+      await gmc!.animateCamera(
+        CameraUpdate.newLatLngZoom(pickup, 15.5),
+      );
+      return;
+    }
+
+    try {
       await gmc!.animateCamera(
         CameraUpdate.newLatLngBounds(
           LatLngBounds(
@@ -477,12 +558,15 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
           72,
         ),
       );
-    });
+    } catch (e) {
+      log('Failed to fit selected endpoints: $e');
+    }
   }
 
   @override
   void initState() {
     super.initState();
+    _mapServices = MapServices();
     WidgetsBinding.instance.addObserver(this);
     _loadPickupMarkerIcons();
     _determinePosition();
@@ -529,7 +613,7 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
           );
         }
 
-        _fitSelectedLocations(controller);
+        _syncSelectedRoute(controller);
 
         return Scaffold(
           backgroundColor: Colors.white,
@@ -539,19 +623,19 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
                 mapType: MapType.normal,
                 onTap: _onMapTap,
                 markers: _visibleMarkers(controller),
-                polylines: _selectedLocationPolyline(controller),
+                polylines: _deliveryRoutePolylines,
                 style: _cleanLightMapStyle,
                 padding: EdgeInsets.only(bottom: _panelHeight * .25),
                 onMapCreated: (mapController) {
                   gmc = mapController;
-                  final hasBothLocations =
-                      double.tryParse(controller.fromLat ?? '') != null &&
-                      double.tryParse(controller.fromLan ?? '') != null &&
-                      double.tryParse(controller.toLat ?? '') != null &&
-                      double.tryParse(controller.toLan ?? '') != null;
+                  final pickup = _pickupPoint(controller);
+                  final delivery = _deliveryPoint(controller);
 
-                  if (hasBothLocations) {
-                    _fitSelectedLocations(controller, force: true);
+                  if (pickup != null && delivery != null) {
+                    _syncSelectedRoute(controller);
+                    Future.delayed(const Duration(milliseconds: 160), () {
+                      if (mounted) _fitSafeEndpoints(pickup, delivery);
+                    });
                   } else if (currentLat != null && currentLng != null) {
                     gmc!.animateCamera(
                       CameraUpdate.newLatLng(

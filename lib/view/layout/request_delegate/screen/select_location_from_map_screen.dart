@@ -37,6 +37,7 @@ class _SelectLocationFromMapScreenState
   double? currentLat;
   double? currentLng;
   bool isCheckingLocation = false;
+  bool isConfirmingLocation = false;
 
   static const _text = Color(0xFF171A1F);
   static const _muted = Color(0xFF8D939C);
@@ -166,7 +167,11 @@ class _SelectLocationFromMapScreenState
   void _onMapTap(LatLng point) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 180), () {
-      _updateLocation(point.latitude, point.longitude);
+      _updateLocation(
+        point.latitude,
+        point.longitude,
+        updateController: false,
+      );
     });
   }
 
@@ -439,7 +444,9 @@ class _SelectLocationFromMapScreenState
               width: double.infinity,
               height: 55,
               child: ElevatedButton(
-                onPressed: currentLat == null || currentLng == null
+                onPressed: currentLat == null ||
+                        currentLng == null ||
+                        isConfirmingLocation
                     ? null
                     : () => _confirmLocation(controller),
                 style: ElevatedButton.styleFrom(
@@ -451,15 +458,24 @@ class _SelectLocationFromMapScreenState
                     borderRadius: BorderRadius.circular(17),
                   ),
                 ),
-                child: Text(
-                  _isArabic(context)
-                      ? 'استخدام هذا الموقع'
-                      : 'Use this location',
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+                child: isConfirmingLocation
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        _isArabic(context)
+                            ? 'استخدام هذا الموقع'
+                            : 'Use this location',
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
               ),
             ),
           ],
@@ -540,7 +556,10 @@ class _SelectLocationFromMapScreenState
           : 'Locating address...';
     }
 
-    final place = placemarks!.first;
+    return _formatPlacemark(placemarks!.first);
+  }
+
+  String _formatPlacemark(Placemark place) {
     final parts = <String>[
       if ((place.street ?? '').trim().isNotEmpty) place.street!.trim(),
       if ((place.subLocality ?? '').trim().isNotEmpty)
@@ -553,11 +572,32 @@ class _SelectLocationFromMapScreenState
     return parts.toSet().join('، ');
   }
 
-  void _confirmLocation(RequestDelegateController controller) {
-    if (currentLat == null || currentLng == null) return;
+  Future<void> _confirmLocation(RequestDelegateController controller) async {
+    if (currentLat == null || currentLng == null || isConfirmingLocation) return;
 
-    _applyCoordinatesToController(currentLat!, currentLng!);
-    final address = _formattedAddress();
+    final lat = currentLat!;
+    final lng = currentLng!;
+
+    setState(() => isConfirmingLocation = true);
+
+    _applyCoordinatesToController(lat, lng);
+
+    String address = '${lat.toStringAsFixed(5)}, ${lng.toStringAsFixed(5)}';
+
+    try {
+      final result = await placemarkFromCoordinates(lat, lng);
+      if (result.isNotEmpty) {
+        placemarks = result;
+        final resolvedAddress = _formatPlacemark(result.first).trim();
+        if (resolvedAddress.isNotEmpty) {
+          address = resolvedAddress;
+        }
+      }
+    } catch (e) {
+      log('Reverse geocoding on confirm failed: $e');
+    }
+
+    if (!mounted) return;
 
     if (widget.args?.isFromAddress == true) {
       controller.setFromAddress(address);
@@ -567,6 +607,7 @@ class _SelectLocationFromMapScreenState
       controller.setToController(address);
     }
 
-    Navigator.of(context).pop();
+    setState(() => isConfirmingLocation = false);
+    Navigator.of(context).pop(true);
   }
 }

@@ -25,35 +25,48 @@ class ChoosePaymentMethodWidget extends StatelessWidget {
               PaymentMethodWidget(
                 label: 'cash'.tr,
                 selectedPayment: 'cash',
-                leading: CustomImage(path: AppImages.cashIcon, type: ImageType.svg, color: AppColors.whiteColor),
+                leading: CustomImage(
+                  path: AppImages.cashIcon,
+                  type: ImageType.svg,
+                  color: AppColors.mainAppColor,
+                  height: 22,
+                ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
               PaymentMethodWidget(
                 label: 'appWalletBalance'.tr,
                 selectedPayment: 'wallet',
                 leading: CustomImage(
                   path: AppImages.payWalletIcon,
                   type: ImageType.svg,
-                  color: AppColors.whiteColor,
-                  height: 20,
+                  color: AppColors.mainAppColor,
+                  height: 21,
                 ),
               ),
-              const SizedBox(height: 16),
-              myAccountController.setting?.paymentCardActivate == 'true'
-                  ? PaymentMethodWidget(
-                      label: 'creditCard'.tr,
-                      selectedPayment: 'online',
-                      leading: const CustomImage(path: AppImages.visaIcon, type: ImageType.svg),
-                    )
-                  : const SizedBox(),
-              const SizedBox(height: 16),
-              myAccountController.setting?.walletCardActivate == 'true'
-                  ? PaymentMethodWidget(
-                      label: 'digitalWalletAndInstaPay'.tr,
-                      selectedPayment: 'v_cash',
-                      leading: const CustomImage(path: AppImages.vfCash, type: ImageType.asset),
-                    )
-                  : const SizedBox(),
+              if (myAccountController.setting?.paymentCardActivate == 'true') ...[
+                const SizedBox(height: 10),
+                PaymentMethodWidget(
+                  label: 'creditCard'.tr,
+                  selectedPayment: 'online',
+                  leading: const CustomImage(
+                    path: AppImages.visaIcon,
+                    type: ImageType.svg,
+                    height: 22,
+                  ),
+                ),
+              ],
+              if (myAccountController.setting?.walletCardActivate == 'true') ...[
+                const SizedBox(height: 10),
+                PaymentMethodWidget(
+                  label: 'digitalWalletAndInstaPay'.tr,
+                  selectedPayment: 'v_cash',
+                  leading: const CustomImage(
+                    path: AppImages.vfCash,
+                    type: ImageType.asset,
+                    height: 22,
+                  ),
+                ),
+              ],
             ],
           );
         },
@@ -64,7 +77,6 @@ class ChoosePaymentMethodWidget extends StatelessWidget {
 
 class PaymentMethodWidget extends StatelessWidget {
   final String label;
-
   final String selectedPayment;
   final String? iconColor;
   final Widget leading;
@@ -80,37 +92,84 @@ class PaymentMethodWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final requestDelegateController = context.watch<RequestDelegateController>();
-    final isSelected = requestDelegateController.selectedPayment == selectedPayment;
-    return InkWell(
-      onTap: () => requestDelegateController.setSelectedPayment(selectedPayment),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 18),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          color: AppColors.blackColor,
-          border: Border.all(color: isSelected ? AppColors.mainAppColor : AppColors.borderColor, width: 1),
-        ),
-        child: Center(
+    final isSelected =
+        requestDelegateController.selectedPayment == selectedPayment;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(15),
+        onTap: () =>
+            requestDelegateController.setSelectedPayment(selectedPayment),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          height: 58,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15),
+            color: isSelected ? const Color(0xFFFFF6EC) : Colors.white,
+            border: Border.all(
+              color: isSelected
+                  ? AppColors.mainAppColor
+                  : const Color(0xFFE6E9ED),
+              width: isSelected ? 1.3 : 1,
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x08000000),
+                blurRadius: 8,
+                offset: Offset(0, 3),
+              ),
+            ],
+          ),
           child: Row(
             children: [
-              leading,
-              const SizedBox(width: 10),
-              Text(label, style: AppTextStyle.text16MS().copyWith(color: AppColors.whiteColor)),
-              const Spacer(),
-              isSelected
-                  ? Container(
-                      height: 16,
-                      width: 16,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(width: 1.3, color: AppColors.mainAppColor),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(2.0),
-                        child: CircleAvatar(backgroundColor: AppColors.mainAppColor),
-                      ),
-                    )
-                  : const SizedBox(),
+              Container(
+                width: 38,
+                height: 38,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF7EF),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: leading,
+              ),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyle.text16MS().copyWith(
+                    color: const Color(0xFF1B1E23),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                width: 21,
+                height: 21,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isSelected
+                      ? AppColors.mainAppColor
+                      : Colors.transparent,
+                  border: Border.all(
+                    width: 1.4,
+                    color: isSelected
+                        ? AppColors.mainAppColor
+                        : const Color(0xFFB9BEC6),
+                  ),
+                ),
+                child: isSelected
+                    ? const Icon(
+                        Icons.check_rounded,
+                        color: Colors.white,
+                        size: 15,
+                      )
+                    : null,
+              ),
             ],
           ),
         ),

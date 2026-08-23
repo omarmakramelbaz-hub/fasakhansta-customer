@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
 
+export '../translation/all_translation.dart' show AppLocal;
+
 extension EmptyPadding on num {
   SizedBox get sbH => SizedBox(height: toDouble());
 

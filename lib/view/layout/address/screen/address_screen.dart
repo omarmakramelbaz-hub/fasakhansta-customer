@@ -15,7 +15,12 @@ import 'add_address_screen.dart';
 
 class AddressScreen extends StatelessWidget {
   static const String routeName = 'AddressScreen';
-  const AddressScreen({super.key});
+  final bool selectForDelivery;
+
+  const AddressScreen({
+    super.key,
+    this.selectForDelivery = false,
+  });
 
   static const _text = Color(0xFF171A1F);
   static const _muted = Color(0xFF8D939C);
@@ -55,6 +60,10 @@ class AddressScreen extends StatelessWidget {
                               area: profile?.areaTitle ?? '',
                               gender: profile?.gender,
                             ),
+                            if (selectForDelivery) ...[
+                              const SizedBox(height: 12),
+                              _selectionHint(context),
+                            ],
                             const SizedBox(height: 18),
                             _sectionTitle(context),
                             const SizedBox(height: 10),
@@ -66,18 +75,25 @@ class AddressScreen extends StatelessWidget {
                               child: Column(
                                 children: List.generate(
                                   addressController.address.length,
-                                  (index) => Padding(
-                                    padding: EdgeInsets.only(
-                                      bottom: index ==
-                                              addressController.address.length - 1
-                                          ? 0
-                                          : 12,
-                                    ),
-                                    child: AddressWidget(
-                                      address:
-                                          addressController.address[index],
-                                    ),
-                                  ),
+                                  (index) {
+                                    final address =
+                                        addressController.address[index];
+                                    return Padding(
+                                      padding: EdgeInsets.only(
+                                        bottom: index ==
+                                                addressController.address.length - 1
+                                            ? 0
+                                            : 12,
+                                      ),
+                                      child: AddressWidget(
+                                        address: address,
+                                        selectionMode: selectForDelivery,
+                                        onSelect: selectForDelivery
+                                            ? () => Navigator.of(context).pop(address)
+                                            : null,
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                             ),
@@ -110,7 +126,13 @@ class AddressScreen extends StatelessWidget {
                       ),
                       icon: const Icon(Icons.add_circle_outline_rounded),
                       label: Text(
-                        _isArabic(context) ? 'إضافة عنوان' : 'Add address',
+                        selectForDelivery
+                            ? (_isArabic(context)
+                                ? 'إضافة عنوان جديد'
+                                : 'Add new address')
+                            : (_isArabic(context)
+                                ? 'إضافة عنوان'
+                                : 'Add address'),
                         style: const TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w800,
@@ -140,7 +162,11 @@ class AddressScreen extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              _isArabic(context) ? 'العناوين' : 'Addresses',
+              selectForDelivery
+                  ? (_isArabic(context)
+                      ? 'اختيار عنوان محفوظ'
+                      : 'Choose saved address')
+                  : (_isArabic(context) ? 'العناوين' : 'Addresses'),
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: _text,
@@ -227,6 +253,49 @@ class AddressScreen extends StatelessWidget {
     );
   }
 
+  Widget _selectionHint(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: _softOrange,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.mainAppColor.withValues(alpha: .12),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: Icon(
+              Icons.touch_app_outlined,
+              color: AppColors.mainAppColor,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              _isArabic(context)
+                  ? 'اضغط على العنوان الذي تريد التوصيل إليه'
+                  : 'Tap the address you want to deliver to',
+              style: const TextStyle(
+                color: _text,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _sectionTitle(BuildContext context) {
     return Row(
       children: [
@@ -245,7 +314,13 @@ class AddressScreen extends StatelessWidget {
         ),
         const SizedBox(width: 9),
         Text(
-          _isArabic(context) ? 'عناويني المحفوظة' : 'Saved addresses',
+          selectForDelivery
+              ? (_isArabic(context)
+                  ? 'اختر عنوان التوصيل'
+                  : 'Choose delivery address')
+              : (_isArabic(context)
+                  ? 'عناويني المحفوظة'
+                  : 'Saved addresses'),
           style: const TextStyle(
             color: _text,
             fontSize: 16,

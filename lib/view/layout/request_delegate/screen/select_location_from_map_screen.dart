@@ -67,13 +67,34 @@ class _SelectLocationFromMapScreenState
         Provider.of<RequestDelegateController>(context, listen: false);
     final isFrom = widget.args?.isFromAddress == true;
 
-    final savedLat =
-        double.tryParse(isFrom ? controller.fromLat ?? '' : controller.toLat ?? '');
-    final savedLng =
-        double.tryParse(isFrom ? controller.fromLan ?? '' : controller.toLan ?? '');
+    if (isFrom) {
+      // Pickup should always start from the user's real device location.
+      // Keep the saved pickup only as a fallback if GPS is unavailable.
+      await _determinePosition();
+      if (currentLat != null && currentLng != null) return;
 
-    if (savedLat != null && savedLng != null) {
-      await _updateLocation(savedLat, savedLng, updateController: false);
+      final savedLat = double.tryParse(controller.fromLat ?? '');
+      final savedLng = double.tryParse(controller.fromLan ?? '');
+      if (savedLat != null && savedLng != null) {
+        await _updateLocation(savedLat, savedLng, updateController: false);
+      }
+      return;
+    }
+
+    // When editing an already selected destination, keep that point.
+    final savedToLat = double.tryParse(controller.toLat ?? '');
+    final savedToLng = double.tryParse(controller.toLan ?? '');
+    if (savedToLat != null && savedToLng != null) {
+      await _updateLocation(savedToLat, savedToLng, updateController: false);
+      return;
+    }
+
+    // A new destination map should open around the user's pickup/current
+    // location so the customer starts from the right area automatically.
+    final pickupLat = double.tryParse(controller.fromLat ?? '');
+    final pickupLng = double.tryParse(controller.fromLan ?? '');
+    if (pickupLat != null && pickupLng != null) {
+      await _updateLocation(pickupLat, pickupLng, updateController: false);
       return;
     }
 

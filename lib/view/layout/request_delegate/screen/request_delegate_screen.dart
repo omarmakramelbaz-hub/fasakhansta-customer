@@ -497,14 +497,20 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
 
   Future<void> _fitRoutePoints(List<LatLng> points) async {
     if (gmc == null || points.length < 2) return;
-    try {
-      final bounds = _mapServices.getLatLngBounds(points);
-      await gmc!.animateCamera(
-        CameraUpdate.newLatLngBounds(bounds, 70),
-      );
-    } catch (e) {
-      log('Failed to fit delivery route: $e');
-    }
+    await _fitSafeEndpoints(points.first, points.last);
+  }
+
+  double _zoomForRouteDistance(double distanceKm) {
+    if (distanceKm <= 0.8) return 15.8;
+    if (distanceKm <= 2) return 14.8;
+    if (distanceKm <= 5) return 13.8;
+    if (distanceKm <= 10) return 12.8;
+    if (distanceKm <= 20) return 11.8;
+    if (distanceKm <= 40) return 10.8;
+    if (distanceKm <= 80) return 9.8;
+    if (distanceKm <= 150) return 8.8;
+    if (distanceKm <= 300) return 7.8;
+    return 7.0;
   }
 
   Future<void> _fitSafeEndpoints(LatLng pickup, LatLng delivery) async {
@@ -518,48 +524,23 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
         ) /
         1000;
 
-    if (distanceKm > 350) {
-      await gmc!.animateCamera(
-        CameraUpdate.newLatLngZoom(pickup, 12.5),
-      );
-      return;
-    }
-
-    final south = pickup.latitude < delivery.latitude
-        ? pickup.latitude
-        : delivery.latitude;
-    final north = pickup.latitude > delivery.latitude
-        ? pickup.latitude
-        : delivery.latitude;
-    final west = pickup.longitude < delivery.longitude
-        ? pickup.longitude
-        : delivery.longitude;
-    final east = pickup.longitude > delivery.longitude
-        ? pickup.longitude
-        : delivery.longitude;
-
-    final almostSamePoint =
-        (pickup.latitude - delivery.latitude).abs() < .00005 &&
-        (pickup.longitude - delivery.longitude).abs() < .00005;
-    if (almostSamePoint) {
-      await gmc!.animateCamera(
-        CameraUpdate.newLatLngZoom(pickup, 15.5),
-      );
-      return;
-    }
+    final center = LatLng(
+      (pickup.latitude + delivery.latitude) / 2,
+      (pickup.longitude + delivery.longitude) / 2,
+    );
+    final zoom = _zoomForRouteDistance(distanceKm);
 
     try {
       await gmc!.animateCamera(
-        CameraUpdate.newLatLngBounds(
-          LatLngBounds(
-            southwest: LatLng(south, west),
-            northeast: LatLng(north, east),
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: center,
+            zoom: zoom,
           ),
-          72,
         ),
       );
     } catch (e) {
-      log('Failed to fit selected endpoints: $e');
+      log('Failed to focus selected delivery area: $e');
     }
   }
 
@@ -626,6 +607,7 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
                 polylines: _deliveryRoutePolylines,
                 style: _cleanLightMapStyle,
                 padding: EdgeInsets.only(bottom: _panelHeight * .25),
+                minMaxZoomPreference: const MinMaxZoomPreference(7.0, 19.0),
                 onMapCreated: (mapController) {
                   gmc = mapController;
                   final pickup = _pickupPoint(controller);

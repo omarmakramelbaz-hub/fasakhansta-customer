@@ -22,9 +22,23 @@ jobs:
 
       - name: Install Dependencies
         run: flutter pub get
-        
+
       - name: Configure Flutter Web platform
         run: flutter create . --platforms web --no-pub
+
+      - name: Configure Google Maps for Web
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          index = Path('web/index.html')
+          html = index.read_text(encoding='utf-8')
+          maps_script = '<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBDfirv6d7BiO-9YnsU5zCHEn9iM9iNtuM"></script>'
+
+          if 'maps.googleapis.com/maps/api/js' not in html:
+              html = html.replace('</head>', f'  {maps_script}\n</head>')
+              index.write_text(html, encoding='utf-8')
+          PY
 
       - name: Build Flutter Web
         run: flutter build web --release
@@ -36,3 +50,5 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_FASAKHANINJATEST }}
           projectId: fasakhaninjatest
           channelId: live
+
+# Only main is allowed to deploy the live review URL.

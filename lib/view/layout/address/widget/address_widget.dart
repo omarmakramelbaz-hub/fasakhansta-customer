@@ -12,7 +12,15 @@ import '../screen/update_address_screen.dart';
 
 class AddressWidget extends StatelessWidget {
   final AddressModel address;
-  const AddressWidget({super.key, required this.address});
+  final bool selectionMode;
+  final VoidCallback? onSelect;
+
+  const AddressWidget({
+    super.key,
+    required this.address,
+    this.selectionMode = false,
+    this.onSelect,
+  });
 
   static const _text = Color(0xFF171A1F);
   static const _muted = Color(0xFF8D939C);
@@ -24,112 +32,129 @@ class AddressWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _border),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0D000000),
-            blurRadius: 14,
-            offset: Offset(0, 4),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: selectionMode ? onSelect : null,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: selectionMode
+                ? AppColors.mainAppColor.withValues(alpha: .24)
+                : _border,
           ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: _softOrange,
-                        borderRadius: BorderRadius.circular(11),
-                      ),
-                      child: Icon(
-                        _addressIcon,
-                        color: AppColors.mainAppColor,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 9),
-                    Expanded(
-                      child: Text(
-                        _title(context),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0D000000),
+              blurRadius: 14,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: _softOrange,
+                          borderRadius: BorderRadius.circular(11),
+                        ),
+                        child: Icon(
+                          _addressIcon,
                           color: AppColors.mainAppColor,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
+                          size: 20,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  _primaryAddress,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: _text,
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                    height: 1.35,
+                      const SizedBox(width: 9),
+                      Expanded(
+                        child: Text(
+                          _title(context),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: AppColors.mainAppColor,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                if (_secondaryAddress.isNotEmpty) ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 10),
                   Text(
-                    _secondaryAddress,
+                    _primaryAddress,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: _muted,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
+                      color: _text,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
                       height: 1.35,
                     ),
                   ),
+                  if (_secondaryAddress.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      _secondaryAddress,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: _muted,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-          const SizedBox(width: 10),
-          Container(width: 1, height: 74, color: _border),
-          const SizedBox(width: 10),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+            const SizedBox(width: 10),
+            Container(width: 1, height: 74, color: _border),
+            const SizedBox(width: 10),
+            if (selectionMode)
               _actionButton(
                 context: context,
-                icon: Icons.edit_outlined,
-                label: _isArabic(context) ? 'تعديل' : 'Edit',
-                color: _text,
-                onTap: () => _edit(context),
+                icon: Icons.check_circle_outline_rounded,
+                label: _isArabic(context) ? 'اختيار' : 'Select',
+                color: AppColors.mainAppColor,
+                onTap: onSelect ?? () {},
+              )
+            else
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _actionButton(
+                    context: context,
+                    icon: Icons.edit_outlined,
+                    label: _isArabic(context) ? 'تعديل' : 'Edit',
+                    color: _text,
+                    onTap: () => _edit(context),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(width: 1, height: 44, color: _border),
+                  const SizedBox(width: 8),
+                  _actionButton(
+                    context: context,
+                    icon: Icons.delete_outline_rounded,
+                    label: _isArabic(context) ? 'حذف' : 'Delete',
+                    color: _delete,
+                    onTap: () => _deleteAddress(context),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Container(width: 1, height: 44, color: _border),
-              const SizedBox(width: 8),
-              _actionButton(
-                context: context,
-                icon: Icons.delete_outline_rounded,
-                label: _isArabic(context) ? 'حذف' : 'Delete',
-                color: _delete,
-                onTap: () => _deleteAddress(context),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -174,7 +199,8 @@ class AddressWidget extends StatelessWidget {
   }
 
   IconData get _addressIcon {
-    final value = '${address.addressName} ${address.badge} ${address.type}'.toLowerCase();
+    final value =
+        '${address.addressName} ${address.badge} ${address.type}'.toLowerCase();
     if (value.contains('home') || value.contains('منزل')) {
       return Icons.home_outlined;
     }
@@ -195,15 +221,21 @@ class AddressWidget extends StatelessWidget {
     ];
 
     if (parts.isNotEmpty) return parts.toSet().join(' - ');
-    if ((address.address ?? '').trim().isNotEmpty) return address.address!.trim();
-    if ((address.areaName ?? '').trim().isNotEmpty) return address.areaName!.trim();
+    if ((address.address ?? '').trim().isNotEmpty) {
+      return address.address!.trim();
+    }
+    if ((address.areaName ?? '').trim().isNotEmpty) {
+      return address.areaName!.trim();
+    }
     return '—';
   }
 
   String get _secondaryAddress {
     final parts = <String>[
-      if ((address.areaName ?? '').trim().isNotEmpty) address.areaName!.trim(),
-      if ((address.floorNo ?? '').trim().isNotEmpty) 'Floor ${address.floorNo!.trim()}',
+      if ((address.areaName ?? '').trim().isNotEmpty)
+        address.areaName!.trim(),
+      if ((address.floorNo ?? '').trim().isNotEmpty)
+        'Floor ${address.floorNo!.trim()}',
       if ((address.apartmentNo ?? '').trim().isNotEmpty)
         'Apt ${address.apartmentNo!.trim()}',
     ];

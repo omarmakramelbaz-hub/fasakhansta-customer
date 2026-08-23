@@ -31,7 +31,13 @@ class CustomMapAnimatedContainer extends StatelessWidget {
     return Consumer<RequestDelegateController>(
       builder: (context, controller, _) {
         final isHidden = containerHeight == 0;
-        final targetHeight = isHidden ? 0.0 : context.height * 0.55;
+        final compact = context.height < 820;
+        final targetHeight = isHidden ? 0.0 : (compact ? 401.0 : 442.0);
+        final gap = compact ? 5.0 : 6.0;
+        final cardHeight = compact ? 49.0 : 53.0;
+        final iconBox = compact ? 34.0 : 38.0;
+        final headerHeight = compact ? 48.0 : 54.0;
+        final summaryHeight = compact ? 54.0 : 58.0;
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 260),
@@ -53,85 +59,74 @@ class CustomMapAnimatedContainer extends StatelessWidget {
           ),
           child: isHidden
               ? const SizedBox.shrink()
-              : LayoutBuilder(
-                  builder: (context, constraints) {
-                    final compact = constraints.maxHeight < 465;
-                    final gap = compact ? 5.0 : 6.0;
-                    final cardHeight = compact ? 49.0 : 53.0;
-                    final iconBox = compact ? 34.0 : 38.0;
-                    final headerHeight = compact ? 48.0 : 54.0;
-                    final summaryHeight = compact ? 54.0 : 58.0;
-
-                    return Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        14,
-                        compact ? 7 : 8,
-                        14,
-                        compact ? 7 : 9,
-                      ),
-                      child: Directionality(
-                        textDirection: _isArabic(context)
-                            ? TextDirection.rtl
-                            : TextDirection.ltr,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            _dragHandle(compact),
-                            SizedBox(height: compact ? 6 : 7),
-                            SizedBox(
-                              height: headerHeight,
-                              child: _header(context, compact),
-                            ),
-                            SizedBox(height: gap),
-                            _currentLocationCard(
-                              context,
-                              controller,
-                              cardHeight: cardHeight,
-                              iconBox: iconBox,
-                              compact: compact,
-                            ),
-                            SizedBox(height: gap),
-                            _destinationCard(
-                              context,
-                              controller,
-                              cardHeight: cardHeight,
-                              iconBox: iconBox,
-                              compact: compact,
-                            ),
-                            SizedBox(height: gap),
-                            _packageCard(
-                              context,
-                              controller,
-                              cardHeight: cardHeight,
-                              iconBox: iconBox,
-                              compact: compact,
-                            ),
-                            SizedBox(height: gap),
-                            _fareCard(
-                              context,
-                              controller,
-                              cardHeight: cardHeight,
-                              iconBox: iconBox,
-                              compact: compact,
-                            ),
-                            SizedBox(height: gap),
-                            _paymentCard(
-                              context,
-                              controller,
-                              cardHeight: cardHeight,
-                              iconBox: iconBox,
-                              compact: compact,
-                            ),
-                            SizedBox(height: gap),
-                            SizedBox(
-                              height: summaryHeight,
-                              child: _summaryCard(context, controller, compact),
-                            ),
-                          ],
+              : Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    14,
+                    compact ? 7 : 8,
+                    14,
+                    compact ? 7 : 9,
+                  ),
+                  child: Directionality(
+                    textDirection: _isArabic(context)
+                        ? TextDirection.rtl
+                        : TextDirection.ltr,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        _dragHandle(compact),
+                        SizedBox(height: compact ? 6 : 7),
+                        SizedBox(
+                          height: headerHeight,
+                          child: _header(context, compact),
                         ),
-                      ),
-                    );
-                  },
+                        SizedBox(height: gap),
+                        _currentLocationCard(
+                          context,
+                          controller,
+                          cardHeight: cardHeight,
+                          iconBox: iconBox,
+                          compact: compact,
+                        ),
+                        SizedBox(height: gap),
+                        _destinationCard(
+                          context,
+                          controller,
+                          cardHeight: cardHeight,
+                          iconBox: iconBox,
+                          compact: compact,
+                        ),
+                        SizedBox(height: gap),
+                        _packageCard(
+                          context,
+                          controller,
+                          cardHeight: cardHeight,
+                          iconBox: iconBox,
+                          compact: compact,
+                        ),
+                        SizedBox(height: gap),
+                        _fareCard(
+                          context,
+                          controller,
+                          cardHeight: cardHeight,
+                          iconBox: iconBox,
+                          compact: compact,
+                        ),
+                        SizedBox(height: gap),
+                        _paymentCard(
+                          context,
+                          controller,
+                          cardHeight: cardHeight,
+                          iconBox: iconBox,
+                          compact: compact,
+                        ),
+                        SizedBox(height: gap),
+                        SizedBox(
+                          height: summaryHeight,
+                          child: _summaryCard(context, controller, compact),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
         );
       },
@@ -574,7 +569,9 @@ class CustomMapAnimatedContainer extends StatelessWidget {
       builder: (sheetContext) {
         final isAr = _isArabic(sheetContext);
         return Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+          ),
           child: Container(
             padding: const EdgeInsets.fromLTRB(20, 14, 20, 22),
             decoration: const BoxDecoration(

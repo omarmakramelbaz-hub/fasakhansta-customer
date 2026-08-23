@@ -2,7 +2,7 @@ name: Flutter Web Review Deploy
 
 on:
   push:
-    branches: [ "main", "fix/home-delivery-address-selector" ]
+    branches: [ "fix/home-delivery-address-selector" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
@@ -50,12 +50,12 @@ jobs:
       - name: Build Flutter Web
         run: flutter build web --release
 
-      - name: Deploy to Firebase Hosting
+      - name: Deploy to Firebase Hosting review channel
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_FASAKHANINJATEST }}
           projectId: fasakhaninjatest
-          channelId: live
+          channelId: home-delivery-address-review
 
-# Keep the fixed Web Preview synced from the active review branch.
+# Review branches must never overwrite the live fasakhaninjatest.web.app channel.

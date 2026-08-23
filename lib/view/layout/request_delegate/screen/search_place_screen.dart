@@ -500,13 +500,35 @@ class _SearchPlaceScreenState extends State<SearchPlaceScreen> {
             alignment: AlignmentDirectional.centerStart,
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
-              onTap: () {
+              onTap: () async {
                 FocusManager.instance.primaryFocus?.unfocus();
-                NamedNavigatorImpl.push(
+                final result = await NamedNavigatorImpl.push(
                   SelectLocationFromMapScreen.routeName,
                   arguments:
                       SelectLocationFromMapScreenArgs(isFromAddress: isFrom),
                 );
+                if (!mounted) return;
+
+                final selectedPoint = isFrom
+                    ? controller.fromLatLng
+                    : controller.toLatLng;
+                if (selectedPoint == null) return;
+
+                if (isFrom) {
+                  controller.setFromLat(selectedPoint.latitude.toString());
+                  controller.setFromLan(selectedPoint.longitude.toString());
+                  controller.setFromLatLng(selectedPoint);
+                } else {
+                  controller.setToLat(selectedPoint.latitude.toString());
+                  controller.setToLan(selectedPoint.longitude.toString());
+                  controller.setToLatLng(selectedPoint);
+                }
+
+                _routeSignature = null;
+                _routePolylines = {};
+                _recalculateDelivery(controller);
+                setState(() {});
+                log('Map selection synced for route preview: $result');
               },
               child: Container(
                 padding:
@@ -828,35 +850,41 @@ class _SearchPlaceScreenState extends State<SearchPlaceScreen> {
     if (!mounted) return;
     setState(() => _routeLoading = true);
 
-    List<LatLng> points = [from, to];
+    List<LatLng> points = [];
     try {
       final route = await mapServices.getRouteData(
         originFrom: from,
         desintation: to,
       );
-      if (route.length >= 2) points = route;
+      if (route.length >= 2) {
+        points = [from, ...route, to];
+      }
     } catch (e) {
-      log('Route preview fallback to direct line: $e');
+      log('Route preview unavailable: $e');
     }
 
     if (!mounted || _routeSignature != signature) return;
 
     setState(() {
       _routeLoading = false;
-      _routePolylines = {
-        Polyline(
-          polylineId: const PolylineId('deliveryRoutePreview'),
-          points: points,
-          color: AppColors.mainAppColor,
-          width: 5,
-          startCap: Cap.roundCap,
-          endCap: Cap.roundCap,
-        ),
-      };
+      _routePolylines = points.length >= 2
+          ? {
+              Polyline(
+                polylineId: const PolylineId('deliveryRoutePreview'),
+                points: points,
+                color: AppColors.mainAppColor,
+                width: 5,
+                startCap: Cap.roundCap,
+                endCap: Cap.roundCap,
+              ),
+            }
+          : {};
     });
 
     Future.delayed(const Duration(milliseconds: 120), () {
-      if (mounted) _fitRoutePreview(points: points);
+      if (mounted) {
+        _fitRoutePreview(points: points.length >= 2 ? points : [from, to]);
+      }
     });
   }
 

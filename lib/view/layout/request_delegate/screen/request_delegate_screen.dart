@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -41,6 +43,9 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
   double? currentLng;
   GoogleMapController? gmc;
   BitmapDescriptor? _orangePinIcon;
+  BitmapDescriptor? _pickupRiderIcon;
+  BitmapDescriptor? _pickupGoDriveIcon;
+  String? _lastCameraFitKey;
   Set<Marker> markers = {};
   bool isLocationLoaded = false;
   bool isCheckingLocation = false;
@@ -66,6 +71,113 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
   {"featureType":"water","elementType":"labels.text.fill","stylers":[{"color":"#5d8da5"}]}
 ]
 ''';
+
+  Future<void> _loadPickupMarkerIcons() async {
+    try {
+      _pickupRiderIcon = await BitmapDescriptor.asset(
+        const ImageConfiguration(),
+        'assets/images/deliveryRiderV2.png',
+        height: 68,
+      );
+      if (mounted) setState(() {});
+    } catch (e) {
+      log('Failed to load pickup rider marker: $e');
+    }
+
+    try {
+      final riderData = await rootBundle.load(
+        'assets/images/deliveryRiderV2.png',
+      );
+      final codec = await ui.instantiateImageCodec(
+        riderData.buffer.asUint8List(),
+      );
+      final frame = await codec.getNextFrame();
+      final rider = frame.image;
+
+      const canvasWidth = 184.0;
+      const canvasHeight = 92.0;
+      final recorder = ui.PictureRecorder();
+      final canvas = ui.Canvas(recorder);
+
+      final src = ui.Rect.fromLTWH(
+        0,
+        0,
+        rider.width.toDouble(),
+        rider.height.toDouble(),
+      );
+      final riderAspect = rider.width / rider.height;
+      const riderHeight = 67.0;
+      final riderWidth = riderHeight * riderAspect;
+      final riderRect = ui.Rect.fromLTWH(
+        4,
+        canvasHeight - riderHeight,
+        riderWidth.clamp(58.0, 82.0),
+        riderHeight,
+      );
+      canvas.drawImageRect(rider, src, riderRect, ui.Paint());
+
+      final poleX = riderRect.right - 7;
+      final polePaint = ui.Paint()
+        ..color = const Color(0xFF555A61)
+        ..strokeWidth = 2.4
+        ..strokeCap = ui.StrokeCap.round;
+      canvas.drawLine(
+        ui.Offset(poleX, 15),
+        ui.Offset(poleX, canvasHeight - 6),
+        polePaint,
+      );
+
+      final flagPath = ui.Path()
+        ..moveTo(poleX, 14)
+        ..lineTo(canvasWidth - 7, 14)
+        ..lineTo(canvasWidth - 19, 29)
+        ..lineTo(canvasWidth - 7, 44)
+        ..lineTo(poleX, 44)
+        ..close();
+      canvas.drawPath(
+        flagPath,
+        ui.Paint()..color = AppColors.mainAppColor,
+      );
+
+      final textPainter = TextPainter(
+        text: const TextSpan(
+          text: 'GO Drive',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+        maxLines: 1,
+      )..layout(maxWidth: canvasWidth - poleX - 16);
+      textPainter.paint(
+        canvas,
+        Offset(
+          poleX + 10,
+          29 - (textPainter.height / 2),
+        ),
+      );
+
+      final picture = recorder.endRecording();
+      final markerImage = await picture.toImage(
+        canvasWidth.toInt(),
+        canvasHeight.toInt(),
+      );
+      final markerBytes = await markerImage.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
+      if (markerBytes == null) return;
+
+      final icon = BitmapDescriptor.fromBytes(
+        markerBytes.buffer.asUint8List(),
+      );
+      if (!mounted) return;
+      setState(() => _pickupGoDriveIcon = icon);
+    } catch (e) {
+      log('Failed to build GO Drive pickup marker: $e');
+    }
+  }
 
   Future<void> _determinePosition() async {
     try {
@@ -231,8 +343,36 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
 
   Set<Marker> _visibleMarkers(RequestDelegateController controller) {
     final result = Set<Marker>.from(markers);
+    final fromLat = double.tryParse(controller.fromLat ?? '');
+    final fromLng = double.tryParse(controller.fromLan ?? '');
     final toLat = double.tryParse(controller.toLat ?? '');
     final toLng = double.tryParse(controller.toLan ?? '');
+
+    if (fromLat != null && fromLng != null) {
+      result.removeWhere(
+        (marker) => marker.markerId.value == 'currentLocation',
+      );
+      result.add(
+        Marker(
+          markerId: const MarkerId('pickupLocation'),
+          position: LatLng(fromLat, fromLng),
+          icon: _pickupGoDriveIcon ??
+              _pickupRiderIcon ??
+              BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueOrange,
+              ),
+          anchor: const Offset(.31, 1),
+          zIndex: 100,
+          infoWindow: InfoWindow(
+            title: 'GO Drive',
+            snippet: context.languageCode == 'ar'
+                ? 'نقطة الاستلام'
+                : 'Pickup point',
+          ),
+        ),
+      );
+    }
+
     if (toLat != null && toLng != null) {
       result.add(
         Marker(
@@ -242,16 +382,109 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
               BitmapDescriptor.defaultMarkerWithHue(
                 BitmapDescriptor.hueOrange,
               ),
+          zIndex: 90,
+          infoWindow: InfoWindow(
+            title: context.languageCode == 'ar'
+                ? 'نقطة التوصيل'
+                : 'Delivery point',
+          ),
         ),
       );
     }
     return result;
   }
 
+  Set<Polyline> _selectedLocationPolyline(
+    RequestDelegateController controller,
+  ) {
+    final fromLat = double.tryParse(controller.fromLat ?? '');
+    final fromLng = double.tryParse(controller.fromLan ?? '');
+    final toLat = double.tryParse(controller.toLat ?? '');
+    final toLng = double.tryParse(controller.toLan ?? '');
+
+    if (fromLat == null ||
+        fromLng == null ||
+        toLat == null ||
+        toLng == null) {
+      return const <Polyline>{};
+    }
+
+    return {
+      Polyline(
+        polylineId: const PolylineId('selectedDeliveryRoute'),
+        points: [
+          LatLng(fromLat, fromLng),
+          LatLng(toLat, toLng),
+        ],
+        color: AppColors.mainAppColor,
+        width: 5,
+        startCap: Cap.roundCap,
+        endCap: Cap.roundCap,
+        geodesic: true,
+      ),
+    };
+  }
+
+  void _fitSelectedLocations(
+    RequestDelegateController controller, {
+    bool force = false,
+  }) {
+    final fromLat = double.tryParse(controller.fromLat ?? '');
+    final fromLng = double.tryParse(controller.fromLan ?? '');
+    final toLat = double.tryParse(controller.toLat ?? '');
+    final toLng = double.tryParse(controller.toLan ?? '');
+
+    if (fromLat == null ||
+        fromLng == null ||
+        toLat == null ||
+        toLng == null ||
+        gmc == null) {
+      return;
+    }
+
+    final key = '$fromLat,$fromLng|$toLat,$toLng';
+    if (!force && _lastCameraFitKey == key) return;
+    _lastCameraFitKey = key;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future.delayed(const Duration(milliseconds: 120));
+      if (!mounted || gmc == null) return;
+
+      final almostSamePoint =
+          (fromLat - toLat).abs() < .00005 &&
+          (fromLng - toLng).abs() < .00005;
+      if (almostSamePoint) {
+        await gmc!.animateCamera(
+          CameraUpdate.newLatLngZoom(
+            LatLng(fromLat, fromLng),
+            15.5,
+          ),
+        );
+        return;
+      }
+
+      final south = fromLat < toLat ? fromLat : toLat;
+      final north = fromLat > toLat ? fromLat : toLat;
+      final west = fromLng < toLng ? fromLng : toLng;
+      final east = fromLng > toLng ? fromLng : toLng;
+
+      await gmc!.animateCamera(
+        CameraUpdate.newLatLngBounds(
+          LatLngBounds(
+            southwest: LatLng(south, west),
+            northeast: LatLng(north, east),
+          ),
+          72,
+        ),
+      );
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _loadPickupMarkerIcons();
     _determinePosition();
   }
 
@@ -296,6 +529,8 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
           );
         }
 
+        _fitSelectedLocations(controller);
+
         return Scaffold(
           backgroundColor: Colors.white,
           body: Stack(
@@ -304,11 +539,20 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
                 mapType: MapType.normal,
                 onTap: _onMapTap,
                 markers: _visibleMarkers(controller),
+                polylines: _selectedLocationPolyline(controller),
                 style: _cleanLightMapStyle,
                 padding: EdgeInsets.only(bottom: _panelHeight * .25),
                 onMapCreated: (mapController) {
                   gmc = mapController;
-                  if (currentLat != null && currentLng != null) {
+                  final hasBothLocations =
+                      double.tryParse(controller.fromLat ?? '') != null &&
+                      double.tryParse(controller.fromLan ?? '') != null &&
+                      double.tryParse(controller.toLat ?? '') != null &&
+                      double.tryParse(controller.toLan ?? '') != null;
+
+                  if (hasBothLocations) {
+                    _fitSelectedLocations(controller, force: true);
+                  } else if (currentLat != null && currentLng != null) {
                     gmc!.animateCamera(
                       CameraUpdate.newLatLng(
                         LatLng(currentLat!, currentLng!),

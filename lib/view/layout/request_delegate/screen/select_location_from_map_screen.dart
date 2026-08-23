@@ -7,11 +7,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../helpers/extensions/extensions.dart';
 import '../../../../helpers/theme/app_colors.dart';
-import '../../../../helpers/translation/all_translation.dart';
-import '../../../custom_widgets/buttons/custom_button.dart';
-import '../../../custom_widgets/custom_app_bar/custom_app_bar.dart';
-import '../../../custom_widgets/custom_loading/custom_loading.dart';
 import '../controller/request_delegate_controller.dart';
 
 class SelectLocationFromMapScreenArgs {
@@ -23,236 +20,553 @@ class SelectLocationFromMapScreenArgs {
 class SelectLocationFromMapScreen extends StatefulWidget {
   static const routeName = 'SelectLocationFromMapScreen';
   final SelectLocationFromMapScreenArgs? args;
+
   const SelectLocationFromMapScreen({super.key, this.args});
 
   @override
-  State<SelectLocationFromMapScreen> createState() => _SelectLocationFromMapScreenState();
+  State<SelectLocationFromMapScreen> createState() =>
+      _SelectLocationFromMapScreenState();
 }
 
-class _SelectLocationFromMapScreenState extends State<SelectLocationFromMapScreen> with WidgetsBindingObserver {
-  StreamSubscription<Position>? positionStream;
+class _SelectLocationFromMapScreenState
+    extends State<SelectLocationFromMapScreen>
+    with WidgetsBindingObserver {
+  GoogleMapController? gmc;
+  Timer? _debounce;
   List<Placemark>? placemarks;
   double? currentLat;
   double? currentLng;
-  GoogleMapController? gmc;
-  Set<Marker> markers = {};
-  Timer? _debounce;
-  String? _mapStyle;
+  bool isCheckingLocation = false;
+
+  static const _text = Color(0xFF171A1F);
+  static const _muted = Color(0xFF8D939C);
+  static const _border = Color(0xFFE8EBEF);
+  static const _softOrange = Color(0xFFFFF4E8);
+
+  bool _isArabic(BuildContext context) => context.languageCode == 'ar';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadInitialLocation();
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  Future<void> _loadInitialLocation() async {
+    final controller =
+        Provider.of<RequestDelegateController>(context, listen: false);
+    final isFrom = widget.args?.isFromAddress == true;
+
+    final savedLat =
+        double.tryParse(isFrom ? controller.fromLat ?? '' : controller.toLat ?? '');
+    final savedLng =
+        double.tryParse(isFrom ? controller.fromLan ?? '' : controller.toLan ?? '');
+
+    if (savedLat != null && savedLng != null) {
+      await _updateLocation(savedLat, savedLng, updateController: false);
+      return;
+    }
+
+    await _determinePosition();
+  }
 
   Future<void> _determinePosition() async {
+    if (!mounted) return;
+    setState(() => isCheckingLocation = true);
+
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         await Geolocator.openLocationSettings();
         serviceEnabled = await Geolocator.isLocationServiceEnabled();
-        setState(() {});
-        if (!serviceEnabled) {
-          log('Location services are still disabled.');
-          return;
-        }
+        if (!serviceEnabled) return;
       }
 
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied ||
-          permission == LocationPermission.unableToDetermine ||
-          permission == LocationPermission.deniedForever) {
+          permission == LocationPermission.unableToDetermine) {
         permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          log('Location permissions are denied');
-          return;
-        }
       }
 
-      if (permission == LocationPermission.deniedForever) {
-        log('Location permissions are permanently denied, we cannot request permissions.');
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        log('Location permission denied');
         return;
       }
 
-      Position position = await Geolocator.getCurrentPosition();
-      _updateLocation(position.latitude, position.longitude);
+      final position = await Geolocator.getCurrentPosition();
+      await _updateLocation(
+        position.latitude,
+        position.longitude,
+        updateController: false,
+      );
     } catch (e) {
       log('Failed to get location: $e');
+    } finally {
+      if (mounted) setState(() => isCheckingLocation = false);
     }
   }
 
-  void _updateLocation(double lat, double lng) async {
+  Future<void> _updateLocation(
+    double lat,
+    double lng, {
+    bool updateController = true,
+  }) async {
+    if (!mounted) return;
+
     setState(() {
       currentLat = lat;
       currentLng = lng;
-      markers.clear();
-      markers.add(Marker(markerId: const MarkerId('currentLocation'), position: LatLng(lat, lng)));
     });
 
-    if (gmc != null) {
-      gmc!.animateCamera(CameraUpdate.newLatLng(LatLng(lat, lng)));
+    if (updateController) {
+      _applyCoordinatesToController(lat, lng);
     }
 
-    placemarks = await placemarkFromCoordinates(lat, lng);
-    setState(() {
-      log(placemarks![0].locality.toString());
-      log(placemarks![0].country.toString());
-      log(placemarks![0].subLocality.toString());
-      log(placemarks![0].subLocality.toString());
-    });
+    if (gmc != null) {
+      await gmc!.animateCamera(
+        CameraUpdate.newLatLng(LatLng(lat, lng)),
+      );
+    }
+
+    try {
+      final result = await placemarkFromCoordinates(lat, lng);
+      if (!mounted) return;
+      setState(() => placemarks = result);
+    } catch (e) {
+      log('Reverse geocoding failed: $e');
+    }
   }
 
-  void _onMapTap(LatLng latLng) {
-    final requestDelegateController = Provider.of<RequestDelegateController>(context, listen: false);
+  void _applyCoordinatesToController(double lat, double lng) {
+    final controller =
+        Provider.of<RequestDelegateController>(context, listen: false);
+    final point = LatLng(lat, lng);
 
     if (widget.args?.isFromAddress == true) {
-      requestDelegateController.setFromLat(latLng.latitude.toString());
-      requestDelegateController.setFromLatLng(LatLng(latLng.latitude, latLng.longitude));
-      requestDelegateController.setFromLan(latLng.longitude.toString());
-      log('${requestDelegateController.fromLat} ${requestDelegateController.fromLan}');
+      controller.setFromLat(lat.toString());
+      controller.setFromLan(lng.toString());
+      controller.setFromLatLng(point);
     } else {
-      requestDelegateController.setToLat(latLng.latitude.toString());
-      requestDelegateController.setToLan(latLng.longitude.toString());
-      requestDelegateController.setToLatLng(LatLng(latLng.latitude, latLng.longitude));
-      log('${requestDelegateController.toLat} ${requestDelegateController.toLan}');
+      controller.setToLat(lat.toString());
+      controller.setToLan(lng.toString());
+      controller.setToLatLng(point);
     }
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 300), () {
-      _updateLocation(latLng.latitude, latLng.longitude);
-    });
+  }
 
-    if (gmc != null) {
-      gmc!.animateCamera(CameraUpdate.newLatLng(LatLng(latLng.latitude, latLng.longitude)));
-    }
-
-    setState(() {
-      markers.clear();
-      if (widget.args!.isFromAddress) {}
-      markers.add(
-        Marker(markerId: const MarkerId('currentLocation'), position: LatLng(latLng.latitude, latLng.longitude)),
-      );
+  void _onMapTap(LatLng point) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 180), () {
+      _updateLocation(point.latitude, point.longitude);
     });
   }
 
-  @override
-  void initState() {
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   FocusManager.instance.primaryFocus?.unfocus();
-    // });
-
-    initMapStyle();
-    _determinePosition();
-    WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<RequestDelegateController>(context, listen: false);
-    });
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  bool isCheckingLocation = false;
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      // When the app comes back from the settings, recheck location status
-      _recheckLocationServices();
+    if (state == AppLifecycleState.resumed && currentLat == null) {
+      _determinePosition();
     }
-  }
-
-  Future<void> _recheckLocationServices() async {
-    setState(() {
-      isCheckingLocation = true; // Show loading state while checking
-    });
-
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-
-    if (serviceEnabled) {
-      await _determinePosition(); // Recheck location if enabled
-    } else {
-      log('Location services are still disabled.');
-    }
-
-    setState(() {
-      isCheckingLocation = false; // End loading state after check
-    });
-  }
-
-  bool isMapInteracting = false;
-
-  // void _onMapInteractionStart() {
-  //   setState(() {
-  //     isMapInteracting = true;
-  //   });
-  // }
-
-  // void _onMapInteractionEnd() {
-  //   setState(() {
-  //     isMapInteracting = false;
-  //   });
-  // }
-
-  void initMapStyle() async {
-    var mapStyle = await DefaultAssetBundle.of(context).loadString('assets/map_styles/dark_map_style.json');
-    setState(() {
-      _mapStyle = mapStyle;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<RequestDelegateController>(
-      builder: (context, requestDelegateController, child) {
-        return GestureDetector(
+      builder: (context, controller, _) {
+        return Directionality(
+          textDirection:
+              _isArabic(context) ? TextDirection.rtl : TextDirection.ltr,
           child: Scaffold(
-            backgroundColor: AppColors.blackColor,
-            resizeToAvoidBottomInset: false,
-            extendBody: true,
-            appBar: CustomAppBar(
-              appBarColor: AppColors.blackColor,
-              radius: 40,
-              title: Text('choseLocationFromMap'.tr),
-            ),
-            body: currentLat != null && currentLng != null
-                ? GoogleMap(
-                    style: _mapStyle,
-                    zoomControlsEnabled: false,
-                    onTap: _onMapTap,
-                    markers: {
-                      Marker(markerId: const MarkerId('currentLocation'), position: LatLng(currentLat!, currentLng!)),
-                    },
-                    mapType: MapType.normal,
-                    onMapCreated: (GoogleMapController controller) {
-                      gmc = controller;
-
-                      gmc!.animateCamera(CameraUpdate.newLatLng(LatLng(currentLat!, currentLng!)));
-                    },
-                    initialCameraPosition: CameraPosition(target: LatLng(currentLat!, currentLng!), zoom: 12),
-                  )
-                : const Center(child: CustomLoading()),
-            bottomNavigationBar: Padding(
-              padding: const EdgeInsets.all(18.0),
-              child: CustomButton(
-                text: 'ok'.tr,
-                onPressed: () {
-                  if (widget.args?.isFromAddress == true) {
-                    requestDelegateController.setFromAddress('${placemarks![0].locality!} ${placemarks![0].street!}');
-                    requestDelegateController.setFromController(
-                      '${placemarks![0].locality!} ${placemarks![0].street!}',
-                    );
-
-                    log('${placemarks![0].locality!} ${placemarks![0].street!}');
-                  } else {
-                    requestDelegateController.setToAddress('${placemarks![0].locality!} ${placemarks![0].street!}');
-                    requestDelegateController.setToController('${placemarks![0].locality!} ${placemarks![0].street!}');
-
-                    log('${placemarks![0].locality!} ${placemarks![0].street!}');
-                  }
-                  Navigator.pop(context);
-                },
-              ),
-            ),
+            backgroundColor: const Color(0xFFF7F7F7),
+            body: currentLat == null || currentLng == null
+                ? _loadingState(context)
+                : Stack(
+                    children: [
+                      Positioned.fill(
+                        child: GoogleMap(
+                          mapType: MapType.normal,
+                          zoomControlsEnabled: false,
+                          myLocationButtonEnabled: false,
+                          compassEnabled: false,
+                          mapToolbarEnabled: false,
+                          onTap: _onMapTap,
+                          markers: {
+                            Marker(
+                              markerId: const MarkerId('selectedLocation'),
+                              position: LatLng(currentLat!, currentLng!),
+                              icon: BitmapDescriptor.defaultMarkerWithHue(
+                                BitmapDescriptor.hueOrange,
+                              ),
+                            ),
+                          },
+                          initialCameraPosition: CameraPosition(
+                            target: LatLng(currentLat!, currentLng!),
+                            zoom: 13.5,
+                          ),
+                          onMapCreated: (mapController) {
+                            gmc = mapController;
+                          },
+                        ),
+                      ),
+                      Positioned(
+                        top: MediaQuery.of(context).padding.top + 10,
+                        left: 14,
+                        child: _roundButton(
+                          icon: Icons.arrow_back_rounded,
+                          onTap: () => Navigator.of(context).pop(),
+                        ),
+                      ),
+                      Positioned(
+                        top: MediaQuery.of(context).padding.top + 10,
+                        left: 76,
+                        right: 76,
+                        child: Container(
+                          height: 48,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(18),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x16000000),
+                                blurRadius: 16,
+                                offset: Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            _isArabic(context)
+                                ? 'اختر موقعك على الخريطة'
+                                : 'Choose location on map',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: _text,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 14,
+                        bottom: 270,
+                        child: Column(
+                          children: [
+                            _roundButton(
+                              icon: Icons.my_location_rounded,
+                              onTap: _determinePosition,
+                            ),
+                            const SizedBox(height: 10),
+                            _zoomButtons(),
+                          ],
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: _detailsSheet(context, controller),
+                      ),
+                    ],
+                  ),
           ),
         );
       },
     );
+  }
+
+  Widget _loadingState(BuildContext context) {
+    return SafeArea(
+      child: Stack(
+        children: [
+          Center(
+            child: CircularProgressIndicator(
+              color: AppColors.mainAppColor,
+              strokeWidth: 2.6,
+            ),
+          ),
+          Positioned(
+            top: 10,
+            left: 14,
+            child: _roundButton(
+              icon: Icons.arrow_back_rounded,
+              onTap: () => Navigator.of(context).pop(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailsSheet(
+    BuildContext context,
+    RequestDelegateController controller,
+  ) {
+    final address = _formattedAddress();
+    final coords = currentLat != null && currentLng != null
+        ? '${currentLat!.toStringAsFixed(5)}, ${currentLng!.toStringAsFixed(5)}'
+        : '';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 9, 16, 16),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(30),
+          topRight: Radius.circular(30),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x1A000000),
+            blurRadius: 24,
+            offset: Offset(0, -6),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 44,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFD4D7DC),
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: _softOrange,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    Icons.location_on_outlined,
+                    color: AppColors.mainAppColor,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 11),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _isArabic(context)
+                            ? 'الموقع المحدد'
+                            : 'Selected location',
+                        style: const TextStyle(
+                          color: _text,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        address,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFF565B63),
+                          fontSize: 12,
+                          height: 1.4,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        coords,
+                        style: const TextStyle(
+                          color: _muted,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8F9FA),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: _border),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.touch_app_outlined,
+                    size: 19,
+                    color: AppColors.mainAppColor,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _isArabic(context)
+                          ? 'اضغط على الخريطة لتحديد المكان بدقة، أو استخدم زر موقعي الحالي.'
+                          : 'Tap the map to fine-tune the location or use the current-location button.',
+                      style: const TextStyle(
+                        color: Color(0xFF6E737B),
+                        fontSize: 11,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                onPressed: currentLat == null || currentLng == null
+                    ? null
+                    : () => _confirmLocation(controller),
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  backgroundColor: AppColors.mainAppColor,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: const Color(0xFFFFC896),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(17),
+                  ),
+                ),
+                child: Text(
+                  _isArabic(context)
+                      ? 'استخدام هذا الموقع'
+                      : 'Use this location',
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _roundButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.white,
+      shape: const CircleBorder(),
+      elevation: 3,
+      shadowColor: const Color(0x26000000),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: 48,
+          height: 48,
+          child: Icon(
+            icon,
+            color: AppColors.mainAppColor,
+            size: 23,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _zoomButtons() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x19000000),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () => gmc?.animateCamera(CameraUpdate.zoomIn()),
+            child: const SizedBox(
+              width: 48,
+              height: 44,
+              child: Icon(Icons.add_rounded, color: _text),
+            ),
+          ),
+          const SizedBox(
+            width: 30,
+            child: Divider(height: 1, color: _border),
+          ),
+          InkWell(
+            onTap: () => gmc?.animateCamera(CameraUpdate.zoomOut()),
+            child: const SizedBox(
+              width: 48,
+              height: 44,
+              child: Icon(Icons.remove_rounded, color: _text),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formattedAddress() {
+    if (placemarks == null || placemarks!.isEmpty) {
+      return _isArabic(context)
+          ? 'جاري تحديد العنوان...'
+          : 'Locating address...';
+    }
+
+    final place = placemarks!.first;
+    final parts = <String>[
+      if ((place.street ?? '').trim().isNotEmpty) place.street!.trim(),
+      if ((place.subLocality ?? '').trim().isNotEmpty)
+        place.subLocality!.trim(),
+      if ((place.locality ?? '').trim().isNotEmpty) place.locality!.trim(),
+      if ((place.administrativeArea ?? '').trim().isNotEmpty)
+        place.administrativeArea!.trim(),
+    ];
+
+    return parts.toSet().join('، ');
+  }
+
+  void _confirmLocation(RequestDelegateController controller) {
+    if (currentLat == null || currentLng == null) return;
+
+    _applyCoordinatesToController(currentLat!, currentLng!);
+    final address = _formattedAddress();
+
+    if (widget.args?.isFromAddress == true) {
+      controller.setFromAddress(address);
+      controller.setFromController(address);
+    } else {
+      controller.setToAddress(address);
+      controller.setToController(address);
+    }
+
+    Navigator.of(context).pop();
   }
 }

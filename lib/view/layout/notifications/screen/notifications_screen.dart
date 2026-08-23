@@ -41,7 +41,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   void initState() {
     super.initState();
     _pusherController = context.read<PusherController>();
-    _pusherController.addEventListener('notification.updated', _handleVendorNotificationUpdated);
+    _pusherController.addEventListener(
+      'notification.updated',
+      _handleVendorNotificationUpdated,
+    );
   }
 
   void _handleVendorNotificationUpdated(PusherEvent event) {
@@ -59,7 +62,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   void dispose() {
-    _pusherController.removeEventListener('notification.updated', _handleVendorNotificationUpdated);
+    _pusherController.removeEventListener(
+      'notification.updated',
+      _handleVendorNotificationUpdated,
+    );
     super.dispose();
   }
 
@@ -97,12 +103,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             child: SvgPicture.asset(AppImages.noNotificationIcon),
           ),
           const SizedBox(height: 22),
-          Center(child: Text('noNotifications'.tr, style: AppTextStyle.text16BM())),
+          Center(
+            child: Text('noNotifications'.tr, style: AppTextStyle.text16BM()),
+          ),
           const SizedBox(height: 7),
           Center(
             child: Text(
               'لا توجد إشعارات في هذا القسم حالياً',
-              style: AppTextStyle.text13RM().copyWith(color: const Color(0xFF929292)),
+              style: AppTextStyle.text13RM().copyWith(
+                color: const Color(0xFF929292),
+              ),
             ),
           ),
         ],
@@ -139,53 +149,68 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           backgroundColor: const Color(0xFFF8F9FB),
           body: PageContainer(
             bottom: false,
-            child: Directionality(
-              textDirection: TextDirection.rtl,
-              child: Column(
-                children: [
-                  const SizedBox(height: 10),
-                  _TopBar(
-                    onBack: () => Navigator.of(context).maybePop(),
-                    onMarkAllRead: () {
-                      // The current API/model does not expose persisted read state yet.
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    height: 58,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
-                      itemCount: _categories.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 9),
-                      itemBuilder: (context, index) {
-                        final category = _categories[index];
-                        return _CategoryChip(
-                          title: category.title,
-                          icon: category.icon,
-                          selected: index == _selectedCategory,
-                          onTap: () => setState(() => _selectedCategory = index),
-                        );
+            child: SafeArea(
+              top: true,
+              bottom: false,
+              child: Directionality(
+                textDirection: TextDirection.rtl,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 8),
+                    _TopBar(
+                      onBack: () => Navigator.of(context).maybePop(),
+                      onMarkAllRead: () {
+                        // The current API/model does not expose persisted read state yet.
                       },
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Expanded(
-                    child: ApiResponseWidget(
-                      apiResponse: notificationsController.notificationsResponse,
-                      onReload: notificationsController.getNotifications,
-                      isEmpty: all.isEmpty,
-                      emptyWidget: _notificationsList(const [], notificationsController),
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 220),
-                        child: KeyedSubtree(
-                          key: ValueKey(_selectedCategory),
-                          child: _notificationsList(visible, notificationsController),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 58,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 4,
+                        ),
+                        itemCount: _categories.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 9),
+                        itemBuilder: (context, index) {
+                          final category = _categories[index];
+                          return _CategoryChip(
+                            title: category.title,
+                            icon: category.icon,
+                            selected: index == _selectedCategory,
+                            onTap: () =>
+                                setState(() => _selectedCategory = index),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Expanded(
+                      child: ApiResponseWidget(
+                        apiResponse:
+                            notificationsController.notificationsResponse,
+                        onReload: notificationsController.getNotifications,
+                        isEmpty: all.isEmpty,
+                        emptyWidget: _notificationsList(
+                          const [],
+                          notificationsController,
+                        ),
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 220),
+                          child: KeyedSubtree(
+                            key: ValueKey(_selectedCategory),
+                            child: _notificationsList(
+                              visible,
+                              notificationsController,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -204,11 +229,20 @@ class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 58,
+      height: 62,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Text('notifications'.tr, style: AppTextStyle.text22BS()),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 126),
+            child: Text(
+              'notifications'.tr,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: AppTextStyle.text22BS(),
+            ),
+          ),
           Positioned(
             left: 14,
             child: Material(
@@ -222,24 +256,40 @@ class _TopBar extends StatelessWidget {
                 child: const SizedBox(
                   width: 44,
                   height: 44,
-                  child: Icon(Icons.arrow_back_ios_new_rounded, size: 19, color: Color(0xFF111111)),
+                  child: Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    size: 19,
+                    color: Color(0xFF111111),
+                  ),
                 ),
               ),
             ),
           ),
           Positioned(
             right: 12,
-            child: TextButton(
-              onPressed: onMarkAllRead,
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                foregroundColor: AppColors.mainAppColor,
-              ),
-              child: Text(
-                'تحديد الكل كمقروء',
-                style: AppTextStyle.text13MS().copyWith(
-                  color: AppColors.mainAppColor,
-                  fontWeight: FontWeight.w700,
+            child: SizedBox(
+              width: 112,
+              child: TextButton(
+                onPressed: onMarkAllRead,
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 8,
+                  ),
+                  foregroundColor: AppColors.mainAppColor,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  'تحديد الكل كمقروء',
+                  maxLines: 2,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyle.text13MS().copyWith(
+                    color: AppColors.mainAppColor,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11.5,
+                    height: 1.15,
+                  ),
                 ),
               ),
             ),
@@ -277,7 +327,9 @@ class _CategoryChip extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: selected ? AppColors.mainAppColor : const Color(0xFFE7E7E7),
+              color: selected
+                  ? AppColors.mainAppColor
+                  : const Color(0xFFE7E7E7),
             ),
             boxShadow: selected
                 ? [
@@ -295,13 +347,17 @@ class _CategoryChip extends StatelessWidget {
               Icon(
                 icon,
                 size: 18,
-                color: selected ? AppColors.mainAppColor : const Color(0xFF777777),
+                color: selected
+                    ? AppColors.mainAppColor
+                    : const Color(0xFF777777),
               ),
               const SizedBox(width: 7),
               Text(
                 title,
                 style: AppTextStyle.text13MS().copyWith(
-                  color: selected ? AppColors.mainAppColor : const Color(0xFF696969),
+                  color: selected
+                      ? AppColors.mainAppColor
+                      : const Color(0xFF696969),
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 ),
               ),

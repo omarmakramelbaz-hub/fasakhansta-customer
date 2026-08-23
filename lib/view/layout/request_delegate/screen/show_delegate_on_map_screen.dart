@@ -8,11 +8,8 @@ import 'package:provider/provider.dart';
 import '../../../../helpers/extensions/extensions.dart';
 import '../../../../helpers/routes/app_routers_import.dart';
 import '../../../../helpers/theme/app_colors.dart';
-import '../../../../helpers/theme/app_text_style.dart';
 import '../../../../helpers/translation/all_translation.dart';
 import '../../../../helpers/utils/common_methods.dart';
-import '../../../custom_widgets/buttons/custom_button.dart';
-import '../../../custom_widgets/custom_form_field/custom_form_field.dart';
 import '../../../custom_widgets/validation/validation_mixin.dart';
 import '../../bottom_navigation/bottom_navigation_bar_screen.dart';
 import '../controller/request_delegate_controller.dart';
@@ -44,10 +41,12 @@ class ShowDelegateOnMapScreen extends StatefulWidget {
   final ShowDelegateOnMapArgs args;
 
   @override
-  State<ShowDelegateOnMapScreen> createState() => _ShowDelegateOnMapScreenState();
+  State<ShowDelegateOnMapScreen> createState() =>
+      _ShowDelegateOnMapScreenState();
 }
 
-class _ShowDelegateOnMapScreenState extends State<ShowDelegateOnMapScreen> with ValidationMixin {
+class _ShowDelegateOnMapScreenState extends State<ShowDelegateOnMapScreen>
+    with ValidationMixin {
   final TextEditingController _feeEC = TextEditingController();
   final FocusNode focusNode = FocusNode();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -71,40 +70,52 @@ class _ShowDelegateOnMapScreenState extends State<ShowDelegateOnMapScreen> with 
 
   Future<void> _fetchAcceptedDelegates() async {
     try {
-      await context.read<RequestDelegateController>().getAcceptedDelegate(delegateOrderId: widget.args.orderId).then((
-        _,
-      ) {
+      await context
+          .read<RequestDelegateController>()
+          .getAcceptedDelegate(delegateOrderId: widget.args.orderId)
+          .then((_) {
         if (mounted) {
           setState(() {
-            acceptedDelegates = requestDelegateController.acceptedDelegate?.delegates ?? [];
+            acceptedDelegates =
+                requestDelegateController.acceptedDelegate?.delegates ?? [];
           });
         }
         if (widget.args.orderId != null || widget.args.orderId != 0) {
           final order = requestDelegateController.acceptedDelegate!.order;
-          requestDelegateController.setFromLat(order?.fromLat.toString() ?? '0.0');
-          requestDelegateController.setFromLan(order?.fromLng.toString() ?? '0.0');
+          requestDelegateController.setFromLat(
+            order?.fromLat.toString() ?? '0.0',
+          );
+          requestDelegateController.setFromLan(
+            order?.fromLng.toString() ?? '0.0',
+          );
           requestDelegateController.setToLat(order?.toLat.toString() ?? '0.0');
           requestDelegateController.setToLan(order?.toLng.toString() ?? '0.0');
-          _feeEC.text = requestDelegateController.acceptedDelegate!.order!.actualPrice.toString();
-          requestDelegateController.calculateDeliveryPrice(kmPrice: widget.args.kmPrice);
+          _feeEC.text = requestDelegateController
+              .acceptedDelegate!.order!.actualPrice
+              .toString();
+          requestDelegateController.calculateDeliveryPrice(
+            kmPrice: widget.args.kmPrice,
+          );
         }
       });
     } catch (e) {
-      // CommonMethods.showError(message: "Error fetching delegates: $e");
+      // Keep polling silently while delegates are being searched.
     }
   }
 
   void _startCheckingAcceptedDelegate() {
-    _checkDelegateTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+    _checkDelegateTimer =
+        Timer.periodic(const Duration(seconds: 5), (timer) async {
       try {
         await _checkAcceptedDelegate();
         if (mounted) {
           setState(() {
-            acceptedDelegates = requestDelegateController.acceptedDelegate?.delegates ?? [];
+            acceptedDelegates =
+                requestDelegateController.acceptedDelegate?.delegates ?? [];
           });
         }
       } catch (e) {
-        // CommonMethods.showError(message: "Error checking delegates: $e");
+        // Keep polling silently while delegates are being searched.
       }
     });
   }
@@ -117,31 +128,29 @@ class _ShowDelegateOnMapScreenState extends State<ShowDelegateOnMapScreen> with 
         orderId: widget.args.orderId!,
         onSuccess: () {
           requestDelegateController.setFee('0.0');
-          NamedNavigatorImpl.push(clean: true, BottomNavigationBarScreen.routeName);
+          NamedNavigatorImpl.push(
+            clean: true,
+            BottomNavigationBarScreen.routeName,
+          );
         },
       );
     });
   }
 
-  //   Future<void> getAcceptedDelegate({int? delegateOrderId}) async {
-  //   // Fetch data and update `acceptedDelegate`
-  //   final result = await fetchAcceptedDelegateData(delegateOrderId);
-  //   if (result != null) {
-  //     acceptedDelegate = result;
-  //     notifyListeners(); // Ensure that the UI listens to changes
-  //   }
-  // }
-
   Future<void> _checkAcceptedDelegate() async {
     try {
-      await requestDelegateController.getAcceptedDelegate(delegateOrderId: widget.args.orderId);
-      if (requestDelegateController.acceptedDelegate?.delegates?.isNotEmpty == true) {
+      await requestDelegateController.getAcceptedDelegate(
+        delegateOrderId: widget.args.orderId,
+      );
+      if (requestDelegateController.acceptedDelegate?.delegates?.isNotEmpty ==
+          true) {
         setState(() {
-          acceptedDelegates = requestDelegateController.acceptedDelegate?.delegates ?? [];
+          acceptedDelegates =
+              requestDelegateController.acceptedDelegate?.delegates ?? [];
         });
       }
     } catch (e) {
-      // CommonMethods.showError(message: "Error checking delegates: $e");
+      // Keep polling silently while delegates are being searched.
     }
   }
 
@@ -154,7 +163,10 @@ class _ShowDelegateOnMapScreenState extends State<ShowDelegateOnMapScreen> with 
         orderId: widget.args.orderId!,
         onSuccess: () {
           requestDelegateController.setFee('0.0');
-          NamedNavigatorImpl.push(clean: true, BottomNavigationBarScreen.routeName);
+          NamedNavigatorImpl.push(
+            clean: true,
+            BottomNavigationBarScreen.routeName,
+          );
         },
       );
     });
@@ -162,18 +174,18 @@ class _ShowDelegateOnMapScreenState extends State<ShowDelegateOnMapScreen> with 
 
   void _resetCheckDelegateTimer() {
     _checkDelegateTimer?.cancel();
-    _checkDelegateTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+    _checkDelegateTimer =
+        Timer.periodic(const Duration(seconds: 5), (timer) async {
       try {
         await _checkAcceptedDelegate();
-        setState(() {
-          if (mounted) {
-            acceptedDelegates = requestDelegateController.acceptedDelegate?.delegates ?? [];
-          }
-        });
-      } catch (e) {
         if (mounted) {
-          // CommonMethods.showError(message: "Error checking delegates: $e");
+          setState(() {
+            acceptedDelegates =
+                requestDelegateController.acceptedDelegate?.delegates ?? [];
+          });
         }
+      } catch (e) {
+        // Keep polling silently while delegates are being searched.
       }
     });
   }
@@ -182,11 +194,26 @@ class _ShowDelegateOnMapScreenState extends State<ShowDelegateOnMapScreen> with 
     _checkDelegateTimer?.cancel();
     _fiveMinuteTimer?.cancel();
     requestDelegateController.setFee('0.0');
-    // requestDelegateController.cancelOrder(
-    //     orderId: widget.args.orderId!,
-    //     onSuccess: () {
-    //       NavigatorMethods.pop(context);
-    //     });
+  }
+
+  int _minimumFare() {
+    return int.tryParse(
+          '${requestDelegateController.acceptedDelegate?.order?.actualPrice}',
+        ) ??
+        int.tryParse('${widget.args.fee}') ??
+        0;
+  }
+
+  void _adjustFare(int delta) {
+    final minimumFare = _minimumFare();
+    final currentFare = int.tryParse(_feeEC.text) ?? minimumFare;
+    final nextFare = currentFare + delta;
+    if (nextFare < minimumFare) return;
+
+    setState(() {
+      _feeEC.text = nextFare.toString();
+      _feeEC.selection = TextSelection.collapsed(offset: _feeEC.text.length);
+    });
   }
 
   @override
@@ -200,6 +227,8 @@ class _ShowDelegateOnMapScreenState extends State<ShowDelegateOnMapScreen> with 
 
   @override
   Widget build(BuildContext context) {
+    final isArabic = context.languageCode == 'ar';
+
     return PopScope(
       canPop: true,
       onPopInvoked: (didPop) {
@@ -209,8 +238,6 @@ class _ShowDelegateOnMapScreenState extends State<ShowDelegateOnMapScreen> with 
           _fiveMinuteTimer?.cancel();
           requestDelegateController.setDistance(0.0);
           requestDelegateController.setFee('0.0');
-
-          // requestDelegateController.reset();
         }
       },
       child: Scaffold(
@@ -222,10 +249,14 @@ class _ShowDelegateOnMapScreenState extends State<ShowDelegateOnMapScreen> with 
               children: [
                 CustomGoogleMapsWidget(
                   showCircle: true,
-                  addressLat: double.tryParse('${requestDelegateController.acceptedDelegate?.order?.fromLat}') ??
+                  addressLat: double.tryParse(
+                        '${requestDelegateController.acceptedDelegate?.order?.fromLat}',
+                      ) ??
                       double.tryParse('${requestDelegateController.fromLat}') ??
                       0.0,
-                  addressLan: double.tryParse('${requestDelegateController.acceptedDelegate?.order?.fromLng}') ??
+                  addressLan: double.tryParse(
+                        '${requestDelegateController.acceptedDelegate?.order?.fromLng}',
+                      ) ??
                       double.tryParse('${requestDelegateController.fromLan}') ??
                       0.0,
                 ),
@@ -244,14 +275,15 @@ class _ShowDelegateOnMapScreenState extends State<ShowDelegateOnMapScreen> with 
                               child: DelegateOfferWidget(
                                 onReject: () {
                                   setState(() {
-                                    acceptedDelegates?.removeWhere((i) => i.id == acceptedDelegates?[index].id);
+                                    acceptedDelegates?.removeWhere(
+                                      (i) => i.id == acceptedDelegates?[index].id,
+                                    );
                                   });
                                 },
-                                order: requestDelegateController.acceptedDelegate?.order,
+                                order: requestDelegateController
+                                    .acceptedDelegate?.order,
                                 acceptedDelegateModel: acceptedDelegates?[index],
-                                cancelReCall: () {
-                                  _cancelTimersAndOrder();
-                                },
+                                cancelReCall: _cancelTimersAndOrder,
                               ),
                             ),
                           ),
@@ -264,187 +296,402 @@ class _ShowDelegateOnMapScreenState extends State<ShowDelegateOnMapScreen> with 
                   bottom: 0,
                   right: 0,
                   left: 0,
-                  // child: ApiResponseWidget(
-                  //   apiResponse:
-                  //       requestDelegateController.acceptedDelegateApiResponse,
-                  //   onReload: () =>
-                  //       requestDelegateController.getAcceptedDelegate(),
-                  //   isEmpty: requestDelegateController.acceptedDelegate == null,
-                  //   loadingWidget: CustomShimmer(
-                  //     height: context.height * 0.32,
-                  //     width: context.width,
-                  //     shimmerColor: AppColor.lightDarkColor,
-                  //     radius: 25,
-                  //   ),
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: AppColors.blackColor,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(20),
-                        topRight: Radius.circular(20),
+                  child: Directionality(
+                    textDirection:
+                        isArabic ? TextDirection.rtl : TextDirection.ltr,
+                    child: Container(
+                      width: double.infinity,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(28),
+                          topRight: Radius.circular(28),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0x24000000),
+                            blurRadius: 24,
+                            offset: Offset(0, -6),
+                          ),
+                        ],
                       ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Center(child: Text('providePrice'.tr, style: AppTextStyle.text14MW())),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
+                      child: SafeArea(
+                        top: false,
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            18,
+                            10,
+                            18,
+                            14 + MediaQuery.of(context).viewInsets.bottom,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              GestureDetector(
-                                onTap: () {
-                                  if (((requestDelegateController.acceptedDelegate?.order?.actualPrice)! -
-                                          (int.parse(_feeEC.text))) <
-                                      (requestDelegateController.acceptedDelegate?.order?.userBalance)!) {
-                                    setState(() {
-                                      int currentValue = int.parse(_feeEC.text);
-                                      currentValue += 1;
-                                      _feeEC.text = currentValue.toString();
-                                    });
-                                  } else {
-                                    CommonMethods.showError(message: 'notEnoughBalance'.tr);
-                                  }
-                                },
-                                child: Card(
-                                  shape: const RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                                  ),
-                                  color: AppColors.mainAppColor,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                                    child: Text('1+', style: AppTextStyle.text14MW().copyWith(fontSize: 25)),
-                                  ),
+                              Container(
+                                width: 44,
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFD7DADF),
+                                  borderRadius: BorderRadius.circular(20),
                                 ),
                               ),
-                              Expanded(
+                              const SizedBox(height: 14),
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 42,
+                                    height: 42,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFF3E8),
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(11),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.6,
+                                        color: AppColors.mainAppColor,
+                                        backgroundColor:
+                                            const Color(0xFFFFE1C7),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 11),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          isArabic
+                                              ? 'جاري البحث عن مندوب'
+                                              : 'Searching for a driver',
+                                          style: const TextStyle(
+                                            color: Color(0xFF171A1F),
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 3),
+                                        Text(
+                                          isArabic
+                                              ? 'بنرسل طلبك لأقرب المندوبين المتاحين'
+                                              : 'Sending your request to nearby available drivers',
+                                          style: const TextStyle(
+                                            color: Color(0xFF8A9099),
+                                            fontSize: 11.5,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 14),
+                              Container(
+                                padding: const EdgeInsets.fromLTRB(
+                                  12,
+                                  10,
+                                  12,
+                                  10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF9FAFB),
+                                  borderRadius: BorderRadius.circular(18),
+                                  border: Border.all(
+                                    color: const Color(0xFFE8EBEF),
+                                  ),
+                                ),
                                 child: Column(
                                   children: [
-                                    20.sbH,
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 20, right: 20, top: 20),
-                                      child: CustomFormField(
-                                        controller: _feeEC,
-                                        hintText: 'egyptianPound'.tr,
-                                        formFieldBorder: FormFieldBorder.underLine,
-                                        textStyle: AppTextStyle.text14MW(),
-                                        keyboardType: TextInputType.number,
-                                        unFocusColor: Colors.transparent,
-                                        focusNode: focusNode,
-                                        otherSideTitle: 'egyptianPound'.tr,
-                                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                                        validator: (v) => validateFeeInShowDelegate(
-                                          paymentType: requestDelegateController.acceptedDelegate?.order?.paymentType,
-                                          actualPrice:
-                                              requestDelegateController.acceptedDelegate?.order?.actualPrice ?? 0,
-                                          userBalance:
-                                              requestDelegateController.acceptedDelegate?.order?.userBalance ?? 0,
-                                          value: _feeEC.text,
-                                          distance: requestDelegateController.acceptedDelegate?.order?.expectedPrice ??
-                                              requestDelegateController.distance ??
-                                              0,
-                                          percentage: widget.args.shippingPercentage,
-                                          kmPrice: widget.args.kmPrice,
-                                        ),
+                                    Text(
+                                      isArabic
+                                          ? 'الأجرة الحالية'
+                                          : 'Current fare',
+                                      style: const TextStyle(
+                                        color: Color(0xFF777D86),
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w600,
                                       ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        _FareStepButton(
+                                          icon: Icons.remove_rounded,
+                                          enabled: (int.tryParse(_feeEC.text) ??
+                                                  _minimumFare()) >
+                                              _minimumFare(),
+                                          onTap: () => _adjustFare(-1),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: TextFormField(
+                                            controller: _feeEC,
+                                            focusNode: focusNode,
+                                            textAlign: TextAlign.center,
+                                            keyboardType: TextInputType.number,
+                                            inputFormatters: const [
+                                              FilteringTextInputFormatter
+                                                  .digitsOnly,
+                                            ],
+                                            validator: (v) =>
+                                                validateFeeInShowDelegate(
+                                              paymentType:
+                                                  requestDelegateController
+                                                      .acceptedDelegate
+                                                      ?.order
+                                                      ?.paymentType,
+                                              actualPrice:
+                                                  requestDelegateController
+                                                          .acceptedDelegate
+                                                          ?.order
+                                                          ?.actualPrice ??
+                                                      0,
+                                              userBalance:
+                                                  requestDelegateController
+                                                          .acceptedDelegate
+                                                          ?.order
+                                                          ?.userBalance ??
+                                                      0,
+                                              value: _feeEC.text,
+                                              distance:
+                                                  requestDelegateController
+                                                          .acceptedDelegate
+                                                          ?.order
+                                                          ?.expectedPrice ??
+                                                      requestDelegateController
+                                                          .distance ??
+                                                      0,
+                                              percentage:
+                                                  widget.args.shippingPercentage,
+                                              kmPrice: widget.args.kmPrice,
+                                            ),
+                                            style: TextStyle(
+                                              color: AppColors.mainAppColor,
+                                              fontSize: 23,
+                                              fontWeight: FontWeight.w900,
+                                            ),
+                                            decoration: InputDecoration(
+                                              suffixText: isArabic ? 'ج' : 'EGP',
+                                              suffixStyle: TextStyle(
+                                                color: AppColors.mainAppColor,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w800,
+                                              ),
+                                              filled: true,
+                                              fillColor: Colors.white,
+                                              contentPadding:
+                                                  const EdgeInsets.symmetric(
+                                                horizontal: 12,
+                                                vertical: 13,
+                                              ),
+                                              enabledBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(14),
+                                                borderSide: const BorderSide(
+                                                  color: Color(0xFFE4E7EB),
+                                                ),
+                                              ),
+                                              focusedBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(14),
+                                                borderSide: BorderSide(
+                                                  color:
+                                                      AppColors.mainAppColor,
+                                                  width: 1.4,
+                                                ),
+                                              ),
+                                              errorBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(14),
+                                                borderSide: const BorderSide(
+                                                  color: Color(0xFFE34B4B),
+                                                ),
+                                              ),
+                                              focusedErrorBorder:
+                                                  OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(14),
+                                                borderSide: const BorderSide(
+                                                  color: Color(0xFFE34B4B),
+                                                ),
+                                              ),
+                                            ),
+                                            onChanged: (_) => setState(() {}),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        _FareStepButton(
+                                          icon: Icons.add_rounded,
+                                          onTap: () => _adjustFare(1),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
                               ),
-                              GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    int currentValue = int.tryParse(_feeEC.text) ?? 0;
-                                    num actualPrice =
-                                        requestDelegateController.acceptedDelegate!.order!.actualPrice ?? 0;
-                                    if (currentValue > 0 && currentValue > actualPrice) {
-                                      currentValue -= 1;
-                                    }
-                                    _feeEC.text = currentValue.toString();
-                                  });
-                                },
-                                child: Card(
-                                  shape: const RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                              const SizedBox(height: 9),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.bolt_rounded,
+                                    size: 16,
+                                    color: AppColors.mainAppColor,
                                   ),
-                                  color: requestDelegateController.acceptedDelegate?.order?.actualPrice ==
-                                          int.tryParse(_feeEC.text)
-                                      ? AppColors.darkGreyColor
-                                      : AppColors.mainAppColor,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                                    child: Text('1-', style: AppTextStyle.text14MW().copyWith(fontSize: 25)),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-                            child: 15.sbH,
-                          ),
-                          Row(
-                            children: [
-                              Expanded(
-                                flex: 2,
-                                child: CustomButton(
-                                  text: 'riseUpFee'.tr,
-                                  onPressed: () async {
-                                    if (_formKey.currentState!.validate()) {
-                                      await requestDelegateController.riseActualPrice(
-                                        newPrice: int.parse(_feeEC.text),
-                                        onSuccess: () async {
-                                          requestDelegateController.setPriceEC(_feeEC.text);
-                                          requestDelegateController.setActualPrice(_feeEC.text);
-
-                                          // Reset the timers to start fresh
-                                          _resetFiveMinuteTimer();
-                                          _resetCheckDelegateTimer();
-
-                                          // Refresh accepted delegates data
-                                          await _fetchAcceptedDelegates();
-                                        },
-                                      );
-                                    }
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                flex: 1,
-                                child: Consumer<RequestDelegateController>(
-                                  builder: (context, requestDelegateController, _) {
-                                    return CustomButton(
-                                      text: 'cancelOrder'.tr,
-                                      gradient: LinearGradient(
-                                        colors: [AppColors.darkGreyColor, AppColors.darkGreyColor],
+                                  const SizedBox(width: 4),
+                                  Flexible(
+                                    child: Text(
+                                      isArabic
+                                          ? 'زيادة الأجرة قد تساعد على قبول الطلب أسرع'
+                                          : 'A higher fare may help your request get accepted faster',
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        color: Color(0xFF777D86),
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w500,
                                       ),
-                                      onPressed: () {
-                                        _cancelTimersAndOrder();
-                                        requestDelegateController.cancelOrder(
-                                          orderId: widget.args.orderId!,
-                                          onSuccess: () =>
-                                              NamedNavigatorImpl.push(clean: true, BottomNavigationBarScreen.routeName),
-                                        );
-                                      },
-                                      style: AppTextStyle.text16BW(),
-                                    );
-                                  },
-                                ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 13),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    flex: 2,
+                                    child: SizedBox(
+                                      height: 51,
+                                      child: ElevatedButton(
+                                        onPressed: () async {
+                                          if (_formKey.currentState!.validate()) {
+                                            await requestDelegateController
+                                                .riseActualPrice(
+                                              newPrice:
+                                                  int.parse(_feeEC.text),
+                                              onSuccess: () async {
+                                                requestDelegateController
+                                                    .setPriceEC(_feeEC.text);
+                                                requestDelegateController
+                                                    .setActualPrice(_feeEC.text);
+                                                _resetFiveMinuteTimer();
+                                                _resetCheckDelegateTimer();
+                                                await _fetchAcceptedDelegates();
+                                              },
+                                            );
+                                          }
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          elevation: 0,
+                                          backgroundColor:
+                                              AppColors.mainAppColor,
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          isArabic
+                                              ? 'تحديث الأجرة'
+                                              : 'Update fare',
+                                          style: const TextStyle(
+                                            fontSize: 15.5,
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: SizedBox(
+                                      height: 51,
+                                      child: OutlinedButton(
+                                        onPressed: () {
+                                          _cancelTimersAndOrder();
+                                          requestDelegateController.cancelOrder(
+                                            orderId: widget.args.orderId!,
+                                            onSuccess: () =>
+                                                NamedNavigatorImpl.push(
+                                              clean: true,
+                                              BottomNavigationBarScreen
+                                                  .routeName,
+                                            ),
+                                          );
+                                        },
+                                        style: OutlinedButton.styleFrom(
+                                          backgroundColor: Colors.white,
+                                          foregroundColor:
+                                              const Color(0xFF626871),
+                                          side: const BorderSide(
+                                            color: Color(0xFFDDE1E6),
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          isArabic
+                                              ? 'إلغاء الطلب'
+                                              : 'Cancel',
+                                          maxLines: 1,
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                          15.sbH,
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                  // ),
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FareStepButton extends StatelessWidget {
+  const _FareStepButton({
+    required this.icon,
+    required this.onTap,
+    this.enabled = true,
+  });
+
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: enabled ? const Color(0xFFFFF0E2) : const Color(0xFFF0F1F3),
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        borderRadius: BorderRadius.circular(14),
+        child: SizedBox(
+          width: 48,
+          height: 48,
+          child: Icon(
+            icon,
+            color: enabled
+                ? AppColors.mainAppColor
+                : const Color(0xFFB7BBC1),
+            size: 24,
           ),
         ),
       ),

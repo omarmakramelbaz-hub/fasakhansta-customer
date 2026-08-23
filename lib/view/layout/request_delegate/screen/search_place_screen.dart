@@ -7,20 +7,12 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../helpers/extensions/extensions.dart';
-import '../../../../helpers/images/app_images.dart';
 import '../../../../helpers/routes/app_routers_import.dart';
 import '../../../../helpers/theme/app_colors.dart';
-import '../../../../helpers/theme/app_text_style.dart';
-import '../../../../helpers/translation/all_translation.dart';
-import '../../../custom_widgets/buttons/custom_button.dart';
-import '../../../custom_widgets/custom_app_bar/custom_app_bar.dart';
-import '../../../custom_widgets/custom_form_field/custom_form_field.dart';
-import '../../../custom_widgets/custom_image/custom_image.dart';
+import '../../address/screen/address_screen.dart';
 import '../../map/model/place_autocomplete_model/place_autocomplete_model.dart';
-import '../../map/utils/google_maps_place_service.dart';
 import '../../map/utils/map_services.dart';
 import '../controller/request_delegate_controller.dart';
-import '../widget/custom_list_view.dart';
 import 'select_location_from_map_screen.dart';
 
 class SearchPlaceScreen extends StatefulWidget {
@@ -33,379 +25,659 @@ class SearchPlaceScreen extends StatefulWidget {
 }
 
 class _SearchPlaceScreenState extends State<SearchPlaceScreen> {
-  final fromController = TextEditingController();
-  final toController = TextEditingController();
   final fromFocusNode = FocusNode();
   final toFocusNode = FocusNode();
-  final focusNode = FocusNode();
 
-  late PlacesService googleMapsPlaceService;
-  // late GoogleMapController googleMapController;
-  late MapServices mapServices;
+  late final MapServices mapServices;
+  late final Uuid uuid;
+  late RequestDelegateController requestDelegateController;
+
   Timer? debounce;
-  String? sesstionToken;
-
-  late LatLng origin;
-  late LatLng desintation;
-  late Uuid uuid;
+  String? sessionToken;
   List<PlaceModel> fromPlaces = [];
   List<PlaceModel> toPlaces = [];
-  Set<Polyline> polyLines = {};
-
-  late RequestDelegateController requestDelegateController;
   bool isFromFieldFocused = false;
   bool isToFieldFocused = false;
-  // LatLng? fromLatLng;
-  // LatLng? toLatLng;
+  bool _listenersBound = false;
+
+  static const _text = Color(0xFF171A1F);
+  static const _muted = Color(0xFF8D939C);
+  static const _border = Color(0xFFE8EBEF);
+  static const _softOrange = Color(0xFFFFF4E8);
+
+  bool _isArabic(BuildContext context) => context.languageCode == 'ar';
 
   @override
-  initState() {
-    requestDelegateController = Provider.of<RequestDelegateController>(context, listen: false);
-
-    requestDelegateController.fromController.addListener(() {
-      fetchFromPredictions();
-    });
-    requestDelegateController.toController.addListener(() {
-      fetchToPredictions();
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      fromController.text = context.read<RequestDelegateController>().fromAddress;
-      fetchFromPredictions(); // Call initially to load data if needed
-      fetchToPredictions(); // Call initially to load data if needed
-    });
+  void initState() {
+    super.initState();
     mapServices = MapServices();
     uuid = const Uuid();
-    fetchFromPredictions();
-    fetchToPredictions();
-    super.initState();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    requestDelegateController =
+        Provider.of<RequestDelegateController>(context, listen: false);
 
-    // Safe to access Provider here
-    requestDelegateController = Provider.of<RequestDelegateController>(context);
+    if (!_listenersBound) {
+      _listenersBound = true;
+      requestDelegateController.fromController.addListener(fetchFromPredictions);
+      requestDelegateController.toController.addListener(fetchToPredictions);
 
-    // Set initial value if needed
-    fromController.text = requestDelegateController.fromAddress;
-
-    // Add listeners to controllers
-    requestDelegateController.fromController.addListener(fetchFromPredictions);
-    requestDelegateController.toController.addListener(fetchToPredictions);
+      if (requestDelegateController.fromController.text.isEmpty &&
+          requestDelegateController.fromAddress.isNotEmpty) {
+        requestDelegateController.fromController.text =
+            requestDelegateController.fromAddress;
+      }
+    }
   }
 
-  // Fetch predictions for the "From" field
   void fetchFromPredictions() {
-    if (debounce?.isActive ?? false) {
-      debounce?.cancel();
-    }
-
-    debounce = Timer(const Duration(milliseconds: 100), () async {
-      // Check if mounted before proceeding
+    debounce?.cancel();
+    debounce = Timer(const Duration(milliseconds: 250), () async {
       if (!mounted) return;
-
-      sesstionToken ??= uuid.v4();
-      // Only use context when mounted
+      final input = requestDelegateController.fromController.text.trim();
+      if (input.length < 2) {
+        fromPlaces = [];
+        if (mounted) setState(() {});
+        return;
+      }
+      sessionToken ??= uuid.v4();
       await mapServices.getPredictions(
-        input: requestDelegateController.fromController.text,
-        sesstionToken: sesstionToken!,
+        input: input,
+        sesstionToken: sessionToken!,
         places: fromPlaces,
       );
-
-      // Only call setState if mounted
-      if (mounted) {
-        setState(() {});
-      }
+      if (mounted) setState(() {});
     });
   }
 
   void fetchToPredictions() {
-    if (debounce?.isActive ?? false) {
-      debounce?.cancel();
-    }
-
-    debounce = Timer(const Duration(milliseconds: 100), () async {
-      // Check if mounted before proceeding
+    debounce?.cancel();
+    debounce = Timer(const Duration(milliseconds: 250), () async {
       if (!mounted) return;
-
-      sesstionToken ??= uuid.v4();
-      // Only use context when mounted
+      final input = requestDelegateController.toController.text.trim();
+      if (input.length < 2) {
+        toPlaces = [];
+        if (mounted) setState(() {});
+        return;
+      }
+      sessionToken ??= uuid.v4();
       await mapServices.getPredictions(
-        input: requestDelegateController.toController.text,
-        sesstionToken: sesstionToken!,
+        input: input,
+        sesstionToken: sessionToken!,
         places: toPlaces,
       );
-
-      // Only call setState if mounted
-      if (mounted) {
-        setState(() {});
-      }
+      if (mounted) setState(() {});
     });
   }
 
   @override
   void dispose() {
-    debounce?.cancel(); // Cancel any active debounce Timer
-
-    // Remove the listeners to prevent errors
-    requestDelegateController.fromController.removeListener(fetchFromPredictions);
-    requestDelegateController.toController.removeListener(fetchToPredictions);
-
-    // Dispose controllers and focus nodes
-    fromController.dispose();
-    toController.dispose();
+    debounce?.cancel();
+    if (_listenersBound) {
+      requestDelegateController.fromController
+          .removeListener(fetchFromPredictions);
+      requestDelegateController.toController.removeListener(fetchToPredictions);
+    }
     fromFocusNode.dispose();
     toFocusNode.dispose();
-    focusNode.dispose();
-
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<RequestDelegateController>(
-      builder: (context, requestDelegateController, _) {
-        log(requestDelegateController.fromAddress);
-
-        return Scaffold(
-          backgroundColor: AppColors.blackColor,
-          extendBody: true,
-          appBar: CustomAppBar(
-            appBarColor: AppColors.blackColor,
-            radius: 40,
-            title: Text('chooseDeliveryAddresses'.tr),
-          ),
-          body: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+      builder: (context, controller, _) {
+        return Directionality(
+          textDirection:
+              _isArabic(context) ? TextDirection.rtl : TextDirection.ltr,
+          child: Scaffold(
+            backgroundColor: const Color(0xFFFAFAFA),
+            resizeToAvoidBottomInset: true,
+            body: SafeArea(
               child: Column(
                 children: [
-                  30.sbH,
-                  Focus(
-                    onFocusChange: (hasFocus) {
-                      isFromFieldFocused = hasFocus;
-                    },
-                    child: CustomFormField(
-                      fillColor: AppColors.lightDarkColor,
-                      prefixIcon: const Padding(
-                        padding: EdgeInsets.all(15.0),
-                        child: CustomImage(path: AppImages.radioFromIcon, type: ImageType.svg),
+                  _header(context),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 18),
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      child: Column(
+                        children: [
+                          _locationCard(
+                            context: context,
+                            controller: controller,
+                            isFrom: true,
+                          ),
+                          if (isFromFieldFocused && fromPlaces.isNotEmpty)
+                            _predictions(context, controller, fromPlaces, true),
+                          const SizedBox(height: 12),
+                          _locationCard(
+                            context: context,
+                            controller: controller,
+                            isFrom: false,
+                          ),
+                          if (isToFieldFocused && toPlaces.isNotEmpty)
+                            _predictions(context, controller, toPlaces, false),
+                          const SizedBox(height: 12),
+                          _savedAddressesCard(context),
+                          const SizedBox(height: 12),
+                          _privacyCard(context),
+                        ],
                       ),
-                      suffixIcon: InkWell(
-                        onTap: () {
-                          requestDelegateController.fromController.clear();
-                          // requestDelegateController.setFromController('');
-                        },
-                        child: const Icon(Icons.close),
-                      ),
-                      controller: requestDelegateController.fromController,
-                      hintText: 'from'.tr,
-                      textStyle: AppTextStyle.text14MW(),
-                      unFocusColor: Colors.transparent,
-                    ),
-                  ),
-                  15.sbH,
-                  GestureDetector(
-                    onTap: () {
-                      NamedNavigatorImpl.push(
-                        SelectLocationFromMapScreen.routeName,
-                        arguments: SelectLocationFromMapScreenArgs(isFromAddress: true),
-                      );
-                    },
-                    child: Row(
-                      children: [
-                        Icon(Icons.share_location, color: AppColors.mainAppColor),
-                        Text('showOnMap'.tr, style: AppTextStyle.text14MM()),
-                      ],
-                    ),
-                  ),
-                  15.sbH,
-                  Focus(
-                    onFocusChange: (hasFocus) {
-                      isFromFieldFocused = !hasFocus;
-                      isToFieldFocused = hasFocus;
-                    },
-                    child: CustomFormField(
-                      fillColor: AppColors.lightDarkColor,
-                      unFocusColor: AppColors.blackColor,
-                      prefixIcon: const Padding(
-                        padding: EdgeInsets.all(15.0),
-                        child: CustomImage(path: AppImages.radioToIcon, type: ImageType.svg),
-                      ),
-                      suffixIcon: InkWell(
-                        onTap: () {
-                          requestDelegateController.toController.clear();
-                          // requestDelegateController.setToController('');
-                        },
-                        child: const Icon(Icons.close),
-                      ),
-                      controller: requestDelegateController.toController,
-                      hintText: 'to'.tr,
-                      textStyle: AppTextStyle.text14MW(),
-                    ),
-                  ),
-                  15.sbH,
-                  GestureDetector(
-                    onTap: () {
-                      NamedNavigatorImpl.push(
-                        SelectLocationFromMapScreen.routeName,
-                        arguments: SelectLocationFromMapScreenArgs(isFromAddress: false),
-                      );
-                    },
-                    child: Row(
-                      children: [
-                        Icon(Icons.share_location, color: AppColors.mainAppColor),
-                        Text('showOnMap'.tr, style: AppTextStyle.text14MM()),
-                      ],
-                    ),
-                  ),
-                  15.sbH,
-                  isFromFieldFocused || isToFieldFocused
-                      ? CustomListView(
-                          onPlaceSelect: (placeDetailsModel) async {
-                            if (isFromFieldFocused) {
-                              requestDelegateController.setFromController(placeDetailsModel.formattedAddress ?? '');
-                              requestDelegateController.setFromLat(
-                                placeDetailsModel.geometry!.location!.lat!.toString(),
-                              );
-                              requestDelegateController.setFromLan(
-                                placeDetailsModel.geometry!.location!.lng!.toString(),
-                              );
-
-                              requestDelegateController.setFromLatLng(
-                                LatLng(
-                                  placeDetailsModel.geometry!.location!.lat!,
-                                  placeDetailsModel.geometry!.location!.lng!,
-                                ),
-                              );
-
-                              fromPlaces.clear();
-                              isFromFieldFocused = false;
-                            } else if (isToFieldFocused) {
-                              requestDelegateController.setToController(placeDetailsModel.formattedAddress ?? '');
-                              requestDelegateController.setToLat(placeDetailsModel.geometry!.location!.lat!.toString());
-                              requestDelegateController.setToLan(placeDetailsModel.geometry!.location!.lng!.toString());
-
-                              requestDelegateController.setToLatLng(
-                                LatLng(
-                                  placeDetailsModel.geometry!.location!.lat!,
-                                  placeDetailsModel.geometry!.location!.lng!,
-                                ),
-                              );
-
-                              toPlaces.clear();
-                              isToFieldFocused = false;
-                            }
-
-                            sesstionToken = null;
-                            setState(() {});
-
-                            // origin = LatLng(
-                            //   double.parse(
-                            //       "${requestDelegateController.fromLat}"),
-                            //   double.parse(
-                            //       "${requestDelegateController.fromLat}"),
-                            // );
-                            // desintation = LatLng(
-                            //   placeDetailsModel.geometry!.location!.lat!,
-                            //   placeDetailsModel.geometry!.location!.lng!,
-                            // );
-
-                            // var points = await mapServices.getRouteData(
-                            //   originFrom: origin,
-                            //   desintation: desintation,
-                            // );
-                            // mapServices.displayRoute(
-                            //   points,
-                            //   polyLines: polyLines,
-                            //   googleMapController: googleMapController,
-                            // );
-                            // setState(() {});
-                            // Dismiss the keyboard
-                            FocusManager.instance.primaryFocus?.unfocus(); // Ensures all text fields lose focus
-                            FocusScope.of(context).requestFocus(FocusNode()); // Explicitly hides the keyboard
-
-                            setState(() {}); // Update UI
-                          },
-                          places: isFromFieldFocused ? fromPlaces : toPlaces,
-                          mapServices: mapServices,
-                        )
-                      : const SizedBox(),
-                  Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: CustomButton(
-                      text: 'confirm'.tr,
-                      onPressed: () {
-                        requestDelegateController.setFromAddress(requestDelegateController.fromController.text);
-
-                        requestDelegateController.setToAddress(requestDelegateController.toController.text);
-
-                        requestDelegateController.setFromLat(
-                          requestDelegateController.fromLatLng?.latitude.toString() ??
-                              requestDelegateController.fromLat ??
-                              '',
-                        );
-
-                        requestDelegateController.setFromLan(
-                          requestDelegateController.fromLatLng?.longitude.toString() ??
-                              requestDelegateController.fromLan ??
-                              '',
-                        );
-
-                        if (requestDelegateController.fromLatLng != null) {
-                          requestDelegateController.setFromLat(
-                            requestDelegateController.fromLatLng?.latitude.toString() ??
-                                requestDelegateController.fromLan ??
-                                '',
-                          );
-
-                          requestDelegateController.setFromLan(
-                            requestDelegateController.fromLatLng?.longitude.toString() ??
-                                requestDelegateController.fromLan ??
-                                '',
-                          );
-                        }
-
-                        if (requestDelegateController.toLatLng != null) {
-                          requestDelegateController.setToLat(
-                            requestDelegateController.toLatLng?.latitude.toString() ?? '',
-                          );
-                          requestDelegateController.setToLan(
-                            requestDelegateController.toLatLng?.longitude.toString() ?? '',
-                          );
-                        }
-
-                        // double distance = requestDelegateController.calculateDistance();
-                        // log(distance.toString());
-
-                        log(requestDelegateController.fromController.text);
-                        log(requestDelegateController.toController.text);
-                        log(requestDelegateController.fromLat.toString());
-                        log(requestDelegateController.fromLan.toString());
-                        log(requestDelegateController.toLat.toString());
-                        log(requestDelegateController.toLan.toString());
-                        requestDelegateController.calculateDistance(
-                          kmPrice: requestDelegateController.delegatesOnMap?.shippingKmPrice ?? 0,
-                        );
-                        // log(requestDelegateController.toController.text);
-                        log(requestDelegateController.distance.toString());
-                        requestDelegateController.calculateDeliveryPrice(
-                          kmPrice: requestDelegateController.delegatesOnMap?.shippingKmPrice ?? 0,
-                        );
-                        log('km price ${requestDelegateController.delegatesOnMap?.shippingKmPrice ?? 0}');
-                        log('distance coast ${requestDelegateController.distance ?? 0}');
-
-                        Navigator.of(context).pop();
-                      },
                     ),
                   ),
                 ],
+              ),
+            ),
+            bottomNavigationBar: SafeArea(
+              top: false,
+              child: Container(
+                color: Colors.white,
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+                child: SizedBox(
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: () => _confirm(controller),
+                    style: ElevatedButton.styleFrom(
+                      elevation: 0,
+                      backgroundColor: AppColors.mainAppColor,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    child: Text(
+                      _isArabic(context)
+                          ? 'تأكيد عنوان التوصيل'
+                          : 'Confirm delivery address',
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
         );
       },
     );
+  }
+
+  Widget _header(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
+      child: Row(
+        children: [
+          _roundIcon(
+            icon: Icons.arrow_back_rounded,
+            onTap: () => Navigator.of(context).pop(),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _isArabic(context)
+                      ? 'اختيار عنوان التوصيل'
+                      : 'Choose delivery address',
+                  style: const TextStyle(
+                    color: _text,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  _isArabic(context)
+                      ? 'حدد موقعك الحالي وعنوان التوصيل'
+                      : 'Set your current and delivery locations',
+                  style: const TextStyle(
+                    color: _muted,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Image.asset(
+            'assets/images/deliveryRiderV2.png',
+            width: 64,
+            height: 54,
+            fit: BoxFit.contain,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _locationCard({
+    required BuildContext context,
+    required RequestDelegateController controller,
+    required bool isFrom,
+  }) {
+    final textController =
+        isFrom ? controller.fromController : controller.toController;
+    final focusNode = isFrom ? fromFocusNode : toFocusNode;
+    final lat = isFrom ? controller.fromLat : controller.toLat;
+    final lng = isFrom ? controller.fromLan : controller.toLan;
+    final title = isFrom
+        ? (_isArabic(context) ? 'موقعي الحالي' : 'Current location')
+        : (_isArabic(context) ? 'التوصيل إلى' : 'Deliver to');
+    final hint = isFrom
+        ? (_isArabic(context)
+            ? 'اكتب موقع الاستلام'
+            : 'Enter pickup location')
+        : (_isArabic(context)
+            ? 'اختر أو ابحث عن عنوان التوصيل'
+            : 'Choose or search delivery address');
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: _cardDecoration(),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: _softOrange,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  isFrom
+                      ? Icons.my_location_rounded
+                      : Icons.location_on_outlined,
+                  color: AppColors.mainAppColor,
+                  size: 21,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: _text,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              if (isFrom)
+                Container(
+                  width: 9,
+                  height: 9,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF25C862),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Focus(
+            onFocusChange: (focused) {
+              setState(() {
+                if (isFrom) {
+                  isFromFieldFocused = focused;
+                  if (focused) isToFieldFocused = false;
+                } else {
+                  isToFieldFocused = focused;
+                  if (focused) isFromFieldFocused = false;
+                }
+              });
+            },
+            child: TextField(
+              controller: textController,
+              focusNode: focusNode,
+              maxLines: 2,
+              minLines: 1,
+              style: const TextStyle(
+                color: _text,
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+              ),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: const TextStyle(
+                  color: _muted,
+                  fontWeight: FontWeight.w400,
+                ),
+                filled: true,
+                fillColor: const Color(0xFFF8F9FA),
+                suffixIcon: textController.text.isEmpty
+                    ? null
+                    : IconButton(
+                        onPressed: textController.clear,
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          color: Color(0xFFADB2BA),
+                          size: 18,
+                        ),
+                      ),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: _border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(
+                    color: AppColors.mainAppColor,
+                    width: 1.3,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          if (lat != null &&
+              lng != null &&
+              lat.isNotEmpty &&
+              lng.isNotEmpty) ...[
+            const SizedBox(height: 7),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                '${_shortCoordinate(lat)}, ${_shortCoordinate(lng)}',
+                style: const TextStyle(
+                  color: _muted,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () {
+                FocusManager.instance.primaryFocus?.unfocus();
+                NamedNavigatorImpl.push(
+                  SelectLocationFromMapScreen.routeName,
+                  arguments:
+                      SelectLocationFromMapScreenArgs(isFromAddress: isFrom),
+                );
+              },
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                decoration: BoxDecoration(
+                  color: _softOrange,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.map_outlined,
+                      color: AppColors.mainAppColor,
+                      size: 19,
+                    ),
+                    const SizedBox(width: 7),
+                    Text(
+                      _isArabic(context)
+                          ? 'اختر من الخريطة'
+                          : 'Choose from map',
+                      style: TextStyle(
+                        color: AppColors.mainAppColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _predictions(
+    BuildContext context,
+    RequestDelegateController controller,
+    List<PlaceModel> places,
+    bool isFrom,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(top: 6),
+      constraints: const BoxConstraints(maxHeight: 220),
+      decoration: _cardDecoration(),
+      child: ListView.separated(
+        padding: EdgeInsets.zero,
+        shrinkWrap: true,
+        itemCount: places.length,
+        separatorBuilder: (_, __) =>
+            const Divider(height: 1, color: _border),
+        itemBuilder: (context, index) {
+          final place = places[index];
+          return ListTile(
+            dense: true,
+            leading: Icon(
+              Icons.location_on_outlined,
+              color: AppColors.mainAppColor,
+              size: 20,
+            ),
+            title: Text(
+              place.description ?? '',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: _text,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            onTap: () async {
+              final details =
+                  await mapServices.getPlaceDetails(placeId: place.placeId!);
+              final location = details.geometry?.location;
+              if (location == null) return;
+
+              if (isFrom) {
+                controller.setFromController(details.formattedAddress ?? '');
+                controller.setFromLat(location.lat.toString());
+                controller.setFromLan(location.lng.toString());
+                controller.setFromLatLng(LatLng(location.lat!, location.lng!));
+                fromPlaces = [];
+                isFromFieldFocused = false;
+              } else {
+                controller.setToController(details.formattedAddress ?? '');
+                controller.setToLat(location.lat.toString());
+                controller.setToLan(location.lng.toString());
+                controller.setToLatLng(LatLng(location.lat!, location.lng!));
+                toPlaces = [];
+                isToFieldFocused = false;
+              }
+
+              sessionToken = null;
+              FocusManager.instance.primaryFocus?.unfocus();
+              if (mounted) setState(() {});
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _savedAddressesCard(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: () => NamedNavigatorImpl.push(AddressScreen.routeName),
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          decoration: _cardDecoration(),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: _softOrange,
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: Icon(
+                  Icons.list_alt_rounded,
+                  color: AppColors.mainAppColor,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _isArabic(context)
+                          ? 'العناوين المحفوظة'
+                          : 'Saved addresses',
+                      style: const TextStyle(
+                        color: _text,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      _isArabic(context)
+                          ? 'عرض وإدارة عناوينك المحفوظة'
+                          : 'View and manage your saved addresses',
+                      style: const TextStyle(color: _muted, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.chevron_left_rounded,
+                color: Color(0xFFADB2BA),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _privacyCard(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _softOrange,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.verified_user_outlined,
+            color: AppColors.mainAppColor,
+            size: 28,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _isArabic(context) ? 'خصوصيتك تهمنا' : 'Your privacy matters',
+                  style: const TextStyle(
+                    color: _text,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  _isArabic(context)
+                      ? 'نستخدم موقعك فقط لتحسين تجربة التوصيل ووصول طلبك بدقة.'
+                      : 'Your location is used only to improve delivery accuracy.',
+                  style: const TextStyle(
+                    color: Color(0xFF6F747C),
+                    fontSize: 11,
+                    height: 1.45,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _roundIcon({required IconData icon, required VoidCallback onTap}) {
+    return Material(
+      color: Colors.white,
+      shape: const CircleBorder(),
+      elevation: 2,
+      shadowColor: const Color(0x22000000),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: SizedBox(
+          width: 46,
+          height: 46,
+          child: Icon(icon, color: AppColors.mainAppColor, size: 23),
+        ),
+      ),
+    );
+  }
+
+  BoxDecoration _cardDecoration() {
+    return BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: _border),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x0D000000),
+          blurRadius: 14,
+          offset: Offset(0, 4),
+        ),
+      ],
+    );
+  }
+
+  String _shortCoordinate(String value) {
+    final number = double.tryParse(value);
+    return number?.toStringAsFixed(5) ?? value;
+  }
+
+  void _confirm(RequestDelegateController controller) {
+    controller.setFromAddress(controller.fromController.text.trim());
+    controller.setToAddress(controller.toController.text.trim());
+
+    if (controller.fromLatLng != null) {
+      controller.setFromLat(controller.fromLatLng!.latitude.toString());
+      controller.setFromLan(controller.fromLatLng!.longitude.toString());
+    }
+    if (controller.toLatLng != null) {
+      controller.setToLat(controller.toLatLng!.latitude.toString());
+      controller.setToLan(controller.toLatLng!.longitude.toString());
+    }
+
+    controller.calculateDistance(
+      kmPrice: controller.delegatesOnMap?.shippingKmPrice ?? 0,
+    );
+    controller.calculateDeliveryPrice(
+      kmPrice: controller.delegatesOnMap?.shippingKmPrice ?? 0,
+    );
+
+    log('delivery distance ${controller.distance}');
+    Navigator.of(context).pop();
   }
 }

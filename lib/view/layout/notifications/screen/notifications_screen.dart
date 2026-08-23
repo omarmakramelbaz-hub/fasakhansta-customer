@@ -89,6 +89,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }).toList();
   }
 
+  String _emptyMessage() {
+    switch (_selectedCategory) {
+      case 1:
+        return 'تحديثات طلباتك وحالة التوصيل هتظهر هنا أول ما يكون فيه جديد.';
+      case 2:
+        return 'أول ما ينزل عرض جديد أو خصم مميز هتلاقيه هنا.';
+      case 3:
+        return 'إشعارات الدفع والمحفظة والمعاملات المالية هتظهر هنا.';
+      case 4:
+        return 'تنبيهات النظام وأي تحديثات مهمة للتطبيق هتظهر هنا.';
+      default:
+        return 'أول ما يكون فيه تحديث جديد هنظهره لك هنا فوراً.';
+    }
+  }
+
   Widget _notificationsList(
     List<NotificationsModel> notifications,
     NotificationsController controller,
@@ -96,23 +111,91 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     if (notifications.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(18, 28, 18, 36),
         children: [
-          SizedBox(height: context.height * .14),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: context.width * .28),
-            child: SvgPicture.asset(AppImages.noNotificationIcon),
-          ),
-          const SizedBox(height: 22),
-          Center(
-            child: Text('noNotifications'.tr, style: AppTextStyle.text16BM()),
-          ),
-          const SizedBox(height: 7),
-          Center(
-            child: Text(
-              'لا توجد إشعارات في هذا القسم حالياً',
-              style: AppTextStyle.text13RM().copyWith(
-                color: const Color(0xFF929292),
-              ),
+          SizedBox(height: context.height * .055),
+          Container(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: const Color(0xFFEEEFF2)),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x0D000000),
+                  blurRadius: 22,
+                  offset: Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 118,
+                  height: 118,
+                  padding: const EdgeInsets.all(25),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF3E8),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.mainAppColor.withValues(alpha: .14),
+                    ),
+                  ),
+                  child: SvgPicture.asset(
+                    AppImages.noNotificationIcon,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Text(
+                  'مفيش إشعارات جديدة',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyle.text16BM().copyWith(
+                    color: const Color(0xFF181A1F),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _emptyMessage(),
+                  textAlign: TextAlign.center,
+                  style: AppTextStyle.text13RM().copyWith(
+                    color: const Color(0xFF8A8F98),
+                    height: 1.55,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                SizedBox(
+                  height: 46,
+                  child: OutlinedButton.icon(
+                    onPressed: controller.getNotifications,
+                    icon: Icon(
+                      Icons.refresh_rounded,
+                      size: 19,
+                      color: AppColors.mainAppColor,
+                    ),
+                    label: Text(
+                      'تحديث الإشعارات',
+                      style: AppTextStyle.text13MS().copyWith(
+                        color: AppColors.mainAppColor,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.mainAppColor,
+                      backgroundColor: const Color(0xFFFFF8F2),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      side: BorderSide(
+                        color: AppColors.mainAppColor.withValues(alpha: .34),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

@@ -40,6 +40,7 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
   double? currentLat;
   double? currentLng;
   GoogleMapController? gmc;
+  BitmapDescriptor? _orangePinIcon;
   Set<Marker> markers = {};
   bool isLocationLoaded = false;
   bool isCheckingLocation = false;
@@ -96,6 +97,12 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
     final controller =
         Provider.of<RequestDelegateController>(context, listen: false);
 
+    _orangePinIcon ??= await BitmapDescriptor.asset(
+      const ImageConfiguration(),
+      'assets/images/deliveryLocationPin.png',
+      height: 42,
+    );
+
     if (!mounted) return;
     setState(() {
       currentLat = lat;
@@ -106,9 +113,10 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
           Marker(
             markerId: const MarkerId('currentLocation'),
             position: LatLng(lat, lng),
-            icon: BitmapDescriptor.defaultMarkerWithHue(
-              BitmapDescriptor.hueOrange,
-            ),
+            icon: _orangePinIcon ??
+                BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueOrange,
+                ),
           ),
         );
     });
@@ -230,9 +238,10 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
         Marker(
           markerId: const MarkerId('deliveryDestination'),
           position: LatLng(toLat, toLng),
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueOrange,
-          ),
+          icon: _orangePinIcon ??
+              BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueOrange,
+              ),
         ),
       );
     }

@@ -49,6 +49,8 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
   late final MapServices _mapServices;
   Set<Polyline> _deliveryRoutePolylines = {};
   String? _routeRequestKey;
+  String? _fareRouteKey;
+  double? _cachedShippingKmPrice;
   Set<Marker> markers = {};
   bool isLocationLoaded = false;
   bool isCheckingLocation = false;
@@ -217,7 +219,6 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
       'assets/images/deliveryLocationPin.png',
       height: 42,
     );
-
     if (!mounted) return;
     setState(() {
       currentLat = lat;
@@ -338,6 +339,21 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
     });
   }
 
+  double? _resolveShippingKmPrice(
+    RequestDelegateController controller,
+  ) {
+    final liveKmPrice =
+        double.tryParse('${controller.delegatesOnMap?.shippingKmPrice}');
+    if (liveKmPrice != null && liveKmPrice > 0) {
+      _cachedShippingKmPrice = liveKmPrice;
+      return liveKmPrice;
+    }
+    return _cachedShippingKmPrice;
+  }
+
+  String _fareKey(LatLng pickup, LatLng delivery, double kmPrice) =>
+      '${pickup.latitude},${pickup.longitude}|${delivery.latitude},${delivery.longitude}|$kmPrice';
+
   void _recalculateFareForCurrentRoute(
     RequestDelegateController controller,
   ) {
@@ -345,17 +361,19 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
     final fromLng = double.tryParse(controller.fromLan ?? '');
     final toLat = double.tryParse(controller.toLat ?? '');
     final toLng = double.tryParse(controller.toLan ?? '');
-    final kmPrice =
-        double.tryParse('${controller.delegatesOnMap?.shippingKmPrice}') ?? 0;
+    final kmPrice = _resolveShippingKmPrice(controller);
 
     if (fromLat == null ||
         fromLng == null ||
         toLat == null ||
         toLng == null ||
+        kmPrice == null ||
         kmPrice <= 0) {
       return;
     }
 
+    final pickup = LatLng(fromLat, fromLng);
+    final delivery = LatLng(toLat, toLng);
     final distanceKm = Geolocator.distanceBetween(
           fromLat,
           fromLng,
@@ -365,9 +383,57 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
         1000;
     final updatedFare = (distanceKm * kmPrice).toStringAsFixed(0);
 
+    _fareRouteKey = _fareKey(pickup, delivery, kmPrice);
     controller.setDistance(distanceKm);
     controller.setPriceEC(updatedFare);
     controller.setActualPrice(updatedFare);
+  }
+
+  void _syncFareForSelectedRoute(
+    RequestDelegateController controller,
+  ) {
+    final pickup = _pickupPoint(controller);
+    final delivery = _deliveryPoint(controller);
+    final kmPrice = _resolveShippingKmPrice(controller);
+    if (pickup == null || delivery == null || kmPrice == null || kmPrice <= 0) {
+      return;
+    }
+
+    final key = _fareKey(pickup, delivery, kmPrice);
+    final distanceKm = Geolocator.distanceBetween(
+          pickup.latitude,
+          pickup.longitude,
+          delivery.latitude,
+          delivery.longitude,
+        ) /
+        1000;
+    final updatedFare = (distanceKm * kmPrice).toStringAsFixed(0);
+
+    if (_fareRouteKey == key &&
+        controller.priceEC.text.trim() == updatedFare &&
+        controller.actualPrice == updatedFare) {
+      return;
+    }
+
+    _fareRouteKey = key;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final latestPickup = _pickupPoint(controller);
+      final latestDelivery = _deliveryPoint(controller);
+      final latestKmPrice = _resolveShippingKmPrice(controller);
+      if (latestPickup == null ||
+          latestDelivery == null ||
+          latestKmPrice == null ||
+          latestKmPrice <= 0 ||
+          _fareKey(latestPickup, latestDelivery, latestKmPrice) != key) {
+        return;
+      }
+
+      controller.setDistance(distanceKm);
+      controller.setPriceEC(updatedFare);
+      controller.setActualPrice(updatedFare);
+    });
   }
 
   void _onMapTap(LatLng latLng) async {
@@ -623,6 +689,7 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
           );
         }
 
+        _syncFareForSelectedRoute(controller);
         _syncSelectedRoute(controller);
 
         return Scaffold(

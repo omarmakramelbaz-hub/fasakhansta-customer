@@ -222,6 +222,79 @@ class CommonMethods {
     );
   }
 
+  static void _showDeliveryLocationWarning({
+    required String message,
+    int seconds = 3,
+  }) {
+    BotToast.showCustomText(
+      duration: Duration(seconds: seconds),
+      toastBuilder: (cancelFunc) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: Container(
+          width: double.infinity,
+          margin: const EdgeInsets.symmetric(horizontal: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFF5E8),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFFFD7AD)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x1A000000),
+                blurRadius: 16,
+                offset: Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFE8CF),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.location_on_outlined,
+                  color: AppColors.mainAppColor,
+                  size: 21,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  message,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF5D4A37),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    height: 1.25,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              InkWell(
+                borderRadius: BorderRadius.circular(18),
+                onTap: cancelFunc,
+                child: const Padding(
+                  padding: EdgeInsets.all(5),
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: 19,
+                    color: Color(0xFF9A8D80),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   static void showError({
     ApiResponse? apiResponse,
     required String message,
@@ -232,6 +305,14 @@ class CommonMethods {
     int seconds = 3,
     VoidCallback? onTap,
   }) {
+    if (message == 'chooseDeliveryLocationsFirst'.tr) {
+      _showDeliveryLocationWarning(
+        message: message,
+        seconds: seconds,
+      );
+      return;
+    }
+
     BotToast.showCustomText(
       duration: Duration(seconds: seconds),
       toastBuilder: (context) => SizedBox(

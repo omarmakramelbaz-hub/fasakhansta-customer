@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../helpers/extensions/extensions.dart';
-import '../../../../helpers/images/app_images.dart';
 import '../../../../helpers/routes/app_routers_import.dart';
 import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/translation/all_translation.dart';
 import '../../../../helpers/utils/common_methods.dart';
 import '../../../../helpers/utils/utils.dart';
-import '../../../custom_widgets/custom_image/custom_image.dart';
 import '../bottom_sheet/payment_rd_bottom_sheet.dart';
 import '../bottom_sheet/submit_your_fee_bottom_sheet.dart';
 import '../controller/request_delegate_controller.dart';
@@ -180,18 +178,18 @@ class CustomMapAnimatedContainer extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Container(
-          width: compact ? 62 : 68,
-          height: compact ? 44 : 50,
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: _softOrange,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: const CustomImage(
-            path: AppImages.darkMotorCycle,
-            type: ImageType.svg,
+        SizedBox(
+          width: compact ? 72 : 80,
+          height: compact ? 50 : 56,
+          child: Image.asset(
+            'assets/images/deliveryRiderV2.png',
             fit: BoxFit.contain,
+            filterQuality: FilterQuality.high,
+            gaplessPlayback: true,
+            errorBuilder: (context, error, stackTrace) {
+              debugPrint('Delivery rider asset error: $error');
+              return const SizedBox.shrink();
+            },
           ),
         ),
       ],

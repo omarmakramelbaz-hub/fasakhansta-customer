@@ -14,7 +14,6 @@ import '../../../../helpers/translation/all_translation.dart';
 import '../../../../helpers/utils/common_methods.dart';
 import '../../../../helpers/utils/utils.dart';
 import '../../../custom_widgets/api_response_widget/api_response_widget.dart';
-import '../../../custom_widgets/buttons/custom_button.dart';
 import '../../../custom_widgets/custom_loading/custom_loading.dart';
 import '../../../custom_widgets/custom_loading/custom_shimmer.dart';
 import '../../../custom_widgets/custom_payment_web_view/custom_payment_web_view.dart';
@@ -36,7 +35,6 @@ class RequestDelegateScreen extends StatefulWidget {
 class _RequestDelegateScreenState extends State<RequestDelegateScreen>
     with WidgetsBindingObserver {
   double? containerHeight;
-  Timer? resetTimer;
   Timer? _debounce;
   List<Placemark>? placemarks;
   double? currentLat;
@@ -46,7 +44,27 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
   bool isLocationLoaded = false;
   bool isCheckingLocation = false;
 
-  double get _panelHeight => context.height * 0.62;
+  double get _panelHeight => context.height * 0.64;
+
+  static const String _cleanLightMapStyle = '''
+[
+  {"elementType":"geometry","stylers":[{"color":"#f7f7f5"}]},
+  {"elementType":"labels.icon","stylers":[{"visibility":"off"}]},
+  {"elementType":"labels.text.fill","stylers":[{"color":"#6f747b"}]},
+  {"elementType":"labels.text.stroke","stylers":[{"color":"#ffffff"}]},
+  {"featureType":"administrative","elementType":"geometry.stroke","stylers":[{"color":"#e4e5e7"}]},
+  {"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#f8f8f6"}]},
+  {"featureType":"poi","stylers":[{"visibility":"off"}]},
+  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#ffffff"}]},
+  {"featureType":"road","elementType":"geometry.stroke","stylers":[{"color":"#e6e8ea"}]},
+  {"featureType":"road.arterial","elementType":"geometry","stylers":[{"color":"#fbfbfb"}]},
+  {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#f1f2f3"}]},
+  {"featureType":"road.local","elementType":"labels.text.fill","stylers":[{"color":"#9a9ea5"}]},
+  {"featureType":"transit","stylers":[{"visibility":"off"}]},
+  {"featureType":"water","elementType":"geometry","stylers":[{"color":"#cfefff"}]},
+  {"featureType":"water","elementType":"labels.text.fill","stylers":[{"color":"#5d8da5"}]}
+]
+''';
 
   Future<void> _determinePosition() async {
     try {
@@ -77,14 +95,13 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
   Future<void> _updateLocation(double lat, double lng) async {
     final controller =
         Provider.of<RequestDelegateController>(context, listen: false);
-    controller.reset();
 
     if (!mounted) return;
     setState(() {
       currentLat = lat;
       currentLng = lng;
       markers
-        ..clear()
+        ..removeWhere((marker) => marker.markerId.value == 'currentLocation')
         ..add(
           Marker(
             markerId: const MarkerId('currentLocation'),
@@ -128,28 +145,30 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
         }
 
         if (delegatesOnMap?.userData != null) {
-          final customMarkerIcon = await BitmapDescriptor.asset(
-            const ImageConfiguration(),
-            'assets/images/motorcycleImage.png',
-            height: 50,
-          );
-          final delegateMarkers = delegatesOnMap!.userData!.map(
-            (userModel) => Marker(
-              icon: customMarkerIcon,
-              markerId: MarkerId(userModel.id.toString()),
-              position: LatLng(
-                double.parse(userModel.lat!),
-                double.parse(userModel.lng!),
+          try {
+            final customMarkerIcon = await BitmapDescriptor.asset(
+              const ImageConfiguration(),
+              'assets/images/motorcycleImage.png',
+              height: 50,
+            );
+            final delegateMarkers = delegatesOnMap!.userData!.map(
+              (userModel) => Marker(
+                icon: customMarkerIcon,
+                markerId: MarkerId(userModel.id.toString()),
+                position: LatLng(
+                  double.parse(userModel.lat!),
+                  double.parse(userModel.lng!),
+                ),
               ),
-            ),
-          );
-          markers.addAll(delegateMarkers);
-          if (mounted) setState(() {});
+            );
+            markers.addAll(delegateMarkers);
+            if (mounted) setState(() {});
+          } catch (e) {
+            log('Failed to load delegate marker image: $e');
+          }
         }
       });
     });
-
-    controller.reset();
 
     if (gmc != null) {
       await gmc!.animateCamera(
@@ -187,11 +206,6 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
   void _onMapTap(LatLng latLng) async {
     final controller =
         Provider.of<RequestDelegateController>(context, listen: false);
-    final customMarkerIcon = await BitmapDescriptor.asset(
-      const ImageConfiguration(),
-      'assets/images/motorcycleImage.png',
-      height: 50,
-    );
 
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
@@ -200,21 +214,6 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
         lat: latLng.latitude.toString(),
         lan: latLng.longitude.toString(),
       );
-
-      if (controller.delegatesOnMap?.userData != null) {
-        final delegateMarkers = controller.delegatesOnMap!.userData!.map(
-          (userModel) => Marker(
-            icon: customMarkerIcon,
-            markerId: MarkerId(userModel.id.toString()),
-            position: LatLng(
-              double.parse(userModel.lat!),
-              double.parse(userModel.lng!),
-            ),
-          ),
-        );
-        markers.addAll(delegateMarkers);
-        if (mounted) setState(() {});
-      }
     });
 
     if (gmc != null) {
@@ -250,7 +249,6 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    resetTimer?.cancel();
     _debounce?.cancel();
     gmc?.dispose();
     super.dispose();
@@ -278,18 +276,6 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
     setState(() => isCheckingLocation = false);
   }
 
-  void _setContainerHeight(double height) {
-    if (!mounted) return;
-    setState(() => containerHeight = height);
-  }
-
-  void _startResetTimer() {
-    resetTimer?.cancel();
-    resetTimer = Timer(const Duration(seconds: 3), () {
-      _setContainerHeight(_panelHeight);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Consumer<RequestDelegateController>(
@@ -305,33 +291,30 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
           backgroundColor: Colors.white,
           body: Stack(
             children: [
-              GestureDetector(
-                onTapDown: (_) => _setContainerHeight(0),
-                onTapUp: (_) => _setContainerHeight(_panelHeight),
-                onTapCancel: _startResetTimer,
-                child: GoogleMap(
-                  mapType: MapType.normal,
-                  onTap: _onMapTap,
-                  markers: _visibleMarkers(controller),
-                  onMapCreated: (mapController) {
-                    gmc = mapController;
-                    if (currentLat != null && currentLng != null) {
-                      gmc!.animateCamera(
-                        CameraUpdate.newLatLng(
-                          LatLng(currentLat!, currentLng!),
-                        ),
-                      );
-                    }
-                  },
-                  initialCameraPosition: CameraPosition(
-                    target: LatLng(currentLat ?? 0, currentLng ?? 0),
-                    zoom: 14,
-                  ),
-                  zoomControlsEnabled: false,
-                  myLocationButtonEnabled: false,
-                  mapToolbarEnabled: false,
-                  compassEnabled: false,
+              GoogleMap(
+                mapType: MapType.normal,
+                onTap: _onMapTap,
+                markers: _visibleMarkers(controller),
+                style: _cleanLightMapStyle,
+                padding: EdgeInsets.only(bottom: _panelHeight * .25),
+                onMapCreated: (mapController) {
+                  gmc = mapController;
+                  if (currentLat != null && currentLng != null) {
+                    gmc!.animateCamera(
+                      CameraUpdate.newLatLng(
+                        LatLng(currentLat!, currentLng!),
+                      ),
+                    );
+                  }
+                },
+                initialCameraPosition: CameraPosition(
+                  target: LatLng(currentLat ?? 0, currentLng ?? 0),
+                  zoom: 14.5,
                 ),
+                zoomControlsEnabled: false,
+                myLocationButtonEnabled: false,
+                mapToolbarEnabled: false,
+                compassEnabled: false,
               ),
               Positioned(
                 top: MediaQuery.of(context).padding.top + 10,
@@ -341,15 +324,16 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
                   child: Center(
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 30,
-                        vertical: 11,
+                        horizontal: 32,
+                        vertical: 12,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
+                        color: Colors.white.withOpacity(.96),
+                        borderRadius: BorderRadius.circular(26),
+                        border: Border.all(color: const Color(0xFFF0F1F3)),
                         boxShadow: const [
                           BoxShadow(
-                            color: Color(0x1A000000),
+                            color: Color(0x18000000),
                             blurRadius: 18,
                             offset: Offset(0, 6),
                           ),
@@ -358,8 +342,8 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
                       child: Text(
                         context.languageCode == 'ar' ? 'الدليفري' : 'Delivery',
                         style: const TextStyle(
-                          color: Color(0xFF181C22),
-                          fontSize: 16,
+                          color: Color(0xFF171A1F),
+                          fontSize: 17,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -375,19 +359,19 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () => NamedNavigatorImpl.pop(),
-                    borderRadius: BorderRadius.circular(24),
-                    child: Container(
-                      width: 46,
-                      height: 46,
+                    borderRadius: BorderRadius.circular(25),
+                    child: Ink(
+                      width: 48,
+                      height: 48,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: AppColors.mainAppColor.withOpacity(.25),
+                          color: AppColors.mainAppColor.withOpacity(.28),
                         ),
                         boxShadow: const [
                           BoxShadow(
-                            color: Color(0x1A000000),
+                            color: Color(0x18000000),
                             blurRadius: 14,
                             offset: Offset(0, 5),
                           ),
@@ -412,7 +396,7 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
                   loadingWidget: CustomShimmer(
                     height: _panelHeight,
                     width: double.infinity,
-                    radius: 30,
+                    radius: 34,
                     fillColor: Colors.white,
                     shimmerColor: const Color(0xFFF3F4F6),
                   ),
@@ -436,8 +420,6 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
   }
 
   Widget _buildBottomNavigationBar(RequestDelegateController controller) {
-    if (containerHeight == 0) return const SizedBox();
-
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -452,40 +434,61 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+          padding: const EdgeInsets.fromLTRB(14, 9, 14, 10),
           child: Row(
             children: [
               _bottomActionButton(
-                icon: Icons.notes_rounded,
-                onPressed: () {
-                  Utils.showAppBottomSheet(
-                    ChangeNotifierProvider.value(
-                      value: controller,
-                      child: RDDetailsBottomSheet(
-                        requestDelegateController: controller,
-                      ),
-                    ),
-                  );
-                },
+                icon: Icons.account_balance_wallet_outlined,
+                label: context.languageCode == 'ar' ? 'الدفع' : 'Payment',
+                onPressed: () => _openPaymentSheet(controller),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: SizedBox(
-                  height: 54,
-                  child: CustomButton(
-                    onPressed: () => _onConfirmOrder(controller),
-                    text: 'confirmOrder'.tr,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => _onConfirmOrder(controller),
+                    borderRadius: BorderRadius.circular(18),
+                    child: Ink(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(18),
+                        gradient: const LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [Color(0xFFFF9A2F), Color(0xFFFF6800)],
+                        ),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x33FF7200),
+                            blurRadius: 16,
+                            offset: Offset(0, 7),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          'confirmOrder'.tr,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
               const SizedBox(width: 10),
               _bottomActionButton(
-                icon: Icons.account_balance_wallet_outlined,
+                icon: Icons.tune_rounded,
+                label: context.languageCode == 'ar' ? 'تفاصيل' : 'Details',
                 onPressed: () {
                   Utils.showAppBottomSheet(
                     ChangeNotifierProvider.value(
                       value: controller,
-                      child: PaymentRDBottomSheet(
+                      child: RDDetailsBottomSheet(
                         requestDelegateController: controller,
                       ),
                     ),
@@ -501,30 +504,57 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
 
   Widget _bottomActionButton({
     required IconData icon,
+    required String label,
     required VoidCallback onPressed,
   }) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onPressed,
-        borderRadius: BorderRadius.circular(17),
-        child: Container(
-          width: 54,
-          height: 54,
+        borderRadius: BorderRadius.circular(18),
+        child: Ink(
+          width: 62,
+          height: 56,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(17),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(color: const Color(0xFFE7E9ED)),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x10000000),
-                blurRadius: 12,
+                color: Color(0x0D000000),
+                blurRadius: 11,
                 offset: Offset(0, 4),
               ),
             ],
           ),
-          child: Icon(icon, color: const Color(0xFF252A31), size: 25),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: const Color(0xFF252A31), size: 22),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Color(0xFF5D626A),
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Future<void> _openPaymentSheet(RequestDelegateController controller) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ChangeNotifierProvider.value(
+        value: controller,
+        child: PaymentRDBottomSheet(requestDelegateController: controller),
       ),
     );
   }
@@ -604,13 +634,10 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
         );
       }
     } else if (controller.descriptionEC.text.isEmpty) {
-      Utils.showAppBottomSheet(
-        ChangeNotifierProvider.value(
-          value: controller,
-          child: RDDetailsBottomSheet(
-            requestDelegateController: controller,
-          ),
-        ),
+      CommonMethods.showError(
+        message: context.languageCode == 'ar'
+            ? 'من فضلك اكتب الغرض المطلوب توصيله أولاً'
+            : 'Please enter the item to be delivered first',
       );
     } else {
       CommonMethods.showToast(message: 'confirmDataNotEmpty'.tr);

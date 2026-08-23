@@ -9,6 +9,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../helpers/extensions/extensions.dart';
 import '../../../../helpers/routes/app_routers_import.dart';
 import '../../../../helpers/theme/app_colors.dart';
+import '../../address/model/address_model.dart';
 import '../../address/screen/address_screen.dart';
 import '../../map/model/place_autocomplete_model/place_autocomplete_model.dart';
 import '../../map/utils/map_services.dart';
@@ -163,7 +164,7 @@ class _SearchPlaceScreenState extends State<SearchPlaceScreen> {
                           if (isToFieldFocused && toPlaces.isNotEmpty)
                             _predictions(context, controller, toPlaces, false),
                           const SizedBox(height: 12),
-                          _savedAddressesCard(context),
+                          _savedAddressesCard(context, controller),
                           const SizedBox(height: 12),
                           _privacyCard(context),
                         ],
@@ -514,12 +515,15 @@ class _SearchPlaceScreenState extends State<SearchPlaceScreen> {
     );
   }
 
-  Widget _savedAddressesCard(BuildContext context) {
+  Widget _savedAddressesCard(
+    BuildContext context,
+    RequestDelegateController controller,
+  ) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        onTap: () => NamedNavigatorImpl.push(AddressScreen.routeName),
+        onTap: () => _chooseSavedAddress(context, controller),
         child: Ink(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: _cardDecoration(),
@@ -555,8 +559,8 @@ class _SearchPlaceScreenState extends State<SearchPlaceScreen> {
                     const SizedBox(height: 3),
                     Text(
                       _isArabic(context)
-                          ? 'عرض وإدارة عناوينك المحفوظة'
-                          : 'View and manage your saved addresses',
+                          ? 'اختر عنوانًا محفوظًا للتوصيل'
+                          : 'Choose a saved delivery address',
                       style: const TextStyle(color: _muted, fontSize: 11),
                     ),
                   ],
@@ -571,6 +575,88 @@ class _SearchPlaceScreenState extends State<SearchPlaceScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _chooseSavedAddress(
+    BuildContext context,
+    RequestDelegateController controller,
+  ) async {
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    final selected = await Navigator.of(context).push<AddressModel>(
+      MaterialPageRoute(
+        builder: (_) => const AddressScreen(selectForDelivery: true),
+      ),
+    );
+
+    if (!mounted || selected == null) return;
+
+    final lat = double.tryParse((selected.lat ?? '').trim());
+    final lng = double.tryParse((selected.lng ?? '').trim());
+
+    if (lat == null || lng == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: const Color(0xFFFFF4E8),
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          content: Text(
+            _isArabic(context)
+                ? 'هذا العنوان لا يحتوي على موقع محدد. عدّله وأضف الموقع أولًا.'
+                : 'This saved address has no location. Edit it and add a map location first.',
+            style: const TextStyle(
+              color: _text,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      );
+      return;
+    }
+
+    final label = _savedAddressLabel(selected);
+    controller.setToController(label);
+    controller.setToAddress(label);
+    controller.setToLat(lat.toString());
+    controller.setToLan(lng.toString());
+    controller.setToLatLng(LatLng(lat, lng));
+
+    toPlaces = [];
+    isToFieldFocused = false;
+    sessionToken = null;
+
+    controller.calculateDistance(
+      kmPrice: controller.delegatesOnMap?.shippingKmPrice ?? 0,
+    );
+    controller.calculateDeliveryPrice(
+      kmPrice: controller.delegatesOnMap?.shippingKmPrice ?? 0,
+    );
+
+    if (mounted) setState(() {});
+  }
+
+  String _savedAddressLabel(AddressModel address) {
+    final directAddress = (address.address ?? '').trim();
+    if (directAddress.isNotEmpty) return directAddress;
+
+    final parts = <String>[
+      if ((address.streetName ?? '').trim().isNotEmpty)
+        address.streetName!.trim(),
+      if ((address.areaName ?? '').trim().isNotEmpty) address.areaName!.trim(),
+      if ((address.cityName ?? address.cityname ?? '').trim().isNotEmpty)
+        (address.cityName ?? address.cityname)!.trim(),
+      if ((address.countryName ?? '').trim().isNotEmpty)
+        address.countryName!.trim(),
+      if ((address.floorNo ?? '').trim().isNotEmpty)
+        '${_isArabic(context) ? 'الدور' : 'Floor'} ${address.floorNo!.trim()}',
+      if ((address.apartmentNo ?? '').trim().isNotEmpty)
+        '${_isArabic(context) ? 'شقة' : 'Apt'} ${address.apartmentNo!.trim()}',
+    ];
+
+    return parts.toSet().join(' - ');
   }
 
   Widget _privacyCard(BuildContext context) {

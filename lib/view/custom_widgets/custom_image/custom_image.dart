@@ -93,14 +93,12 @@ class _ImageBuild extends StatelessWidget {
           placeholder: (context, url) => CupertinoActivityIndicator(color: AppColors.mainAppColor),
           errorWidget: (context, url, error) {
             try {
-              // Log the error for debugging purposes
               debugPrint('Network Image Error: $error, URL: $url');
 
               if (error is HttpException && error.message.contains('404')) {
                 debugPrint('404 error for network image: $url');
               }
 
-              // Display fallback image
               return Container(
                 width: width,
                 height: height,
@@ -155,6 +153,21 @@ class _ImageBuild extends StatelessWidget {
         );
 
       case ImageType.svg:
+        final lowerPath = path.toLowerCase();
+        final isRasterAsset = lowerPath.endsWith('.png') ||
+            lowerPath.endsWith('.jpg') ||
+            lowerPath.endsWith('.jpeg') ||
+            lowerPath.endsWith('.webp');
+
+        if (isRasterAsset) {
+          return Image.asset(
+            path,
+            fit: fit ?? BoxFit.contain,
+            width: width,
+            height: height,
+          );
+        }
+
         return SvgPicture.asset(
           path,
           fit: fit ?? BoxFit.contain,

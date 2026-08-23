@@ -8,7 +8,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../helpers/extensions/extensions.dart';
-import '../../../../helpers/images/app_images.dart';
 import '../../../../helpers/routes/app_routers_import.dart';
 import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/translation/all_translation.dart';
@@ -16,7 +15,6 @@ import '../../../../helpers/utils/common_methods.dart';
 import '../../../../helpers/utils/utils.dart';
 import '../../../custom_widgets/api_response_widget/api_response_widget.dart';
 import '../../../custom_widgets/buttons/custom_button.dart';
-import '../../../custom_widgets/custom_image/custom_image.dart';
 import '../../../custom_widgets/custom_loading/custom_loading.dart';
 import '../../../custom_widgets/custom_loading/custom_shimmer.dart';
 import '../../../custom_widgets/custom_payment_web_view/custom_payment_web_view.dart';
@@ -35,133 +33,147 @@ class RequestDelegateScreen extends StatefulWidget {
   State<RequestDelegateScreen> createState() => _RequestDelegateScreenState();
 }
 
-class _RequestDelegateScreenState extends State<RequestDelegateScreen> with WidgetsBindingObserver {
+class _RequestDelegateScreenState extends State<RequestDelegateScreen>
+    with WidgetsBindingObserver {
   double? containerHeight;
   Timer? resetTimer;
+  Timer? _debounce;
   List<Placemark>? placemarks;
   double? currentLat;
   double? currentLng;
   GoogleMapController? gmc;
   Set<Marker> markers = {};
-  String? _mapStyle;
   bool isLocationLoaded = false;
   bool isCheckingLocation = false;
-  bool isMapInteracting = false;
-  Timer? _debounce;
+
+  double get _panelHeight => context.height * 0.62;
 
   Future<void> _determinePosition() async {
     try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         await Geolocator.openLocationSettings();
         return;
       }
 
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
         permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+        if (permission == LocationPermission.denied ||
+            permission == LocationPermission.deniedForever) {
           log('Location permissions are denied.');
           return;
         }
       }
 
-      Position position = await Geolocator.getCurrentPosition();
-      _updateLocation(position.latitude, position.longitude);
+      final position = await Geolocator.getCurrentPosition();
+      await _updateLocation(position.latitude, position.longitude);
     } catch (e) {
       log('Failed to get location: $e');
     }
   }
 
-  void _updateLocation(double lat, double lng) async {
-    final requestDelegateController = Provider.of<RequestDelegateController>(context, listen: false);
-    requestDelegateController.reset();
+  Future<void> _updateLocation(double lat, double lng) async {
+    final controller =
+        Provider.of<RequestDelegateController>(context, listen: false);
+    controller.reset();
 
     if (!mounted) return;
     setState(() {
       currentLat = lat;
       currentLng = lng;
-      markers.clear();
-      markers.add(Marker(markerId: const MarkerId('currentLocation'), position: LatLng(lat, lng)));
+      markers
+        ..clear()
+        ..add(
+          Marker(
+            markerId: const MarkerId('currentLocation'),
+            position: LatLng(lat, lng),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+              BitmapDescriptor.hueOrange,
+            ),
+          ),
+        );
     });
 
-    // Ensure controller fetches data after location update
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      requestDelegateController.initialDelegatesOnMap();
+      controller.initialDelegatesOnMap();
+      controller
+          .getDelegatesOnMap(
+            lat: currentLat.toString(),
+            lan: currentLng.toString(),
+          )
+          .then((_) async {
+        final delegatesOnMap = controller.delegatesOnMap;
 
-      requestDelegateController.getDelegatesOnMap(lat: currentLat.toString(), lan: currentLng.toString()).then((
-        value,
-      ) async {
-        final delegatesOnMap = requestDelegateController.delegatesOnMap;
-
-        // Check if shippingOrderId exists
-        if (delegatesOnMap?.shippingOrderId != null && delegatesOnMap?.shippingOrderId != 0) {
-          log('Shipping order ID found: ${delegatesOnMap?.shippingOrderId}');
-
-          // Set the order ID and navigate
-          requestDelegateController.setOrderId(delegatesOnMap?.shippingOrderId ?? 0);
-
-          log('Navigating to ShowDelegateOnMapScreen');
-          ///////////////////////////////////////////////////// re comment later /////////////////////////////////////////////////
+        if (delegatesOnMap?.shippingOrderId != null &&
+            delegatesOnMap?.shippingOrderId != 0) {
+          controller.setOrderId(delegatesOnMap?.shippingOrderId ?? 0);
           NamedNavigatorImpl.push(
             ShowDelegateOnMapScreen.routeName,
             arguments: ShowDelegateOnMapArgs(
               orderId: delegatesOnMap?.shippingOrderId,
-              fee: int.parse(delegatesOnMap?.orderData?.actualPrice.toString() ?? '0'),
+              fee: int.parse(
+                delegatesOnMap?.orderData?.actualPrice.toString() ?? '0',
+              ),
               kmPrice: int.parse('${delegatesOnMap?.shippingKmPrice}'),
-              shippingPercentage: int.parse('${delegatesOnMap?.shippingMinPricePrecentage}'),
-              distance: num.parse('${requestDelegateController.distance ?? 0}'),
+              shippingPercentage: int.parse(
+                '${delegatesOnMap?.shippingMinPricePrecentage}',
+              ),
+              distance: num.parse('${controller.distance ?? 0}'),
             ),
           );
         } else {
-          log('No shipping order ID found. Skipping navigation.');
-          requestDelegateController.setDistance(0.0);
+          controller.setDistance(0.0);
         }
 
-        // Add markers for user data if available
         if (delegatesOnMap?.userData != null) {
-          var customMarkerIcon = await BitmapDescriptor.asset(
+          final customMarkerIcon = await BitmapDescriptor.asset(
             const ImageConfiguration(),
             'assets/images/motorcycleImage.png',
             height: 50,
           );
-          var myMarker = delegatesOnMap?.userData!.map(
+          final delegateMarkers = delegatesOnMap!.userData!.map(
             (userModel) => Marker(
               icon: customMarkerIcon,
               markerId: MarkerId(userModel.id.toString()),
-              position: LatLng(double.parse(userModel.lat!), double.parse(userModel.lng!)),
+              position: LatLng(
+                double.parse(userModel.lat!),
+                double.parse(userModel.lng!),
+              ),
             ),
           );
-          markers.addAll(myMarker!);
+          markers.addAll(delegateMarkers);
           if (mounted) setState(() {});
         }
       });
     });
-    requestDelegateController.reset();
+
+    controller.reset();
 
     if (gmc != null) {
-      gmc!.animateCamera(CameraUpdate.newLatLng(LatLng(lat, lng)));
+      await gmc!.animateCamera(
+        CameraUpdate.newLatLng(LatLng(lat, lng)),
+      );
     }
 
-    requestDelegateController.setFromLat(lat.toString());
-    requestDelegateController.setFromLan(lng.toString());
+    controller.setFromLat(lat.toString());
+    controller.setFromLan(lng.toString());
 
-    // Reverse geocoding is not available on every Flutter Web runtime.
-    // Never keep the whole Go Drive page blocked on the loading spinner if it fails.
     try {
       placemarks = await placemarkFromCoordinates(lat, lng);
       if (placemarks != null && placemarks!.isNotEmpty) {
-        requestDelegateController.setFromAddress(
+        controller.setFromAddress(
           '${placemarks![0].locality}, ${placemarks![0].country} ${placemarks![0].street}',
         );
       } else {
-        requestDelegateController.setFromAddress(
+        controller.setFromAddress(
           '${lat.toStringAsFixed(5)}, ${lng.toStringAsFixed(5)}',
         );
       }
     } catch (e) {
       log('Reverse geocoding failed: $e');
-      requestDelegateController.setFromAddress(
+      controller.setFromAddress(
         '${lat.toStringAsFixed(5)}, ${lng.toStringAsFixed(5)}',
       );
     }
@@ -173,62 +185,74 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen> with Widg
   }
 
   void _onMapTap(LatLng latLng) async {
-    final requestDelegateController = Provider.of<RequestDelegateController>(context, listen: false);
-    var customMarkerIcon = await BitmapDescriptor.asset(
+    final controller =
+        Provider.of<RequestDelegateController>(context, listen: false);
+    final customMarkerIcon = await BitmapDescriptor.asset(
       const ImageConfiguration(),
       'assets/images/motorcycleImage.png',
       height: 50,
     );
+
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
       _updateLocation(latLng.latitude, latLng.longitude);
-      // requestDelegateController.setFromLat(latLng.latitude.toString());
-      // requestDelegateController.setFromLan(latLng.longitude.toString());
-      requestDelegateController.getDelegatesOnMap(lat: latLng.latitude.toString(), lan: latLng.longitude.toString());
+      controller.getDelegatesOnMap(
+        lat: latLng.latitude.toString(),
+        lan: latLng.longitude.toString(),
+      );
 
-      if (requestDelegateController.delegatesOnMap?.userData != null) {
-        var myMarker = requestDelegateController.delegatesOnMap?.userData!.map(
+      if (controller.delegatesOnMap?.userData != null) {
+        final delegateMarkers = controller.delegatesOnMap!.userData!.map(
           (userModel) => Marker(
             icon: customMarkerIcon,
             markerId: MarkerId(userModel.id.toString()),
-            position: LatLng(double.parse(userModel.lat!), double.parse(userModel.lng!)),
+            position: LatLng(
+              double.parse(userModel.lat!),
+              double.parse(userModel.lng!),
+            ),
           ),
         );
-        markers.addAll(myMarker!);
+        markers.addAll(delegateMarkers);
         if (mounted) setState(() {});
       }
     });
 
     if (gmc != null) {
-      gmc!.animateCamera(CameraUpdate.newLatLng(LatLng(latLng.latitude, latLng.longitude)));
+      gmc!.animateCamera(CameraUpdate.newLatLng(latLng));
     }
+  }
 
-    if (!mounted) return;
-    setState(() {
-      markers.clear();
-    });
+  Set<Marker> _visibleMarkers(RequestDelegateController controller) {
+    final result = Set<Marker>.from(markers);
+    final toLat = double.tryParse(controller.toLat ?? '');
+    final toLng = double.tryParse(controller.toLan ?? '');
+    if (toLat != null && toLng != null) {
+      result.add(
+        Marker(
+          markerId: const MarkerId('deliveryDestination'),
+          position: LatLng(toLat, toLng),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueOrange,
+          ),
+        ),
+      );
+    }
+    return result;
   }
 
   @override
   void initState() {
     super.initState();
-    initMapStyle();
     WidgetsBinding.instance.addObserver(this);
     _determinePosition();
-  }
-
-  void initMapStyle() async {
-    var mapStyle = await DefaultAssetBundle.of(context).loadString('assets/map_styles/dark_map_style.json');
-    if (!mounted) return;
-    setState(() {
-      _mapStyle = mapStyle;
-    });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     resetTimer?.cancel();
+    _debounce?.cancel();
+    gmc?.dispose();
     super.dispose();
   }
 
@@ -241,12 +265,9 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen> with Widg
 
   Future<void> _recheckLocationServices() async {
     if (!mounted) return;
-    setState(() {
-      isCheckingLocation = true;
-    });
+    setState(() => isCheckingLocation = true);
 
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (serviceEnabled) {
       await _determinePosition();
     } else {
@@ -254,142 +275,219 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen> with Widg
     }
 
     if (!mounted) return;
-    setState(() {
-      isCheckingLocation = false;
-    });
+    setState(() => isCheckingLocation = false);
   }
 
   void _setContainerHeight(double height) {
     if (!mounted) return;
-    setState(() {
-      containerHeight = height;
-    });
+    setState(() => containerHeight = height);
   }
 
   void _startResetTimer() {
     resetTimer?.cancel();
     resetTimer = Timer(const Duration(seconds: 3), () {
-      _setContainerHeight(context.height * 0.35);
+      _setContainerHeight(_panelHeight);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<RequestDelegateController>(
-      builder: (context, requestDelegateController, _) {
-        if (isLocationLoaded) {
-          return Scaffold(
-            backgroundColor: AppColors.blackColor,
-            body: Stack(
-              children: [
-                GestureDetector(
-                  onTapDown: (_) => _setContainerHeight(0),
-                  onTapUp: (_) => _setContainerHeight(context.height * 0.35),
-                  onTapCancel: () => _startResetTimer(),
-                  child: isLocationLoaded
-                      ? GoogleMap(
-                          mapType: MapType.normal,
-                          onTap: _onMapTap,
-                          markers: markers,
-                          style: _mapStyle,
-                          onMapCreated: (GoogleMapController controller) {
-                            gmc = controller;
-                            if (currentLat != null && currentLng != null) {
-                              gmc!.animateCamera(CameraUpdate.newLatLng(LatLng(currentLat!, currentLng!)));
-                            }
-                          },
-                          initialCameraPosition: CameraPosition(
-                            target: LatLng(currentLat ?? 0, currentLng ?? 0),
-                            zoom: 14,
-                          ),
-                          zoomControlsEnabled: false,
-                        )
-                      : const Center(child: CustomLoading()),
+      builder: (context, controller, _) {
+        if (!isLocationLoaded) {
+          return const Scaffold(
+            backgroundColor: Colors.white,
+            body: Center(child: CustomLoading()),
+          );
+        }
+
+        return Scaffold(
+          backgroundColor: Colors.white,
+          body: Stack(
+            children: [
+              GestureDetector(
+                onTapDown: (_) => _setContainerHeight(0),
+                onTapUp: (_) => _setContainerHeight(_panelHeight),
+                onTapCancel: _startResetTimer,
+                child: GoogleMap(
+                  mapType: MapType.normal,
+                  onTap: _onMapTap,
+                  markers: _visibleMarkers(controller),
+                  onMapCreated: (mapController) {
+                    gmc = mapController;
+                    if (currentLat != null && currentLng != null) {
+                      gmc!.animateCamera(
+                        CameraUpdate.newLatLng(
+                          LatLng(currentLat!, currentLng!),
+                        ),
+                      );
+                    }
+                  },
+                  initialCameraPosition: CameraPosition(
+                    target: LatLng(currentLat ?? 0, currentLng ?? 0),
+                    zoom: 14,
+                  ),
+                  zoomControlsEnabled: false,
+                  myLocationButtonEnabled: false,
+                  mapToolbarEnabled: false,
+                  compassEnabled: false,
                 ),
-                Positioned(
-                  top: MediaQuery.of(context).padding.top + 10,
-                  right: context.languageCode == 'ar' ? 10 : null,
-                  left: context.languageCode == 'ar' ? null : 10,
-                  child: InkWell(
-                    onTap: () => NamedNavigatorImpl.pop(),
-                    child: RotatedBox(
-                      quarterTurns: context.languageCode == 'ar' ? 0 : 2,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(color: AppColors.blackColor, shape: BoxShape.circle),
-                        child: Icon(Icons.arrow_back, color: AppColors.mainAppColor),
+              ),
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 10,
+                left: 0,
+                right: 0,
+                child: IgnorePointer(
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 30,
+                        vertical: 11,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x1A000000),
+                            blurRadius: 18,
+                            offset: Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        context.languageCode == 'ar' ? 'الدليفري' : 'Delivery',
+                        style: const TextStyle(
+                          color: Color(0xFF181C22),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
                   ),
                 ),
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: ApiResponseWidget(
-                    loadingWidget: CustomShimmer(
-                      height: context.height * 0.35,
-                      width: double.infinity,
-                      radius: 15,
-                      fillColor: AppColors.lightDarkColor,
-                      shimmerColor: AppColors.lightMainAppColor,
+              ),
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 10,
+                right: context.languageCode == 'ar' ? 12 : null,
+                left: context.languageCode == 'ar' ? null : 12,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => NamedNavigatorImpl.pop(),
+                    borderRadius: BorderRadius.circular(24),
+                    child: Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.mainAppColor.withOpacity(.25),
+                        ),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x1A000000),
+                            blurRadius: 14,
+                            offset: Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        context.languageCode == 'ar'
+                            ? Icons.arrow_forward_rounded
+                            : Icons.arrow_back_rounded,
+                        color: AppColors.mainAppColor,
+                        size: 25,
+                      ),
                     ),
-                    apiResponse: requestDelegateController.delegateOnMapApiResponse,
-                    onReload: () => requestDelegateController.getDelegatesOnMap(
-                      lat: currentLat.toString(),
-                      lan: currentLng.toString(),
-                    ),
-                    isEmpty: requestDelegateController.delegatesOnMap?.userData == null,
-                    child: CustomMapAnimatedContainer(containerHeight: containerHeight),
                   ),
                 ),
-              ],
-            ),
-            bottomNavigationBar: _buildBottomNavigationBar(requestDelegateController),
-          );
-        } else {
-          return const Center(child: CustomLoading());
-        }
+              ),
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: ApiResponseWidget(
+                  loadingWidget: CustomShimmer(
+                    height: _panelHeight,
+                    width: double.infinity,
+                    radius: 30,
+                    fillColor: Colors.white,
+                    shimmerColor: const Color(0xFFF3F4F6),
+                  ),
+                  apiResponse: controller.delegateOnMapApiResponse,
+                  onReload: () => controller.getDelegatesOnMap(
+                    lat: currentLat.toString(),
+                    lan: currentLng.toString(),
+                  ),
+                  isEmpty: controller.delegatesOnMap?.userData == null,
+                  child: CustomMapAnimatedContainer(
+                    containerHeight: containerHeight,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          bottomNavigationBar: _buildBottomNavigationBar(controller),
+        );
       },
     );
   }
 
   Widget _buildBottomNavigationBar(RequestDelegateController controller) {
-    if (containerHeight == 0) {
-      return const SizedBox();
-    } else {
-      return Container(
-        color: AppColors.blackColor,
+    if (containerHeight == 0) return const SizedBox();
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x12000000),
+            blurRadius: 18,
+            offset: Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+          padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
           child: Row(
             children: [
-              IconButton(
-                icon: const CustomImage(path: AppImages.discretionRDIcon, type: ImageType.svg),
+              _bottomActionButton(
+                icon: Icons.notes_rounded,
                 onPressed: () {
                   Utils.showAppBottomSheet(
                     ChangeNotifierProvider.value(
                       value: controller,
-                      child: RDDetailsBottomSheet(requestDelegateController: controller),
+                      child: RDDetailsBottomSheet(
+                        requestDelegateController: controller,
+                      ),
                     ),
                   );
                 },
               ),
+              const SizedBox(width: 10),
               Expanded(
-                child: CustomButton(
-                  onPressed: () {
-                    _onConfirmOrder(controller);
-                  },
-                  text: 'confirmOrder'.tr,
+                child: SizedBox(
+                  height: 54,
+                  child: CustomButton(
+                    onPressed: () => _onConfirmOrder(controller),
+                    text: 'confirmOrder'.tr,
+                  ),
                 ),
               ),
-              IconButton(
-                icon: const CustomImage(path: AppImages.paymentRDIcon, type: ImageType.svg),
+              const SizedBox(width: 10),
+              _bottomActionButton(
+                icon: Icons.account_balance_wallet_outlined,
                 onPressed: () {
                   Utils.showAppBottomSheet(
                     ChangeNotifierProvider.value(
                       value: controller,
-                      child: PaymentRDBottomSheet(requestDelegateController: controller),
+                      child: PaymentRDBottomSheet(
+                        requestDelegateController: controller,
+                      ),
                     ),
                   );
                 },
@@ -397,14 +495,46 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen> with Widg
             ],
           ),
         ),
-      );
-    }
+      ),
+    );
+  }
+
+  Widget _bottomActionButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(17),
+        child: Container(
+          width: 54,
+          height: 54,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(17),
+            border: Border.all(color: const Color(0xFFE7E9ED)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x10000000),
+                blurRadius: 12,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Icon(icon, color: const Color(0xFF252A31), size: 25),
+        ),
+      ),
+    );
   }
 
   void _onConfirmOrder(RequestDelegateController controller) {
-    final shippingKmPrice = double.tryParse('${controller.delegatesOnMap?.shippingKmPrice}') ?? 0;
-    final expectedPrice = controller.calculateDeliveryPrice(kmPrice: shippingKmPrice).toString();
-    final bool serviceActivated = controller.delegatesOnMap?.goDriveBlock == 0;
+    final shippingKmPrice =
+        double.tryParse('${controller.delegatesOnMap?.shippingKmPrice}') ?? 0;
+    final expectedPrice =
+        controller.calculateDeliveryPrice(kmPrice: shippingKmPrice).toString();
+    final serviceActivated = controller.delegatesOnMap?.goDriveBlock == 0;
 
     if (controller.isDataValid()) {
       if (!serviceActivated) {
@@ -422,14 +552,19 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen> with Widg
           expectedPrice: expectedPrice,
           paymentType: controller.selectedPayment,
           onSuccess: () {
-            if (controller.selectedPayment == 'cash' || controller.selectedPayment == 'wallet') {
+            if (controller.selectedPayment == 'cash' ||
+                controller.selectedPayment == 'wallet') {
               NamedNavigatorImpl.push(
                 ShowDelegateOnMapScreen.routeName,
                 arguments: ShowDelegateOnMapArgs(
                   orderId: controller.orderId,
                   fee: int.parse(controller.actualPrice ?? '0'),
-                  kmPrice: int.parse('${controller.delegatesOnMap?.shippingKmPrice}'),
-                  shippingPercentage: int.parse('${controller.delegatesOnMap?.shippingMinPricePrecentage}'),
+                  kmPrice: int.parse(
+                    '${controller.delegatesOnMap?.shippingKmPrice}',
+                  ),
+                  shippingPercentage: int.parse(
+                    '${controller.delegatesOnMap?.shippingMinPricePrecentage}',
+                  ),
                   distance: num.parse('${controller.distance}'),
                 ),
               );
@@ -451,8 +586,12 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen> with Widg
                       arguments: ShowDelegateOnMapArgs(
                         orderId: controller.orderId,
                         fee: int.parse(controller.actualPrice ?? '0'),
-                        kmPrice: int.parse('${controller.delegatesOnMap?.shippingKmPrice}'),
-                        shippingPercentage: int.parse('${controller.delegatesOnMap?.shippingMinPricePrecentage}'),
+                        kmPrice: int.parse(
+                          '${controller.delegatesOnMap?.shippingKmPrice}',
+                        ),
+                        shippingPercentage: int.parse(
+                          '${controller.delegatesOnMap?.shippingMinPricePrecentage}',
+                        ),
                         distance: num.parse('${controller.distance}'),
                       ),
                     );
@@ -468,7 +607,9 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen> with Widg
       Utils.showAppBottomSheet(
         ChangeNotifierProvider.value(
           value: controller,
-          child: RDDetailsBottomSheet(requestDelegateController: controller),
+          child: RDDetailsBottomSheet(
+            requestDelegateController: controller,
+          ),
         ),
       );
     } else {

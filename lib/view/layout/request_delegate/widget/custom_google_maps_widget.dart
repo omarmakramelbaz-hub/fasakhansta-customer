@@ -5,9 +5,11 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../helpers/theme/app_colors.dart';
 import '../../map/utils/map_services.dart';
+import '../controller/request_delegate_controller.dart';
 
 class CustomGoogleMapsWidget extends StatefulWidget {
   const CustomGoogleMapsWidget({
@@ -67,17 +69,21 @@ class _CustomGoogleMapsWidgetState extends State<CustomGoogleMapsWidget> {
   Timer? _searchAnimationTimer;
   double _searchAngle = 0;
   String? _routeKey;
+  bool _delegateResponded = false;
+  LatLng? _controllerDelivery;
 
   LatLng get _pickup => LatLng(widget.addressLat, widget.addressLan);
 
   LatLng? get _delivery {
+    if (_controllerDelivery != null) return _controllerDelivery;
     final lat = widget.deliveryLat;
     final lng = widget.deliveryLan;
     if (lat == null || lng == null || lat == 0 || lng == 0) return null;
     return LatLng(lat, lng);
   }
 
-  bool get _canShowRoute => widget.showRoute && _delivery != null;
+  bool get _canShowRoute =>
+      (_delegateResponded || widget.showRoute) && _delivery != null;
 
   @override
   void initState() {
@@ -113,6 +119,9 @@ class _CustomGoogleMapsWidgetState extends State<CustomGoogleMapsWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final controller = context.watch<RequestDelegateController>();
+    _scheduleControllerSync(controller);
+
     return GoogleMap(
       circles: circles,
       polylines: polylines,
@@ -132,6 +141,35 @@ class _CustomGoogleMapsWidgetState extends State<CustomGoogleMapsWidget> {
         zoom: 14.5,
       ),
     );
+  }
+
+  void _scheduleControllerSync(RequestDelegateController controller) {
+    final delegates = controller.acceptedDelegate?.delegates;
+    final responded = delegates?.isNotEmpty == true;
+    final order = controller.acceptedDelegate?.order;
+
+    final toLat = double.tryParse('${order?.toLat ?? controller.toLat ?? ''}');
+    final toLng = double.tryParse('${order?.toLng ?? controller.toLan ?? ''}');
+    final nextDelivery = toLat != null &&
+            toLng != null &&
+            toLat != 0 &&
+            toLng != 0
+        ? LatLng(toLat, toLng)
+        : null;
+
+    final deliveryChanged =
+        (_controllerDelivery?.latitude != nextDelivery?.latitude) ||
+            (_controllerDelivery?.longitude != nextDelivery?.longitude);
+
+    if (_delegateResponded == responded && !deliveryChanged) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _delegateResponded = responded;
+      _controllerDelivery = nextDelivery;
+      _routeKey = null;
+      _refreshMapState(moveCamera: true);
+    });
   }
 
   Future<void> _loadMarkerIcons() async {
@@ -326,7 +364,7 @@ class _CustomGoogleMapsWidgetState extends State<CustomGoogleMapsWidget> {
     const metersPerDegree = 111320.0;
     final latRadians = center.latitude * math.pi / 180;
     final latOffset = (radiusMeters / metersPerDegree) * math.cos(angle);
-    final cosLat = math.cos(latRadians).abs().clamp(.1, 1.0);
+    final cosLat = math.cos(latRadians).abs().clamp(.1, 1.0).toDouble();
     final lngOffset =
         (radiusMeters / (metersPerDegree * cosLat)) * math.sin(angle);
 

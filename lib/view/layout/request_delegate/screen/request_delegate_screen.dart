@@ -236,6 +236,11 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
         );
     });
 
+    controller.setFromLat(lat.toString());
+    controller.setFromLan(lng.toString());
+    controller.setFromLatLng(LatLng(lat, lng));
+    _recalculateFareForCurrentRoute(controller);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.initialDelegatesOnMap();
       controller
@@ -266,6 +271,8 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
         } else {
           controller.setDistance(0.0);
         }
+
+        _recalculateFareForCurrentRoute(controller);
 
         if (delegatesOnMap?.userData != null) {
           try {
@@ -307,9 +314,6 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
       );
     }
 
-    controller.setFromLat(lat.toString());
-    controller.setFromLan(lng.toString());
-
     try {
       placemarks = await placemarkFromCoordinates(lat, lng);
       if (placemarks != null && placemarks!.isNotEmpty) {
@@ -334,17 +338,42 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
     });
   }
 
-  void _onMapTap(LatLng latLng) async {
-    final controller =
-        Provider.of<RequestDelegateController>(context, listen: false);
+  void _recalculateFareForCurrentRoute(
+    RequestDelegateController controller,
+  ) {
+    final fromLat = double.tryParse(controller.fromLat ?? '');
+    final fromLng = double.tryParse(controller.fromLan ?? '');
+    final toLat = double.tryParse(controller.toLat ?? '');
+    final toLng = double.tryParse(controller.toLan ?? '');
+    final kmPrice =
+        double.tryParse('${controller.delegatesOnMap?.shippingKmPrice}') ?? 0;
 
+    if (fromLat == null ||
+        fromLng == null ||
+        toLat == null ||
+        toLng == null ||
+        kmPrice <= 0) {
+      return;
+    }
+
+    final distanceKm = Geolocator.distanceBetween(
+          fromLat,
+          fromLng,
+          toLat,
+          toLng,
+        ) /
+        1000;
+    final updatedFare = (distanceKm * kmPrice).toStringAsFixed(0);
+
+    controller.setDistance(distanceKm);
+    controller.setPriceEC(updatedFare);
+    controller.setActualPrice(updatedFare);
+  }
+
+  void _onMapTap(LatLng latLng) async {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
       _updateLocation(latLng.latitude, latLng.longitude);
-      controller.getDelegatesOnMap(
-        lat: latLng.latitude.toString(),
-        lan: latLng.longitude.toString(),
-      );
     });
 
     if (gmc != null) {

@@ -35,6 +35,7 @@ class AddAddressScreen extends StatefulWidget {
 class _AddAddressScreenState extends State<AddAddressScreen>
     with ValidationMixin {
   final _formKey = GlobalKey<FormState>();
+
   final _areaNameEc = TextEditingController();
   final _apartmentNoEc = TextEditingController();
   final _floorNoEc = TextEditingController();
@@ -56,26 +57,13 @@ class _AddAddressScreenState extends State<AddAddressScreen>
   double? currentLat;
   double? currentLng;
   GoogleMapController? gmc;
+
   final LocationService _locationService = LocationService();
 
   static const _text = Color(0xFF171A1F);
   static const _muted = Color(0xFF858B94);
   static const _border = Color(0xFFE7EAEE);
-  static const _surface = Color(0xFFF8F9FA);
   static const _softOrange = Color(0xFFFFF3E7);
-
-  static const String _cleanLightMapStyle = '''
-[
-  {"elementType":"geometry","stylers":[{"color":"#f7f7f5"}]},
-  {"elementType":"labels.icon","stylers":[{"visibility":"off"}]},
-  {"elementType":"labels.text.fill","stylers":[{"color":"#6f747b"}]},
-  {"elementType":"labels.text.stroke","stylers":[{"color":"#ffffff"}]},
-  {"featureType":"poi","stylers":[{"visibility":"off"}]},
-  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#ffffff"}]},
-  {"featureType":"road","elementType":"geometry.stroke","stylers":[{"color":"#e7e9eb"}]},
-  {"featureType":"water","elementType":"geometry","stylers":[{"color":"#cfefff"}]}
-]
-''';
 
   bool _isArabic(BuildContext context) => context.languageCode == 'ar';
 
@@ -107,17 +95,22 @@ class _AddAddressScreenState extends State<AddAddressScreen>
 
   Future<void> _updateLocation(double lat, double lng) async {
     if (!mounted) return;
+
     setState(() {
       currentLat = lat;
       currentLng = lng;
     });
 
     if (gmc != null) {
-      await gmc!.animateCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(target: LatLng(lat, lng), zoom: 14.5),
-        ),
-      );
+      try {
+        await gmc!.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(target: LatLng(lat, lng), zoom: 14.5),
+          ),
+        );
+      } catch (e) {
+        log('Failed to move add-address map: $e');
+      }
     }
 
     try {
@@ -172,12 +165,13 @@ class _AddAddressScreenState extends State<AddAddressScreen>
       child: Consumer<AddressController>(
         builder: (context, addressController, _) {
           final isArabic = _isArabic(context);
+
           return Directionality(
             textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
             child: Scaffold(
               resizeToAvoidBottomInset: true,
               backgroundColor: const Color(0xFFF7F8FA),
-              appBar: _appBar(context),
+              appBar: _buildAppBar(context),
               body: SafeArea(
                 top: false,
                 child: Form(
@@ -187,41 +181,51 @@ class _AddAddressScreenState extends State<AddAddressScreen>
                       final keyboardOpen =
                           MediaQuery.of(context).viewInsets.bottom > 0;
                       final compact = constraints.maxHeight < 760;
-                      final mapHeight = compact ? 155.0 : 205.0;
+                      final mapHeight = keyboardOpen
+                          ? 0.0
+                          : (constraints.maxHeight * 0.23)
+                              .clamp(compact ? 120.0 : 150.0, 190.0)
+                              .toDouble();
 
                       return Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 620),
                           child: Padding(
                             padding: EdgeInsets.fromLTRB(
-                              14,
-                              compact ? 8 : 10,
-                              14,
-                              compact ? 8 : 10,
+                              12,
+                              compact ? 7 : 10,
+                              12,
+                              compact ? 7 : 10,
                             ),
                             child: Column(
                               children: [
-                                _intro(context, compact),
                                 if (!keyboardOpen) ...[
-                                  SizedBox(height: compact ? 7 : 9),
-                                  _mapCard(
-                                    context,
-                                    addressController,
-                                    height: mapHeight,
-                                  ),
-                                  SizedBox(height: compact ? 7 : 9),
+                                  _intro(context, compact),
+                                  SizedBox(height: compact ? 6 : 8),
+                                  _mapCard(context, height: mapHeight),
+                                  SizedBox(height: compact ? 6 : 8),
                                 ] else ...[
-                                  const SizedBox(height: 5),
                                   _compactLocationBar(context),
-                                  const SizedBox(height: 6),
+                                  const SizedBox(height: 5),
                                 ],
-                                _typeSelector(context, addressController, compact),
-                                SizedBox(height: compact ? 6 : 8),
-                                Expanded(
-                                  child: _formGrid(context, compact),
+                                _typeSelector(
+                                  context,
+                                  addressController,
+                                  compact: compact || keyboardOpen,
                                 ),
-                                SizedBox(height: compact ? 6 : 8),
-                                _saveButton(context, addressController, compact),
+                                SizedBox(height: compact ? 5 : 7),
+                                Expanded(
+                                  child: _formGrid(
+                                    context,
+                                    compact: compact || keyboardOpen,
+                                  ),
+                                ),
+                                SizedBox(height: compact ? 5 : 7),
+                                _saveButton(
+                                  context,
+                                  addressController,
+                                  compact: compact || keyboardOpen,
+                                ),
                               ],
                             ),
                           ),
@@ -238,14 +242,15 @@ class _AddAddressScreenState extends State<AddAddressScreen>
     );
   }
 
-  PreferredSizeWidget _appBar(BuildContext context) {
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
     final isArabic = _isArabic(context);
+
     return AppBar(
       elevation: 0,
       scrolledUnderElevation: 0,
       backgroundColor: Colors.white,
       automaticallyImplyLeading: false,
-      toolbarHeight: 60,
+      toolbarHeight: 58,
       titleSpacing: 12,
       title: Row(
         children: [
@@ -255,8 +260,8 @@ class _AddAddressScreenState extends State<AddAddressScreen>
               onTap: () => NamedNavigatorImpl.pop(),
               borderRadius: BorderRadius.circular(22),
               child: SizedBox(
-                width: 44,
-                height: 44,
+                width: 42,
+                height: 42,
                 child: Icon(
                   isArabic
                       ? Icons.arrow_forward_rounded
@@ -282,74 +287,82 @@ class _AddAddressScreenState extends State<AddAddressScreen>
   }
 
   Widget _intro(BuildContext context, bool compact) {
-    return Row(
-      children: [
-        Container(
-          width: compact ? 38 : 42,
-          height: compact ? 38 : 42,
-          decoration: BoxDecoration(
-            color: _softOrange,
-            borderRadius: BorderRadius.circular(13),
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(
+        horizontal: 11,
+        vertical: compact ? 7 : 9,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: compact ? 36 : 40,
+            height: compact ? 36 : 40,
+            decoration: BoxDecoration(
+              color: _softOrange,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.location_on_outlined,
+              color: AppColors.mainAppColor,
+              size: compact ? 20 : 22,
+            ),
           ),
-          child: Icon(
-            Icons.location_on_outlined,
-            color: AppColors.mainAppColor,
-            size: compact ? 21 : 23,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _isArabic(context)
-                    ? 'حدد موقع العنوان وأكمل البيانات'
-                    : 'Set the location and complete the details',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: _text,
-                  fontSize: compact ? 14.5 : 16,
-                  fontWeight: FontWeight.w800,
+          const SizedBox(width: 9),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _isArabic(context)
+                      ? 'حدد موقع العنوان وأكمل البيانات'
+                      : 'Set the location and complete the details',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: _text,
+                    fontSize: compact ? 13.5 : 15,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                _isArabic(context)
-                    ? 'كل البيانات في شاشة واحدة بدون سكرول'
-                    : 'All address details on one screen',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: _muted,
-                  fontSize: compact ? 10 : 11,
-                  fontWeight: FontWeight.w500,
+                const SizedBox(height: 2),
+                Text(
+                  _isArabic(context)
+                      ? 'كل البيانات أمامك في شاشة واحدة'
+                      : 'All details are available on one screen',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: _muted,
+                    fontSize: compact ? 9.5 : 10.5,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _mapCard(
-    BuildContext context,
-    AddressController addressController, {
-    required double height,
-  }) {
+  Widget _mapCard(BuildContext context, {required double height}) {
     return Container(
       height: height,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: _border),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x10000000),
-            blurRadius: 14,
+            color: Color(0x0D000000),
+            blurRadius: 12,
             offset: Offset(0, 4),
           ),
         ],
@@ -358,14 +371,13 @@ class _AddAddressScreenState extends State<AddAddressScreen>
           ? Center(
               child: CircularProgressIndicator(
                 color: AppColors.mainAppColor,
-                strokeWidth: 2.4,
+                strokeWidth: 2.3,
               ),
             )
           : Stack(
               children: [
                 Positioned.fill(
                   child: GoogleMap(
-                    style: _cleanLightMapStyle,
                     initialCameraPosition: CameraPosition(
                       target: LatLng(currentLat!, currentLng!),
                       zoom: 14.5,
@@ -384,64 +396,18 @@ class _AddAddressScreenState extends State<AddAddressScreen>
                     compassEnabled: false,
                     mapToolbarEnabled: false,
                     onTap: (_) => _openMapPicker(),
-                    onMapCreated: (controller) {
-                      gmc = controller;
-                      if (addressController.addressDetails != null) {
-                        controller.animateCamera(
-                          CameraUpdate.newLatLng(
-                            LatLng(currentLat!, currentLng!),
-                          ),
-                        );
-                      }
-                    },
+                    onMapCreated: (controller) => gmc = controller,
                   ),
                 ),
                 PositionedDirectional(
-                  top: 9,
-                  start: 9,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 7,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(.95),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x12000000),
-                          blurRadius: 8,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.touch_app_outlined,
-                          size: 16,
-                          color: AppColors.mainAppColor,
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          _isArabic(context)
-                              ? 'اضغط لتعديل الموقع'
-                              : 'Tap to adjust location',
-                          style: const TextStyle(
-                            color: _text,
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  top: 8,
+                  start: 8,
+                  child: _mapHint(context),
                 ),
                 PositionedDirectional(
-                  left: 9,
-                  right: 9,
-                  bottom: 9,
+                  start: 8,
+                  end: 8,
+                  bottom: 8,
                   child: _locationInfo(context),
                 ),
               ],
@@ -449,17 +415,54 @@ class _AddAddressScreenState extends State<AddAddressScreen>
     );
   }
 
-  Widget _locationInfo(BuildContext context) {
+  Widget _mapHint(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(.96),
-        borderRadius: BorderRadius.circular(13),
+        borderRadius: BorderRadius.circular(11),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x12000000),
-            blurRadius: 8,
-            offset: Offset(0, 3),
+            color: Color(0x10000000),
+            blurRadius: 7,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.touch_app_outlined,
+            size: 15,
+            color: AppColors.mainAppColor,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            _isArabic(context) ? 'اضغط لتعديل الموقع' : 'Tap to adjust location',
+            style: const TextStyle(
+              color: _text,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _locationInfo(BuildContext context) {
+    return Container(
+      height: 38,
+      padding: const EdgeInsets.symmetric(horizontal: 9),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(.97),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x10000000),
+            blurRadius: 7,
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -468,7 +471,7 @@ class _AddAddressScreenState extends State<AddAddressScreen>
           Icon(
             Icons.location_on_rounded,
             color: AppColors.mainAppColor,
-            size: 18,
+            size: 17,
           ),
           const SizedBox(width: 6),
           Expanded(
@@ -478,20 +481,22 @@ class _AddAddressScreenState extends State<AddAddressScreen>
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 color: _text,
-                fontSize: 10.8,
+                fontSize: 10.5,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
-          if (currentLat != null && currentLng != null)
+          if (currentLat != null && currentLng != null) ...[
+            const SizedBox(width: 6),
             Text(
               '${currentLat!.toStringAsFixed(4)}, ${currentLng!.toStringAsFixed(4)}',
               style: const TextStyle(
                 color: _muted,
-                fontSize: 9,
+                fontSize: 8.5,
                 fontWeight: FontWeight.w500,
               ),
             ),
+          ],
         ],
       ),
     );
@@ -500,15 +505,15 @@ class _AddAddressScreenState extends State<AddAddressScreen>
   Widget _compactLocationBar(BuildContext context) {
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(13),
       child: InkWell(
         onTap: _openMapPicker,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(13),
         child: Container(
-          height: 42,
-          padding: const EdgeInsets.symmetric(horizontal: 11),
+          height: 40,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(13),
             border: Border.all(color: _border),
           ),
           child: Row(
@@ -516,9 +521,9 @@ class _AddAddressScreenState extends State<AddAddressScreen>
               Icon(
                 Icons.location_on_outlined,
                 color: AppColors.mainAppColor,
-                size: 19,
+                size: 18,
               ),
-              const SizedBox(width: 7),
+              const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   _resolvedAddress(context),
@@ -526,7 +531,7 @@ class _AddAddressScreenState extends State<AddAddressScreen>
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: _text,
-                    fontSize: 11,
+                    fontSize: 10.5,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -534,7 +539,7 @@ class _AddAddressScreenState extends State<AddAddressScreen>
               Icon(
                 Icons.edit_location_alt_outlined,
                 color: AppColors.mainAppColor,
-                size: 19,
+                size: 18,
               ),
             ],
           ),
@@ -545,50 +550,48 @@ class _AddAddressScreenState extends State<AddAddressScreen>
 
   Widget _typeSelector(
     BuildContext context,
-    AddressController controller,
-    bool compact,
-  ) {
-    final options = <({String value, String ar, String en, IconData icon})>[
-      (
-        value: 'apartment',
-        ar: 'شقة',
-        en: 'Apartment',
-        icon: Icons.apartment_rounded,
-      ),
-      (
-        value: 'home',
-        ar: 'منزل',
-        en: 'Home',
-        icon: Icons.home_outlined,
-      ),
-      (
-        value: 'office',
-        ar: 'مكتب',
-        en: 'Office',
-        icon: Icons.business_center_outlined,
-      ),
-    ];
-
+    AddressController controller, {
+    required bool compact,
+  }) {
     return Row(
       children: [
-        for (int i = 0; i < options.length; i++) ...[
-          if (i > 0) const SizedBox(width: 7),
-          Expanded(
-            child: _typeChip(
-              context,
-              controller,
-              value: options[i].value,
-              label: _isArabic(context) ? options[i].ar : options[i].en,
-              icon: options[i].icon,
-              compact: compact,
-            ),
+        Expanded(
+          child: _typeOption(
+            context,
+            controller,
+            value: 'office',
+            label: _isArabic(context) ? 'شقة' : 'Apartment',
+            icon: Icons.apartment_rounded,
+            compact: compact,
           ),
-        ],
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: _typeOption(
+            context,
+            controller,
+            value: 'home',
+            label: _isArabic(context) ? 'منزل' : 'Home',
+            icon: Icons.home_outlined,
+            compact: compact,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: _typeOption(
+            context,
+            controller,
+            value: 'apartment',
+            label: _isArabic(context) ? 'مكتب' : 'Office',
+            icon: Icons.business_center_outlined,
+            compact: compact,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _typeChip(
+  Widget _typeOption(
     BuildContext context,
     AddressController controller, {
     required String value,
@@ -596,18 +599,21 @@ class _AddAddressScreenState extends State<AddAddressScreen>
     required IconData icon,
     required bool compact,
   }) {
-    final selected = controller.indexSelectedOfficeOrHouseOrApartment == value;
+    final selected =
+        controller.indexSelectedOfficeOrHouseOrApartment == value;
+
     return Material(
       color: selected ? _softOrange : Colors.white,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(13),
       child: InkWell(
-        onTap: () => controller.setIndexSelectedOfficeOrHouseOrApartment(value),
-        borderRadius: BorderRadius.circular(14),
+        onTap: () =>
+            controller.setIndexSelectedOfficeOrHouseOrApartment(value),
+        borderRadius: BorderRadius.circular(13),
         child: Container(
-          height: compact ? 40 : 44,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          height: compact ? 38 : 42,
+          padding: const EdgeInsets.symmetric(horizontal: 7),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(13),
             border: Border.all(
               color: selected ? AppColors.mainAppColor : _border,
               width: selected ? 1.2 : 1,
@@ -618,10 +624,10 @@ class _AddAddressScreenState extends State<AddAddressScreen>
             children: [
               Icon(
                 icon,
-                size: compact ? 17 : 19,
+                size: compact ? 16 : 18,
                 color: selected ? AppColors.mainAppColor : _muted,
               ),
-              const SizedBox(width: 5),
+              const SizedBox(width: 4),
               Flexible(
                 child: Text(
                   label,
@@ -629,7 +635,7 @@ class _AddAddressScreenState extends State<AddAddressScreen>
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: selected ? AppColors.mainAppColor : _text,
-                    fontSize: compact ? 11 : 12,
+                    fontSize: compact ? 10.5 : 11.5,
                     fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
                   ),
                 ),
@@ -641,29 +647,30 @@ class _AddAddressScreenState extends State<AddAddressScreen>
     );
   }
 
-  Widget _formGrid(BuildContext context, bool compact) {
-    final gap = compact ? 6.0 : 8.0;
+  Widget _formGrid(BuildContext context, {required bool compact}) {
+    final gap = compact ? 5.0 : 7.0;
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         _fieldRow(
           _field(
-            context,
             controller: _areaNameEc,
             focusNode: _areaNameFocusNode,
             hint: 'buildingName'.tr,
             icon: Icons.domain_outlined,
             validator: validateEmptyField,
+            compact: compact,
             onSubmitted: (_) =>
                 FocusScope.of(context).requestFocus(_streetNameFocusNode),
           ),
           _field(
-            context,
             controller: _streetNameEc,
             focusNode: _streetNameFocusNode,
             hint: 'street'.tr,
             icon: Icons.signpost_outlined,
             validator: validateEmptyField,
+            compact: compact,
             onSubmitted: (_) =>
                 FocusScope.of(context).requestFocus(_apartmentNoFocusNode),
           ),
@@ -671,24 +678,24 @@ class _AddAddressScreenState extends State<AddAddressScreen>
         ),
         _fieldRow(
           _field(
-            context,
             controller: _apartmentNoEc,
             focusNode: _apartmentNoFocusNode,
             hint: 'apartmentNumber'.tr,
             icon: Icons.door_front_door_outlined,
             keyboardType: TextInputType.number,
             validator: validateEmptyField,
+            compact: compact,
             onSubmitted: (_) =>
                 FocusScope.of(context).requestFocus(_floorNoFocusNode),
           ),
           _field(
-            context,
             controller: _floorNoEc,
             focusNode: _floorNoFocusNode,
             hint: 'theRoleIsOptional'.tr,
             icon: Icons.stairs_outlined,
             keyboardType: TextInputType.number,
             validator: validateEmptyField,
+            compact: compact,
             onSubmitted: (_) =>
                 FocusScope.of(context).requestFocus(_mobileFocusNode),
           ),
@@ -696,33 +703,33 @@ class _AddAddressScreenState extends State<AddAddressScreen>
         ),
         _fieldRow(
           _field(
-            context,
             controller: _mobileEc,
             focusNode: _mobileFocusNode,
             hint: 'mobileNumber'.tr,
             icon: Icons.phone_outlined,
             keyboardType: TextInputType.phone,
-            validator: (v) => validatePhone(v, country: _country),
+            validator: (value) => validatePhone(value, country: _country),
+            compact: compact,
             onSubmitted: (_) =>
                 FocusScope.of(context).requestFocus(_addressNameFocusNode),
           ),
           _field(
-            context,
             controller: _addressNameEc,
             focusNode: _addressNameFocusNode,
             hint: 'titleLabelIsOptional'.tr,
             icon: Icons.bookmark_border_rounded,
+            compact: compact,
             onSubmitted: (_) =>
                 FocusScope.of(context).requestFocus(_badgeFocusNode),
           ),
           gap,
         ),
         _field(
-          context,
           controller: _badgeEc,
           focusNode: _badgeFocusNode,
           hint: 'optionalDistinctiveSign'.tr,
           icon: Icons.near_me_outlined,
+          compact: compact,
           textInputAction: TextInputAction.done,
           onSubmitted: (_) => FocusManager.instance.primaryFocus?.unfocus(),
         ),
@@ -741,12 +748,12 @@ class _AddAddressScreenState extends State<AddAddressScreen>
     );
   }
 
-  Widget _field(
-    BuildContext context, {
+  Widget _field({
     required TextEditingController controller,
     required FocusNode focusNode,
     required String hint,
     required IconData icon,
+    required bool compact,
     String? Function(String?)? validator,
     TextInputType? keyboardType,
     TextInputAction? textInputAction,
@@ -760,39 +767,49 @@ class _AddAddressScreenState extends State<AddAddressScreen>
       textInputAction: textInputAction ?? TextInputAction.next,
       onFieldSubmitted: onSubmitted,
       onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
-      style: const TextStyle(
+      style: TextStyle(
         color: _text,
-        fontSize: 12.5,
+        fontSize: compact ? 11.5 : 12.5,
         fontWeight: FontWeight.w600,
       ),
       decoration: InputDecoration(
         isDense: true,
         hintText: hint,
-        hintStyle: const TextStyle(
+        hintStyle: TextStyle(
           color: _muted,
-          fontSize: 11.5,
+          fontSize: compact ? 10.5 : 11.5,
           fontWeight: FontWeight.w400,
         ),
-        prefixIcon: Icon(icon, size: 18, color: const Color(0xFF9AA0A8)),
-        prefixIconConstraints: const BoxConstraints(minWidth: 38, minHeight: 42),
+        prefixIcon: Icon(
+          icon,
+          size: compact ? 16 : 18,
+          color: const Color(0xFF9AA0A8),
+        ),
+        prefixIconConstraints: BoxConstraints(
+          minWidth: compact ? 34 : 38,
+          minHeight: compact ? 38 : 42,
+        ),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 11, vertical: 12),
-        errorStyle: const TextStyle(fontSize: 8.5, height: .9),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: 9,
+          vertical: compact ? 9 : 11,
+        ),
+        errorStyle: const TextStyle(fontSize: 8, height: .85),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(13),
           borderSide: const BorderSide(color: _border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(13),
           borderSide: BorderSide(color: AppColors.mainAppColor, width: 1.3),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(13),
           borderSide: const BorderSide(color: Color(0xFFE35B5B)),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(13),
           borderSide: const BorderSide(color: Color(0xFFE35B5B)),
         ),
       ),
@@ -801,12 +818,12 @@ class _AddAddressScreenState extends State<AddAddressScreen>
 
   Widget _saveButton(
     BuildContext context,
-    AddressController addressController,
-    bool compact,
-  ) {
+    AddressController addressController, {
+    required bool compact,
+  }) {
     return SizedBox(
       width: double.infinity,
-      height: compact ? 48 : 52,
+      height: compact ? 46 : 50,
       child: ElevatedButton(
         onPressed: () => _saveAddress(context, addressController),
         style: ElevatedButton.styleFrom(
@@ -814,13 +831,13 @@ class _AddAddressScreenState extends State<AddAddressScreen>
           backgroundColor: AppColors.mainAppColor,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(15),
           ),
         ),
         child: Text(
           _isArabic(context) ? 'حفظ العنوان' : 'Save address',
           style: TextStyle(
-            fontSize: compact ? 15 : 16,
+            fontSize: compact ? 14.5 : 15.5,
             fontWeight: FontWeight.w800,
           ),
         ),
@@ -849,7 +866,7 @@ class _AddAddressScreenState extends State<AddAddressScreen>
     }
 
     final place = placemarks?.isNotEmpty == true ? placemarks!.first : null;
-    final streetFromMap = (place?.street ?? '').trim();
+    final mapStreet = (place?.street ?? '').trim();
 
     context.read<AddressController>().storeAddress(
           areaName: _areaNameEc.text.trim(),
@@ -863,8 +880,8 @@ class _AddAddressScreenState extends State<AddAddressScreen>
           lang: lng,
           countryName: place?.country ?? fallback?.countryName ?? '',
           cityName: place?.locality ?? fallback?.cityName ?? '',
-          address: streetFromMap.isNotEmpty
-              ? streetFromMap
+          address: mapStreet.isNotEmpty
+              ? mapStreet
               : (fallback?.address ?? _streetNameEc.text.trim()),
           badge: _badgeEc.text.trim(),
           onSuccess: ({int? userAddressId}) {
@@ -877,17 +894,26 @@ class _AddAddressScreenState extends State<AddAddressScreen>
 
   String _resolvedAddress(BuildContext context) {
     final place = placemarks?.isNotEmpty == true ? placemarks!.first : null;
-    final parts = <String>[
-      if ((place?.street ?? '').trim().isNotEmpty) place!.street!.trim(),
-      if ((place?.subLocality ?? '').trim().isNotEmpty)
-        place!.subLocality!.trim(),
-      if ((place?.locality ?? '').trim().isNotEmpty) place!.locality!.trim(),
-    ];
+    final parts = <String>[];
 
-    if (parts.isNotEmpty) return parts.toSet().join('، ');
+    final street = (place?.street ?? '').trim();
+    final subLocality = (place?.subLocality ?? '').trim();
+    final locality = (place?.locality ?? '').trim();
+
+    if (street.isNotEmpty) parts.add(street);
+    if (subLocality.isNotEmpty && !parts.contains(subLocality)) {
+      parts.add(subLocality);
+    }
+    if (locality.isNotEmpty && !parts.contains(locality)) {
+      parts.add(locality);
+    }
+
+    if (parts.isNotEmpty) return parts.join('، ');
+
     if (currentLat != null && currentLng != null) {
       return '${currentLat!.toStringAsFixed(5)}, ${currentLng!.toStringAsFixed(5)}';
     }
+
     return _isArabic(context)
         ? 'جاري تحديد موقعك...'
         : 'Locating your address...';

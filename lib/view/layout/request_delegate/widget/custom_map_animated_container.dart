@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../helpers/extensions/extensions.dart';
@@ -339,6 +340,19 @@ class CustomMapAnimatedContainer extends StatelessWidget {
         ? '—'
         : '${controller.priceEC.text.trim()} ${_isArabic(context) ? 'ج' : 'EGP'}';
 
+    final fromLat = double.tryParse(controller.fromLat ?? '');
+    final fromLng = double.tryParse(controller.fromLan ?? '');
+    final toLat = double.tryParse(controller.toLat ?? '');
+    final toLng = double.tryParse(controller.toLan ?? '');
+    final hasDistance =
+        fromLat != null && fromLng != null && toLat != null && toLng != null;
+    final distanceKm = hasDistance
+        ? Geolocator.distanceBetween(fromLat, fromLng, toLat, toLng) / 1000
+        : 0.0;
+    final distance = hasDistance
+        ? '${distanceKm.toStringAsFixed(1)} ${_isArabic(context) ? 'كم' : 'km'}'
+        : '—';
+
     return Container(
       decoration: _cardDecoration(),
       padding: EdgeInsets.symmetric(vertical: compact ? 5 : 7),
@@ -346,9 +360,9 @@ class CustomMapAnimatedContainer extends StatelessWidget {
         children: [
           Expanded(
             child: _summaryItem(
-              icon: Icons.shield_outlined,
-              label: _isArabic(context) ? 'دفع آمن' : 'Secure',
-              value: '100%',
+              icon: Icons.route_outlined,
+              label: _isArabic(context) ? 'المسافة' : 'Distance',
+              value: distance,
               compact: compact,
             ),
           ),

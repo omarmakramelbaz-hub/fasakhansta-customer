@@ -434,6 +434,7 @@ class _SearchPlaceScreenState extends State<SearchPlaceScreen> {
               maxLines: 2,
               minLines: 1,
               onChanged: (_) => _onSearchChanged(isFrom),
+              onTapOutside: (_) {},
               style: const TextStyle(
                 color: _text,
                 fontSize: 13.5,
@@ -550,54 +551,56 @@ class _SearchPlaceScreenState extends State<SearchPlaceScreen> {
     bool isFrom,
     bool loading,
   ) {
-    return Container(
-      margin: const EdgeInsets.only(top: 6),
-      constraints: const BoxConstraints(maxHeight: 230),
-      decoration: _cardDecoration(),
-      child: loading && places.isEmpty
-          ? const SizedBox(
-              height: 58,
-              child: Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+    return TextFieldTapRegion(
+      child: Container(
+        margin: const EdgeInsets.only(top: 6),
+        constraints: const BoxConstraints(maxHeight: 230),
+        decoration: _cardDecoration(),
+        child: loading && places.isEmpty
+            ? const SizedBox(
+                height: 58,
+                child: Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
                 ),
-              ),
-            )
-          : ListView.separated(
-              padding: EdgeInsets.zero,
-              shrinkWrap: true,
-              itemCount: places.length,
-              separatorBuilder: (_, __) =>
-                  const Divider(height: 1, color: _border),
-              itemBuilder: (context, index) {
-                final place = places[index];
-                return ListTile(
-                  dense: true,
-                  leading: Icon(
-                    Icons.location_on_outlined,
-                    color: AppColors.mainAppColor,
-                    size: 20,
-                  ),
-                  title: Text(
-                    place.description ?? '',
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: _text,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+              )
+            : ListView.separated(
+                padding: EdgeInsets.zero,
+                shrinkWrap: true,
+                itemCount: places.length,
+                separatorBuilder: (_, __) =>
+                    const Divider(height: 1, color: _border),
+                itemBuilder: (context, index) {
+                  final place = places[index];
+                  return ListTile(
+                    dense: true,
+                    leading: Icon(
+                      Icons.location_on_outlined,
+                      color: AppColors.mainAppColor,
+                      size: 20,
                     ),
-                  ),
-                  onTap: () => _selectPrediction(
-                    controller,
-                    place,
-                    isFrom,
-                  ),
-                );
-              },
-            ),
+                    title: Text(
+                      place.description ?? '',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: _text,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    onTap: () => _selectPrediction(
+                      controller,
+                      place,
+                      isFrom,
+                    ),
+                  );
+                },
+              ),
+      ),
     );
   }
 

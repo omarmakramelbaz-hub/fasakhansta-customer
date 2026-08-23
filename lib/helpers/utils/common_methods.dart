@@ -87,6 +87,60 @@ class CommonMethods {
     Color? textColor,
     int seconds = 3,
   }) {
+    final normalizedMessage = message.trim().toLowerCase();
+    final isSuccess = type == ToastType.success;
+    final isDeliveryCancellation = isSuccess &&
+        (message.contains('تم الإلغاء') ||
+            message.contains('تم الالغاء') ||
+            message.contains('تم الغاء') ||
+            (normalizedMessage.contains('cancel') &&
+                (normalizedMessage.contains('order') ||
+                    normalizedMessage.contains('success'))));
+    final hasFareKeyword = message.contains('أجرة') ||
+        message.contains('اجرة') ||
+        message.contains('تسعير') ||
+        message.contains('السعر') ||
+        message.contains('سعر') ||
+        normalizedMessage.contains('fare') ||
+        normalizedMessage.contains('price');
+    final hasFareUpdateKeyword = message.contains('تم') ||
+        message.contains('تحديث') ||
+        message.contains('تعديل') ||
+        message.contains('رفع') ||
+        message.contains('زيادة') ||
+        message.contains('نجاح') ||
+        normalizedMessage.contains('updated') ||
+        normalizedMessage.contains('increased') ||
+        normalizedMessage.contains('success');
+    final isDeliveryFareUpdate =
+        isSuccess && hasFareKeyword && hasFareUpdateKeyword;
+
+    if (isDeliveryCancellation) {
+      _showGoDriveActionSuccess(
+        title: 'تم إلغاء طلب التوصيل',
+        message: 'تم إيقاف البحث عن مندوب ولن يتم تنفيذ الطلب.',
+        icon: Icons.close_rounded,
+        accentColor: const Color(0xFFD84A4A),
+        iconBackgroundColor: const Color(0xFFFFEEEE),
+        borderColor: const Color(0xFFF3CCCC),
+        seconds: seconds,
+      );
+      return;
+    }
+
+    if (isDeliveryFareUpdate) {
+      _showGoDriveActionSuccess(
+        title: 'تم تحديث أجرة التوصيل',
+        message: 'تم تحديث الطلب وإرساله للمندوبين بالأجرة الجديدة.',
+        icon: Icons.payments_outlined,
+        accentColor: AppColors.mainAppColor,
+        iconBackgroundColor: const Color(0xFFFFF2E7),
+        borderColor: const Color(0xFFFFD8B6),
+        seconds: seconds,
+      );
+      return;
+    }
+
     final isAddToCartSuccess = type == ToastType.success && message.contains('إضاف') && message.contains('السلة');
     if (isAddToCartSuccess) {
       showCartSuccess(message: message, seconds: seconds);
@@ -213,6 +267,101 @@ class CommonMethods {
                 child: const Padding(
                   padding: EdgeInsets.all(6),
                   child: Icon(Icons.close_rounded, size: 20, color: Color(0xFF9A9A9A)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  static void _showGoDriveActionSuccess({
+    required String title,
+    required String message,
+    required IconData icon,
+    required Color accentColor,
+    required Color iconBackgroundColor,
+    required Color borderColor,
+    int seconds = 3,
+  }) {
+    BotToast.showCustomText(
+      duration: Duration(seconds: seconds),
+      toastBuilder: (cancelFunc) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: Container(
+          width: double.infinity,
+          margin: const EdgeInsets.symmetric(horizontal: 14),
+          padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: borderColor),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x22000000),
+                blurRadius: 20,
+                offset: Offset(0, 7),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: iconBackgroundColor,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  color: accentColor,
+                  size: 25,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF202328),
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      message,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF7C828A),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: cancelFunc,
+                child: const Padding(
+                  padding: EdgeInsets.all(6),
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: 20,
+                    color: Color(0xFF9A9A9A),
+                  ),
                 ),
               ),
             ],

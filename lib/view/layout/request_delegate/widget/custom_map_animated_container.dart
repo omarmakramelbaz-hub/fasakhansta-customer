@@ -303,7 +303,7 @@ class CustomMapAnimatedContainer extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
       child: Container(
-        minHeight: 62,
+        constraints: const BoxConstraints(minHeight: 62),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: _fieldDecoration(),
         child: Directionality(

@@ -193,8 +193,8 @@ class _SearchPlaceScreenState extends State<SearchPlaceScreen> {
                     ),
                     child: Text(
                       _isArabic(context)
-                          ? 'تأكيد عنوان التوصيل'
-                          : 'Confirm delivery address',
+                          ? 'تأكيد العناوين'
+                          : 'Confirm addresses',
                       style: const TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w800,
@@ -227,8 +227,8 @@ class _SearchPlaceScreenState extends State<SearchPlaceScreen> {
               children: [
                 Text(
                   _isArabic(context)
-                      ? 'اختيار عنوان التوصيل'
-                      : 'Choose delivery address',
+                      ? 'تحديد العناوين'
+                      : 'Set addresses',
                   style: const TextStyle(
                     color: _text,
                     fontSize: 22,

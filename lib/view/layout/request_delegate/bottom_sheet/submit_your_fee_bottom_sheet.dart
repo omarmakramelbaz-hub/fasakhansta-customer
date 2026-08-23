@@ -1,16 +1,11 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../helpers/extensions/extensions.dart';
 import '../../../../helpers/routes/app_routers_import.dart';
-import '../../../../helpers/theme/app_text_style.dart';
+import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/translation/all_translation.dart';
-import '../../../custom_widgets/buttons/custom_button.dart';
-import '../../../custom_widgets/custom_form_field/custom_form_field.dart';
-import '../../../custom_widgets/global_widgets/dark_app_bottom_sheet.dart';
 import '../controller/request_delegate_controller.dart';
 import '../widget/payment_methoud_widget.dart';
 
@@ -22,13 +17,15 @@ class SubmitYourFeeBottomSheet extends StatefulWidget {
     required this.shippingPercentage,
     required this.distance,
   });
+
   final RequestDelegateController requestDelegateController;
   final num kmPrice;
   final num shippingPercentage;
   final num distance;
 
   @override
-  State<SubmitYourFeeBottomSheet> createState() => _SubmitYourFeeBottomSheetState();
+  State<SubmitYourFeeBottomSheet> createState() =>
+      _SubmitYourFeeBottomSheetState();
 }
 
 class _SubmitYourFeeBottomSheetState extends State<SubmitYourFeeBottomSheet> {
@@ -39,6 +36,8 @@ class _SubmitYourFeeBottomSheetState extends State<SubmitYourFeeBottomSheet> {
   late final double _referenceFare;
   late final double _minimumFare;
 
+  bool get _isArabic => context.languageCode == 'ar';
+
   @override
   void initState() {
     super.initState();
@@ -47,11 +46,10 @@ class _SubmitYourFeeBottomSheetState extends State<SubmitYourFeeBottomSheet> {
 
     final currentFare =
         double.tryParse(widget.requestDelegateController.priceEC.text.trim()) ?? 0;
-    final storedCalculatedFare = widget.distance.toDouble();
 
-    // Use the strongest available reference so reopening the sheet cannot
-    // repeatedly reduce an already discounted fare.
-    _referenceFare = math.max(currentFare, storedCalculatedFare);
+    // The visible calculated fare is the reference amount. The customer can
+    // reduce it by no more than 10%.
+    _referenceFare = currentFare > 0 ? currentFare : widget.distance.toDouble();
     _minimumFare = (_referenceFare * .90).ceilToDouble();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -59,6 +57,13 @@ class _SubmitYourFeeBottomSheetState extends State<SubmitYourFeeBottomSheet> {
         context.read<RequestDelegateController>();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _feeEC.dispose();
+    focusNode.dispose();
+    super.dispose();
   }
 
   String? _validateFare(String? value) {
@@ -69,9 +74,9 @@ class _SubmitYourFeeBottomSheetState extends State<SubmitYourFeeBottomSheet> {
     }
 
     if (_referenceFare > 0 && inputValue < _minimumFare) {
-      return 'minimumAmountToDeliver'
-          .tr
-          .replaceAll('{}', _minimumFare.toStringAsFixed(0));
+      return _isArabic
+          ? 'أقل مبلغ مسموح هو ${_minimumFare.toStringAsFixed(0)} ج'
+          : 'Minimum allowed fare is ${_minimumFare.toStringAsFixed(0)} EGP';
     }
 
     return null;
@@ -79,48 +84,258 @@ class _SubmitYourFeeBottomSheetState extends State<SubmitYourFeeBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: _formKey,
-      child: DarkAppBottomSheet(
-        isDark: true,
-        title: 'providePrice'.tr,
-        showBorder: true,
-        children: [
-          CustomFormField(
-            controller: _feeEC,
-            hintText: 'egyptianPound'.tr,
-            formFieldBorder: FormFieldBorder.underLine,
-            textStyle: AppTextStyle.text14MW(),
-            keyboardType: TextInputType.number,
-            unFocusColor: Colors.transparent,
-            focusNode: focusNode,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            validator: _validateFare,
-            suffixIcon: Text(
-              'egyptianPound'.tr,
-              style: AppTextStyle.text14MW().copyWith(fontSize: 16),
+    final viewInsets = MediaQuery.of(context).viewInsets;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: viewInsets.bottom),
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * .86,
+        ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(30),
+            topRight: Radius.circular(30),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x22000000),
+              blurRadius: 24,
+              offset: Offset(0, -7),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          top: false,
+          child: Directionality(
+            textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
+            child: Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(18, 10, 18, 18),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD8DCE1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      _isArabic ? 'عاوز تدفع كام؟' : 'How much do you want to pay?',
+                      style: const TextStyle(
+                        color: Color(0xFF171A1F),
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      _isArabic
+                          ? 'حدد المبلغ المناسب ليك، ويمكن تقليله بحد أقصى 10%.'
+                          : 'Choose your fare. You can reduce it by up to 10%.',
+                      style: const TextStyle(
+                        color: Color(0xFF8A9098),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF8F1),
+                        borderRadius: BorderRadius.circular(17),
+                        border: Border.all(
+                          color: AppColors.mainAppColor.withOpacity(.20),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.payments_outlined,
+                              color: AppColors.mainAppColor,
+                              size: 23,
+                            ),
+                          ),
+                          const SizedBox(width: 11),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _isArabic ? 'السعر المحدد' : 'Calculated fare',
+                                  style: const TextStyle(
+                                    color: Color(0xFF777D86),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${_referenceFare.toStringAsFixed(0)} ${_isArabic ? 'ج' : 'EGP'}',
+                                  style: const TextStyle(
+                                    color: Color(0xFF171A1F),
+                                    fontSize: 19,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 7,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(11),
+                            ),
+                            child: Text(
+                              _isArabic
+                                  ? 'الحد الأدنى ${_minimumFare.toStringAsFixed(0)} ج'
+                                  : 'Min ${_minimumFare.toStringAsFixed(0)} EGP',
+                              style: TextStyle(
+                                color: AppColors.mainAppColor,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 13),
+                    TextFormField(
+                      controller: _feeEC,
+                      focusNode: focusNode,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      validator: _validateFare,
+                      textAlign: TextAlign.start,
+                      style: const TextStyle(
+                        color: Color(0xFF171A1F),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: _isArabic ? 'المبلغ اللي هتدفعه' : 'Your fare',
+                        labelStyle: const TextStyle(
+                          color: Color(0xFF858B94),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        suffixIcon: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          child: Center(
+                            widthFactor: 1,
+                            child: Text(
+                              _isArabic ? 'جنيه مصري' : 'EGP',
+                              style: const TextStyle(
+                                color: Color(0xFF6D737C),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xFFF8F9FB),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 15,
+                          vertical: 17,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE4E7EB),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                          borderSide: BorderSide(
+                            color: AppColors.mainAppColor,
+                            width: 1.4,
+                          ),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE84B4B),
+                          ),
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE84B4B),
+                            width: 1.4,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      _isArabic ? 'طريقة الدفع' : 'Payment method',
+                      style: const TextStyle(
+                        color: Color(0xFF171A1F),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const ChoosePaymentMethodWidget(),
+                    const SizedBox(height: 18),
+                    SizedBox(
+                      height: 54,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            widget.requestDelegateController
+                                .setPriceEC(_feeEC.text.trim());
+                            widget.requestDelegateController
+                                .setActualPrice(_feeEC.text.trim());
+                            NamedNavigatorImpl.pop();
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.mainAppColor,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(17),
+                          ),
+                        ),
+                        child: Text(
+                          _isArabic ? 'تأكيد المبلغ' : 'Confirm fare',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
-          Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom,
-            ),
-            child: 15.sbH,
-          ),
-          const ChoosePaymentMethodWidget(),
-          15.sbH,
-          CustomButton(
-            text: 'confirmOrder'.tr,
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                widget.requestDelegateController.setPriceEC(_feeEC.text);
-                widget.requestDelegateController.setActualPrice(_feeEC.text);
-                NamedNavigatorImpl.pop();
-              }
-            },
-          ),
-          15.sbH,
-        ],
+        ),
       ),
     );
   }

@@ -352,6 +352,7 @@ class CustomMapAnimatedContainer extends StatelessWidget {
     final distance = hasDistance
         ? '${distanceKm.toStringAsFixed(1)} ${_isArabic(context) ? 'كم' : 'km'}'
         : '—';
+    final eta = hasDistance ? _deliveryEta(context, distanceKm) : '—';
 
     return Container(
       decoration: _cardDecoration(),
@@ -380,13 +381,27 @@ class CustomMapAnimatedContainer extends StatelessWidget {
             child: _summaryItem(
               icon: Icons.schedule_rounded,
               label: _isArabic(context) ? 'وقت التوصيل' : 'ETA',
-              value: _isArabic(context) ? '20 - 30 د' : '20 - 30 min',
+              value: eta,
               compact: compact,
             ),
           ),
         ],
       ),
     );
+  }
+
+  String _deliveryEta(BuildContext context, double distanceKm) {
+    final isArabic = _isArabic(context);
+    if (distanceKm <= 5) {
+      return isArabic ? '30 - 45 د' : '30 - 45 min';
+    }
+    if (distanceKm <= 10) {
+      return isArabic ? '60 - 90 د' : '60 - 90 min';
+    }
+    if (distanceKm <= 20) {
+      return isArabic ? '90 - 150 د' : '90 - 150 min';
+    }
+    return isArabic ? 'خلال 6 ساعات' : 'Within 6 hrs';
   }
 
   Widget _summaryItem({

@@ -111,7 +111,7 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
       final riderRect = ui.Rect.fromLTWH(
         4,
         canvasHeight - riderHeight,
-        riderWidth.clamp(58.0, 82.0),
+        riderWidth,
         riderHeight,
       );
       canvas.drawImageRect(rider, src, riderRect, ui.Paint());

@@ -444,67 +444,40 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
         top: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 9, 14, 10),
-          child: Row(
-            children: [
-              _bottomActionButton(
-                icon: Icons.account_balance_wallet_outlined,
-                label: context.languageCode == 'ar' ? 'الدفع' : 'Payment',
-                onPressed: () => _openPaymentSheet(controller),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => _onConfirmOrder(controller),
-                    borderRadius: BorderRadius.circular(18),
-                    child: Ink(
-                      height: 56,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(18),
-                        gradient: const LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                          colors: [Color(0xFFFF9A2F), Color(0xFFFF6800)],
-                        ),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x33FF7200),
-                            blurRadius: 16,
-                            offset: Offset(0, 7),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          'confirmOrder'.tr,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _onConfirmOrder(controller),
+              borderRadius: BorderRadius.circular(18),
+              child: Ink(
+                height: 56,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  gradient: const LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [Color(0xFFFF9A2F), Color(0xFFFF6800)],
+                  ),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x33FF7200),
+                      blurRadius: 16,
+                      offset: Offset(0, 7),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    'confirmOrder'.tr,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
-              _bottomActionButton(
-                icon: Icons.tune_rounded,
-                label: context.languageCode == 'ar' ? 'تفاصيل' : 'Details',
-                onPressed: () {
-                  Utils.showAppBottomSheet(
-                    ChangeNotifierProvider.value(
-                      value: controller,
-                      child: RDDetailsBottomSheet(
-                        requestDelegateController: controller,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ],
+            ),
           ),
         ),
       ),

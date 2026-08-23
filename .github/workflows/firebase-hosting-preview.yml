@@ -2,7 +2,7 @@ name: Flutter Web Review Deploy
 
 on:
   push:
-    branches: [ "main", "fix/home-delivery-address-selector" ]
+    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
@@ -58,4 +58,4 @@ jobs:
           projectId: fasakhaninjatest
           channelId: live
 
-# Keep the fixed Web Preview synced from the active review branch.
+# Only main may deploy the live review URL.

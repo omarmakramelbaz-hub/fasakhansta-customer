@@ -72,7 +72,7 @@ class AppImages {
   static const String radioFromIcon = 'assets/svg/radioFromIcon.svg';
   static const String radioToIcon = 'assets/svg/radioToIcon.svg';
   static const String searchLocationIcon = 'assets/svg/searchLocationIcon.svg';
-  static const String darkMotorCycle = 'assets/images/motorcycleImage.png';
+  static const String darkMotorCycle = 'assets/images/deliveryRiderV2.png';
   static const String paymentRDIcon = 'assets/svg/paymentRDIcon.svg';
   static const String discretionRDIcon = 'assets/svg/discretionRDIcon.svg';
   static const String delegateRDIcon = 'assets/svg/delegateRDIcon.svg';

@@ -431,7 +431,7 @@ class _ShowDelegateOnMapScreenState extends State<ShowDelegateOnMapScreen>
                                             focusNode: focusNode,
                                             textAlign: TextAlign.center,
                                             keyboardType: TextInputType.number,
-                                            inputFormatters: const [
+                                            inputFormatters: [
                                               FilteringTextInputFormatter
                                                   .digitsOnly,
                                             ],

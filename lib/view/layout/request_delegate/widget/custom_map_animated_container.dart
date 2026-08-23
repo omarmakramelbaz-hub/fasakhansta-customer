@@ -8,6 +8,7 @@ import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/translation/all_translation.dart';
 import '../../../../helpers/utils/common_methods.dart';
 import '../../../../helpers/utils/utils.dart';
+import '../../../custom_widgets/custom_image/custom_image.dart';
 import '../bottom_sheet/payment_rd_bottom_sheet.dart';
 import '../bottom_sheet/submit_your_fee_bottom_sheet.dart';
 import '../controller/request_delegate_controller.dart';
@@ -29,60 +30,118 @@ class CustomMapAnimatedContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<RequestDelegateController>(
       builder: (context, controller, _) {
+        final isHidden = containerHeight == 0;
+        final targetHeight = isHidden ? 0.0 : context.height * 0.55;
+
         return AnimatedContainer(
           duration: const Duration(milliseconds: 260),
-          height: containerHeight ?? context.height * 0.64,
+          height: targetHeight,
           clipBehavior: Clip.antiAlias,
           decoration: const BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(34),
-              topRight: Radius.circular(34),
+              topLeft: Radius.circular(32),
+              topRight: Radius.circular(32),
             ),
             boxShadow: [
               BoxShadow(
-                color: Color(0x20000000),
-                blurRadius: 28,
-                offset: Offset(0, -8),
+                color: Color(0x1A000000),
+                blurRadius: 24,
+                offset: Offset(0, -7),
               ),
             ],
           ),
-          child: SingleChildScrollView(
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
-            child: Directionality(
-              textDirection: _isArabic(context) ? TextDirection.rtl : TextDirection.ltr,
-              child: Column(
-                children: [
-                  _dragHandle(),
-                  const SizedBox(height: 14),
-                  _header(context),
-                  const SizedBox(height: 16),
-                  _currentLocationCard(context, controller),
-                  const SizedBox(height: 10),
-                  _destinationCard(context, controller),
-                  const SizedBox(height: 10),
-                  _packageCard(context, controller),
-                  const SizedBox(height: 10),
-                  _fareCard(context, controller),
-                  const SizedBox(height: 10),
-                  _paymentCard(context, controller),
-                  const SizedBox(height: 14),
-                  _summaryCard(context, controller),
-                ],
-              ),
-            ),
-          ),
+          child: isHidden
+              ? const SizedBox.shrink()
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final compact = constraints.maxHeight < 465;
+                    final gap = compact ? 5.0 : 6.0;
+                    final cardHeight = compact ? 49.0 : 53.0;
+                    final iconBox = compact ? 34.0 : 38.0;
+                    final headerHeight = compact ? 48.0 : 54.0;
+                    final summaryHeight = compact ? 54.0 : 58.0;
+
+                    return Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        14,
+                        compact ? 7 : 8,
+                        14,
+                        compact ? 7 : 9,
+                      ),
+                      child: Directionality(
+                        textDirection: _isArabic(context)
+                            ? TextDirection.rtl
+                            : TextDirection.ltr,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            _dragHandle(compact),
+                            SizedBox(height: compact ? 6 : 7),
+                            SizedBox(
+                              height: headerHeight,
+                              child: _header(context, compact),
+                            ),
+                            SizedBox(height: gap),
+                            _currentLocationCard(
+                              context,
+                              controller,
+                              cardHeight: cardHeight,
+                              iconBox: iconBox,
+                              compact: compact,
+                            ),
+                            SizedBox(height: gap),
+                            _destinationCard(
+                              context,
+                              controller,
+                              cardHeight: cardHeight,
+                              iconBox: iconBox,
+                              compact: compact,
+                            ),
+                            SizedBox(height: gap),
+                            _packageCard(
+                              context,
+                              controller,
+                              cardHeight: cardHeight,
+                              iconBox: iconBox,
+                              compact: compact,
+                            ),
+                            SizedBox(height: gap),
+                            _fareCard(
+                              context,
+                              controller,
+                              cardHeight: cardHeight,
+                              iconBox: iconBox,
+                              compact: compact,
+                            ),
+                            SizedBox(height: gap),
+                            _paymentCard(
+                              context,
+                              controller,
+                              cardHeight: cardHeight,
+                              iconBox: iconBox,
+                              compact: compact,
+                            ),
+                            SizedBox(height: gap),
+                            SizedBox(
+                              height: summaryHeight,
+                              child: _summaryCard(context, controller, compact),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
         );
       },
     );
   }
 
-  Widget _dragHandle() {
+  Widget _dragHandle(bool compact) {
     return Container(
-      width: 50,
-      height: 5,
+      width: 44,
+      height: compact ? 4 : 5,
       decoration: BoxDecoration(
         color: const Color(0xFFD7DADF),
         borderRadius: BorderRadius.circular(20),
@@ -90,61 +149,67 @@ class CustomMapAnimatedContainer extends StatelessWidget {
     );
   }
 
-  Widget _header(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(4, 2, 4, 2),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _isArabic(context) ? 'توصيل سريع وآمن' : 'Fast & secure delivery',
-                  style: const TextStyle(
-                    color: _textColor,
-                    fontSize: 25,
-                    fontWeight: FontWeight.w800,
-                    height: 1.15,
-                  ),
+  Widget _header(BuildContext context, bool compact) {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _isArabic(context) ? 'توصيل سريع وآمن' : 'Fast & secure delivery',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: _textColor,
+                  fontSize: compact ? 19 : 21,
+                  fontWeight: FontWeight.w800,
+                  height: 1.05,
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  _isArabic(context)
-                      ? 'حدد تفاصيل طلبك واختر ما يناسبك'
-                      : 'Set your order details and choose what suits you',
-                  style: const TextStyle(
-                    color: _mutedColor,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
+              ),
+              SizedBox(height: compact ? 2 : 4),
+              Text(
+                _isArabic(context)
+                    ? 'حدد تفاصيل طلبك واختر ما يناسبك'
+                    : 'Set your order details and choose what suits you',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: _mutedColor,
+                  fontSize: compact ? 10.5 : 11.5,
+                  fontWeight: FontWeight.w500,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Container(
-            width: 86,
-            height: 72,
-            padding: const EdgeInsets.all(7),
-            decoration: BoxDecoration(
-              color: _softOrange,
-              borderRadius: BorderRadius.circular(22),
-            ),
-            child: Image.asset(
-              AppImages.gooDriveImage,
-              fit: BoxFit.contain,
-            ),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          width: compact ? 62 : 68,
+          height: compact ? 44 : 50,
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: _softOrange,
+            borderRadius: BorderRadius.circular(16),
           ),
-        ],
-      ),
+          child: const CustomImage(
+            path: AppImages.darkMotorCycle,
+            type: ImageType.svg,
+            fit: BoxFit.contain,
+          ),
+        ),
+      ],
     );
   }
 
   Widget _currentLocationCard(
     BuildContext context,
-    RequestDelegateController controller,
-  ) {
+    RequestDelegateController controller, {
+    required double cardHeight,
+    required double iconBox,
+    required bool compact,
+  }) {
     final lat = controller.fromLat;
     final lng = controller.fromLan;
     final coordinates = lat != null && lng != null && lat.isNotEmpty && lng.isNotEmpty
@@ -159,24 +224,27 @@ class CustomMapAnimatedContainer extends StatelessWidget {
           ? coordinates
           : (_isArabic(context) ? 'حدد موقع الاستلام' : 'Select pickup location'),
       trailing: Container(
-        width: 12,
-        height: 12,
+        width: 10,
+        height: 10,
         decoration: const BoxDecoration(
           color: Color(0xFF25C862),
           shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(color: Color(0x4425C862), blurRadius: 7, spreadRadius: 2),
-          ],
         ),
       ),
       onTap: () => _openSearchPlace(controller),
+      cardHeight: cardHeight,
+      iconBox: iconBox,
+      compact: compact,
     );
   }
 
   Widget _destinationCard(
     BuildContext context,
-    RequestDelegateController controller,
-  ) {
+    RequestDelegateController controller, {
+    required double cardHeight,
+    required double iconBox,
+    required bool compact,
+  }) {
     return _actionCard(
       context: context,
       icon: Icons.location_on_outlined,
@@ -184,15 +252,25 @@ class CustomMapAnimatedContainer extends StatelessWidget {
       subtitle: controller.toAddress.isNotEmpty
           ? controller.toAddress
           : (_isArabic(context) ? 'اختر عنوان التوصيل' : 'Choose delivery address'),
-      trailing: const Icon(Icons.chevron_left_rounded, color: Color(0xFFB3B7BD), size: 24),
+      trailing: Icon(
+        Icons.chevron_left_rounded,
+        color: const Color(0xFFB3B7BD),
+        size: compact ? 20 : 22,
+      ),
       onTap: () => _openSearchPlace(controller),
+      cardHeight: cardHeight,
+      iconBox: iconBox,
+      compact: compact,
     );
   }
 
   Widget _packageCard(
     BuildContext context,
-    RequestDelegateController controller,
-  ) {
+    RequestDelegateController controller, {
+    required double cardHeight,
+    required double iconBox,
+    required bool compact,
+  }) {
     final value = controller.descriptionEC.text.trim();
     return _actionCard(
       context: context,
@@ -200,17 +278,27 @@ class CustomMapAnimatedContainer extends StatelessWidget {
       title: _isArabic(context) ? 'الغرض المطلوب توصيله' : 'Item to be delivered',
       subtitle: value.isNotEmpty
           ? value
-          : (_isArabic(context) ? 'اضغط هنا واكتب وصف الغرض أو تفاصيله' : 'Tap to describe the item'),
+          : (_isArabic(context) ? 'اضغط واكتب وصف الغرض' : 'Tap to describe the item'),
       highlight: value.isNotEmpty,
-      trailing: const Icon(Icons.edit_outlined, color: Color(0xFFB3B7BD), size: 22),
+      trailing: Icon(
+        Icons.edit_outlined,
+        color: const Color(0xFFB3B7BD),
+        size: compact ? 18 : 20,
+      ),
       onTap: () => _openPackageEditor(context, controller),
+      cardHeight: cardHeight,
+      iconBox: iconBox,
+      compact: compact,
     );
   }
 
   Widget _fareCard(
     BuildContext context,
-    RequestDelegateController controller,
-  ) {
+    RequestDelegateController controller, {
+    required double cardHeight,
+    required double iconBox,
+    required bool compact,
+  }) {
     final hasFare = controller.priceEC.text.trim().isNotEmpty;
     final fareValue = hasFare
         ? '${controller.priceEC.text.trim()} ${_isArabic(context) ? 'ج' : 'EGP'}'
@@ -222,15 +310,25 @@ class CustomMapAnimatedContainer extends StatelessWidget {
       title: _isArabic(context) ? 'قدم أجرتك' : 'Offer your fare',
       subtitle: fareValue,
       highlight: hasFare,
-      trailing: const Icon(Icons.chevron_left_rounded, color: Color(0xFFB3B7BD), size: 24),
+      trailing: Icon(
+        Icons.chevron_left_rounded,
+        color: const Color(0xFFB3B7BD),
+        size: compact ? 20 : 22,
+      ),
       onTap: () => _openFareSheet(context, controller),
+      cardHeight: cardHeight,
+      iconBox: iconBox,
+      compact: compact,
     );
   }
 
   Widget _paymentCard(
     BuildContext context,
-    RequestDelegateController controller,
-  ) {
+    RequestDelegateController controller, {
+    required double cardHeight,
+    required double iconBox,
+    required bool compact,
+  }) {
     final payment = switch (controller.selectedPayment) {
       'wallet' => _isArabic(context) ? 'المحفظة' : 'Wallet',
       'online' => _isArabic(context) ? 'بطاقة بنكية' : 'Bank card',
@@ -244,14 +342,22 @@ class CustomMapAnimatedContainer extends StatelessWidget {
       icon: Icons.account_balance_wallet_outlined,
       title: _isArabic(context) ? 'الدفع' : 'Payment',
       subtitle: payment,
-      trailing: const Icon(Icons.chevron_left_rounded, color: Color(0xFFB3B7BD), size: 24),
+      trailing: Icon(
+        Icons.chevron_left_rounded,
+        color: const Color(0xFFB3B7BD),
+        size: compact ? 20 : 22,
+      ),
       onTap: () => _openPaymentSheet(context, controller),
+      cardHeight: cardHeight,
+      iconBox: iconBox,
+      compact: compact,
     );
   }
 
   Widget _summaryCard(
     BuildContext context,
     RequestDelegateController controller,
+    bool compact,
   ) {
     final fare = controller.priceEC.text.trim().isEmpty
         ? '—'
@@ -259,7 +365,7 @@ class CustomMapAnimatedContainer extends StatelessWidget {
 
     return Container(
       decoration: _cardDecoration(),
-      padding: const EdgeInsets.symmetric(vertical: 14),
+      padding: EdgeInsets.symmetric(vertical: compact ? 5 : 7),
       child: Row(
         children: [
           Expanded(
@@ -267,22 +373,25 @@ class CustomMapAnimatedContainer extends StatelessWidget {
               icon: Icons.shield_outlined,
               label: _isArabic(context) ? 'دفع آمن' : 'Secure',
               value: '100%',
+              compact: compact,
             ),
           ),
-          _divider(),
+          _divider(compact),
           Expanded(
             child: _summaryItem(
               icon: Icons.account_balance_wallet_outlined,
               label: _isArabic(context) ? 'الأجرة' : 'Fare',
               value: fare,
+              compact: compact,
             ),
           ),
-          _divider(),
+          _divider(compact),
           Expanded(
             child: _summaryItem(
               icon: Icons.schedule_rounded,
-              label: _isArabic(context) ? 'وقت التوصيل المتوقع' : 'ETA',
+              label: _isArabic(context) ? 'وقت التوصيل' : 'ETA',
               value: _isArabic(context) ? '20 - 30 د' : '20 - 30 min',
+              compact: compact,
             ),
           ),
         ],
@@ -294,24 +403,26 @@ class CustomMapAnimatedContainer extends StatelessWidget {
     required IconData icon,
     required String label,
     required String value,
+    required bool compact,
   }) {
     return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: const Color(0xFF858A92), size: 22),
-        const SizedBox(height: 6),
+        Icon(icon, color: const Color(0xFF858A92), size: compact ? 17 : 19),
+        const SizedBox(height: 2),
         Text(
           label,
           textAlign: TextAlign.center,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
+          style: TextStyle(
             color: _textColor,
-            fontSize: 10.5,
+            fontSize: compact ? 9 : 9.5,
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 1),
         Text(
           value,
           textAlign: TextAlign.center,
@@ -319,7 +430,7 @@ class CustomMapAnimatedContainer extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
             color: AppColors.mainAppColor,
-            fontSize: 15,
+            fontSize: compact ? 12.5 : 13.5,
             fontWeight: FontWeight.w800,
           ),
         ),
@@ -327,10 +438,10 @@ class CustomMapAnimatedContainer extends StatelessWidget {
     );
   }
 
-  Widget _divider() {
+  Widget _divider(bool compact) {
     return Container(
       width: 1,
-      height: 55,
+      height: compact ? 37 : 41,
       color: const Color(0xFFE5E7EA),
     );
   }
@@ -342,62 +453,71 @@ class CustomMapAnimatedContainer extends StatelessWidget {
     required String subtitle,
     required Widget trailing,
     required VoidCallback onTap,
+    required double cardHeight,
+    required double iconBox,
+    required bool compact,
     bool highlight = false,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
-        child: Ink(
-          decoration: _cardDecoration(highlight: highlight),
-          child: Container(
-            constraints: const BoxConstraints(minHeight: 72),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-            child: Row(
-              children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: _softOrange,
-                    borderRadius: BorderRadius.circular(13),
+    return SizedBox(
+      height: cardHeight,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(15),
+          onTap: onTap,
+          child: Ink(
+            decoration: _cardDecoration(highlight: highlight),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: iconBox,
+                    height: iconBox,
+                    decoration: BoxDecoration(
+                      color: _softOrange,
+                      borderRadius: BorderRadius.circular(11),
+                    ),
+                    child: Icon(
+                      icon,
+                      color: AppColors.mainAppColor,
+                      size: compact ? 19 : 21,
+                    ),
                   ),
-                  child: Icon(icon, color: AppColors.mainAppColor, size: 23),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: _textColor,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
+                  SizedBox(width: compact ? 9 : 10),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: _textColor,
+                            fontSize: compact ? 12.3 : 13,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: highlight ? AppColors.mainAppColor : _mutedColor,
-                          fontSize: 12,
-                          fontWeight: highlight ? FontWeight.w600 : FontWeight.w400,
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: highlight ? AppColors.mainAppColor : _mutedColor,
+                            fontSize: compact ? 10 : 10.8,
+                            fontWeight: highlight ? FontWeight.w600 : FontWeight.w400,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                trailing,
-              ],
+                  const SizedBox(width: 6),
+                  trailing,
+                ],
+              ),
             ),
           ),
         ),
@@ -408,16 +528,16 @@ class CustomMapAnimatedContainer extends StatelessWidget {
   BoxDecoration _cardDecoration({bool highlight = false}) {
     return BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(15),
       border: Border.all(
-        color: highlight ? AppColors.mainAppColor.withOpacity(.75) : _borderColor,
-        width: highlight ? 1.2 : 1,
+        color: highlight ? AppColors.mainAppColor.withOpacity(.72) : _borderColor,
+        width: highlight ? 1.1 : 1,
       ),
       boxShadow: const [
         BoxShadow(
-          color: Color(0x0D000000),
-          blurRadius: 13,
-          offset: Offset(0, 5),
+          color: Color(0x0A000000),
+          blurRadius: 9,
+          offset: Offset(0, 3),
         ),
       ],
     );
@@ -472,7 +592,7 @@ class CustomMapAnimatedContainer extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Center(child: _dragHandle()),
+                    Center(child: _dragHandle(false)),
                     const SizedBox(height: 18),
                     Text(
                       isAr ? 'الغرض المطلوب توصيله' : 'Item to be delivered',
@@ -484,7 +604,9 @@ class CustomMapAnimatedContainer extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      isAr ? 'اكتب وصفًا واضحًا للغرض أو أي تفاصيل مهمة' : 'Add a clear description and important details',
+                      isAr
+                          ? 'اكتب وصفًا واضحًا للغرض أو أي تفاصيل مهمة'
+                          : 'Add a clear description and important details',
                       style: const TextStyle(color: _mutedColor, fontSize: 12),
                     ),
                     const SizedBox(height: 16),
@@ -497,7 +619,9 @@ class CustomMapAnimatedContainer extends StatelessWidget {
                       textInputAction: TextInputAction.newline,
                       style: const TextStyle(color: _textColor, fontSize: 15),
                       decoration: InputDecoration(
-                        hintText: isAr ? 'مثال: كرتونة مستندات صغيرة' : 'Example: small document box',
+                        hintText: isAr
+                            ? 'مثال: كرتونة مستندات صغيرة'
+                            : 'Example: small document box',
                         hintStyle: const TextStyle(color: Color(0xFFB0B4BB)),
                         filled: true,
                         fillColor: const Color(0xFFF8F9FA),
@@ -508,7 +632,10 @@ class CustomMapAnimatedContainer extends StatelessWidget {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(color: AppColors.mainAppColor, width: 1.4),
+                          borderSide: BorderSide(
+                            color: AppColors.mainAppColor,
+                            width: 1.4,
+                          ),
                         ),
                       ),
                     ),
@@ -524,11 +651,16 @@ class CustomMapAnimatedContainer extends StatelessWidget {
                           backgroundColor: AppColors.mainAppColor,
                           foregroundColor: Colors.white,
                           elevation: 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
                         child: Text(
                           isAr ? 'حفظ التفاصيل' : 'Save details',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
                     ),

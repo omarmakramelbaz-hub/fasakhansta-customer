@@ -6,13 +6,8 @@ import '../../../../helpers/extensions/extensions.dart';
 import '../../../../helpers/images/app_images.dart';
 import '../../../../helpers/routes/app_routers_import.dart';
 import '../../../../helpers/theme/app_colors.dart';
-import '../../../../helpers/theme/app_text_style.dart';
-import '../../../../helpers/translation/all_translation.dart';
 import '../../../custom_widgets/api_response_widget/api_response_widget.dart';
-import '../../../custom_widgets/buttons/custom_button.dart';
-import '../../../custom_widgets/page_container/page_container.dart';
 import '../../auth/controller/auth_controller.dart';
-import '../../my_account/account_app_bar/account_app_bar.dart';
 import '../controller/address_controller.dart';
 import '../widget/address_widget.dart';
 import '../widget/circle_avatar_widget.dart';
@@ -22,136 +17,328 @@ class AddressScreen extends StatelessWidget {
   static const String routeName = 'AddressScreen';
   const AddressScreen({super.key});
 
+  static const _text = Color(0xFF171A1F);
+  static const _muted = Color(0xFF8D939C);
+  static const _border = Color(0xFFE8EBEF);
+  static const _softOrange = Color(0xFFFFF4E8);
+
+  bool _isArabic(BuildContext context) => context.languageCode == 'ar';
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (BuildContext context) {
-        return AddressController()
-          ..initialAddress()
-          ..getAddress();
-      },
+      create: (_) => AddressController()
+        ..initialAddress()
+        ..getAddress(),
       child: Consumer<AddressController>(
         builder: (context, addressController, _) {
-          return Scaffold(
-            extendBody: true,
-            appBar: AppBar(
-              backgroundColor: AppColors.whiteColor,
-              centerTitle: false,
-              automaticallyImplyLeading: false,
-              title: CustomAccountAppBar(title: 'addresses'.tr),
-            ),
-            body: PageContainer(
-              bottom: false,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(vertical: 22),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.whiteColor,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(34),
-                      topRight: Radius.circular(34),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.greyColor.withValues(alpha: 0.2),
-                        offset: const Offset(0, -3),
-                        blurRadius: 10,
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      24.sbH,
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-                        child: Row(
+          final profile = context.watch<AuthController>().profile;
+
+          return Directionality(
+            textDirection:
+                _isArabic(context) ? TextDirection.rtl : TextDirection.ltr,
+            child: Scaffold(
+              backgroundColor: const Color(0xFFFAFAFA),
+              body: SafeArea(
+                child: Column(
+                  children: [
+                    _header(context, addressController),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(16, 10, 16, 22),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            CircleAvatarWidget(
-                              gender: Provider.of<AuthController>(context).profile?.gender,
-                              name: Provider.of<AuthController>(context).profile?.name,
+                            _profileCard(
+                              context,
+                              name: profile?.name ?? '',
+                              area: profile?.areaTitle ?? '',
+                              gender: profile?.gender,
                             ),
-                            10.sbW,
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  Provider.of<AuthController>(context).profile?.name ?? '',
-                                  style: AppTextStyle.text18MS(),
-                                ),
-                                5.sbH,
-                                Row(
-                                  children: [
-                                    SvgPicture.asset(AppImages.egyptIcon),
-                                    10.sbW,
-                                    Text(
-                                      Provider.of<AuthController>(context).profile?.areaTitle ?? '',
-                                      style: AppTextStyle.text16RG(),
+                            const SizedBox(height: 18),
+                            _sectionTitle(context),
+                            const SizedBox(height: 10),
+                            ApiResponseWidget(
+                              apiResponse: addressController.addressResponse,
+                              onReload: addressController.getAddress,
+                              isEmpty: addressController.address.isEmpty,
+                              emptyWidget: _emptyState(context),
+                              child: Column(
+                                children: List.generate(
+                                  addressController.address.length,
+                                  (index) => Padding(
+                                    padding: EdgeInsets.only(
+                                      bottom: index ==
+                                              addressController.address.length - 1
+                                          ? 0
+                                          : 12,
                                     ),
-                                  ],
+                                    child: AddressWidget(
+                                      address:
+                                          addressController.address[index],
+                                    ),
+                                  ),
                                 ),
-                              ],
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      20.sbH,
-                      const Divider(thickness: 1),
-                      24.sbH,
-                      Center(
-                        child: ApiResponseWidget(
-                          apiResponse: addressController.addressResponse,
-                          onReload: addressController.getAddress,
-                          isEmpty: addressController.address.isEmpty,
-                          emptyWidget: Column(
-                            children: [
-                              (context.height * 0.15).sbH,
-                              SvgPicture.asset(AppImages.noAddressIcon),
-                              20.sbH,
-                              Text('noAddresses'.tr, style: AppTextStyle.text16BM()),
-                              (context.height * 0.15).sbH,
-                            ],
-                          ),
-                          child: Column(
-                            children: List.generate(
-                              addressController.address.length,
-                              (index) => Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 20),
-                                child: Column(
-                                  children: [
-                                    AddressWidget(address: addressController.address[index]),
-                                    20.sbH,
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
+                    ),
+                  ],
+                ),
+              ),
+              bottomNavigationBar: SafeArea(
+                top: false,
+                child: Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+                  child: SizedBox(
+                    height: 56,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _openAddAddress(
+                        context,
+                        addressController,
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        backgroundColor: AppColors.mainAppColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
                         ),
                       ),
-                      24.sbH,
-                    ],
+                      icon: const Icon(Icons.add_circle_outline_rounded),
+                      label: Text(
+                        _isArabic(context) ? 'إضافة عنوان' : 'Add address',
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
-            bottomNavigationBar: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 21, vertical: 20),
-              child: CustomButton(
-                onPressed: () {
-                  NamedNavigatorImpl.push(
-                    AddAddressScreen.routeName,
-                    arguments: AddAddressArgs(
-                      onSuccess: () {
-                        addressController.getAddress();
-                      },
-                    ),
-                  );
-                },
-                text: 'addAddress'.tr,
-              ),
-            ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _header(BuildContext context, AddressController controller) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
+      child: Row(
+        children: [
+          _roundButton(
+            icon: Icons.arrow_back_rounded,
+            onTap: () => Navigator.of(context).pop(),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              _isArabic(context) ? 'العناوين' : 'Addresses',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: _text,
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          _roundButton(
+            icon: Icons.add_circle_outline_rounded,
+            onTap: () => _openAddAddress(context, controller),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _profileCard(
+    BuildContext context, {
+    required String name,
+    required String area,
+    required String? gender,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: _cardDecoration(radius: 20),
+      child: Row(
+        children: [
+          CircleAvatarWidget(gender: gender, name: name),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: _text,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      height: 16,
+                      child: SvgPicture.asset(
+                        AppImages.egyptIcon,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        area.isEmpty
+                            ? (_isArabic(context) ? 'مصر' : 'Egypt')
+                            : area,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: _muted,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const Icon(
+            Icons.chevron_left_rounded,
+            color: Color(0xFFADB2BA),
+            size: 24,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionTitle(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: _softOrange,
+            borderRadius: BorderRadius.circular(11),
+          ),
+          child: Icon(
+            Icons.location_on_outlined,
+            color: AppColors.mainAppColor,
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: 9),
+        Text(
+          _isArabic(context) ? 'عناويني المحفوظة' : 'Saved addresses',
+          style: const TextStyle(
+            color: _text,
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _emptyState(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 42, horizontal: 20),
+      decoration: _cardDecoration(radius: 20),
+      child: Column(
+        children: [
+          SizedBox(
+            width: 92,
+            height: 92,
+            child: SvgPicture.asset(AppImages.noAddressIcon),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _isArabic(context) ? 'لا توجد عناوين محفوظة' : 'No saved addresses',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: _text,
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            _isArabic(context)
+                ? 'أضف عنوانًا لتسهيل اختيار موقع التوصيل لاحقًا.'
+                : 'Add an address to make delivery selection faster.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: _muted,
+              fontSize: 11.5,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _roundButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.white,
+      shape: const CircleBorder(),
+      elevation: 2,
+      shadowColor: const Color(0x22000000),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: SizedBox(
+          width: 46,
+          height: 46,
+          child: Icon(icon, color: AppColors.mainAppColor, size: 23),
+        ),
+      ),
+    );
+  }
+
+  BoxDecoration _cardDecoration({double radius = 18}) {
+    return BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(radius),
+      border: Border.all(color: _border),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x0D000000),
+          blurRadius: 14,
+          offset: Offset(0, 4),
+        ),
+      ],
+    );
+  }
+
+  void _openAddAddress(
+    BuildContext context,
+    AddressController addressController,
+  ) {
+    NamedNavigatorImpl.push(
+      AddAddressScreen.routeName,
+      arguments: AddAddressArgs(
+        onSuccess: addressController.getAddress,
       ),
     );
   }

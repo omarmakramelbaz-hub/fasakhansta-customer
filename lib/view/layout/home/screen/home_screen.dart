@@ -248,6 +248,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Consumer<HomeController>(
       builder: (context, controller, _) {
+        final isGuest = HiveMethods.getToken() == null;
+        final hasSelectedLocation =
+            HiveMethods.getLat() != null && HiveMethods.getLan() != null;
+        final topContentSpacer =
+            (isGuest || !hasSelectedLocation) ? 268.0 : 238.0;
+
         return Scaffold(
           body: SingleChildScrollView(
             physics: const ClampingScrollPhysics(),
@@ -257,10 +263,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Reserve the same top area previously used by the fixed
-                    // header/wallet. Because this spacer is inside the scroll
-                    // view, the whole top section now scrolls away naturally.
-                    const SizedBox(height: 238),
+                    // Keep the first visible home card fully below the wallet.
+                    // Guests and users without a selected address don't render
+                    // the nearby-restaurants section that normally adds spacing.
+                    SizedBox(height: topContentSpacer),
                     RestaurantsNearYouWidget(controller: controller),
                     SliderWidget(controller: controller),
                     HomeFeatureCards(controller: controller),

@@ -279,7 +279,9 @@ class CustomMapAnimatedContainer extends StatelessWidget {
     return _actionCard(
       context: context,
       icon: Icons.payments_outlined,
-      title: _isArabic(context) ? 'قدم أجرتك' : 'Offer your fare',
+      title: _isArabic(context)
+          ? 'عاوز تدفع كام'
+          : 'How much do you want to pay?',
       subtitle: fareValue,
       highlight: hasFare,
       trailing: Icon(
@@ -705,10 +707,7 @@ class CustomMapAnimatedContainer extends StatelessWidget {
             kmPrice:
                 int.tryParse('${controller.delegatesOnMap?.shippingKmPrice}') ??
                     0,
-            shippingPercentage: int.tryParse(
-                  '${controller.delegatesOnMap?.shippingMinPricePrecentage}',
-                ) ??
-                0,
+            shippingPercentage: 10,
             distance: num.tryParse('${controller.distance}') ?? 0,
           ),
         ),

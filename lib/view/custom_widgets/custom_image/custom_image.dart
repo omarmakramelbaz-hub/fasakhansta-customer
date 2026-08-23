@@ -83,25 +83,6 @@ class _ImageBuild extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lowerPath = path.toLowerCase();
-    final isRasterAsset = lowerPath.endsWith('.png') ||
-        lowerPath.endsWith('.jpg') ||
-        lowerPath.endsWith('.jpeg') ||
-        lowerPath.endsWith('.webp');
-
-    if (isRasterAsset && (type == ImageType.asset || type == ImageType.svg)) {
-      return Image.asset(
-        path,
-        fit: fit ?? BoxFit.contain,
-        width: width,
-        height: height,
-        errorBuilder: (context, error, stackTrace) {
-          debugPrint('Raster Asset Image Error: $error, path: $path');
-          return const SizedBox.shrink();
-        },
-      );
-    }
-
     switch (type) {
       case ImageType.network:
         return CachedNetworkImage(
@@ -172,6 +153,21 @@ class _ImageBuild extends StatelessWidget {
         );
 
       case ImageType.svg:
+        final lowerPath = path.toLowerCase();
+        final isRasterAsset = lowerPath.endsWith('.png') ||
+            lowerPath.endsWith('.jpg') ||
+            lowerPath.endsWith('.jpeg') ||
+            lowerPath.endsWith('.webp');
+
+        if (isRasterAsset) {
+          return Image.asset(
+            path,
+            fit: fit ?? BoxFit.contain,
+            width: width,
+            height: height,
+          );
+        }
+
         return SvgPicture.asset(
           path,
           fit: fit ?? BoxFit.contain,

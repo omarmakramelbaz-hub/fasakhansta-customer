@@ -23,10 +23,15 @@ class WebPlaceDetails {
   });
 }
 
-js.JsObject? _placesNamespace() {
+js.JsObject? _mapsNamespace() {
   final google = js.context['google'];
   if (google == null) return null;
   final maps = google['maps'];
+  return maps is js.JsObject ? maps : null;
+}
+
+js.JsObject? _placesNamespace() {
+  final maps = _mapsNamespace();
   if (maps == null) return null;
   final places = maps['places'];
   return places is js.JsObject ? places : null;
@@ -86,24 +91,30 @@ Future<List<WebPlacePrediction>> getWebPlacePredictions({
 Future<WebPlaceDetails?> getWebPlaceDetails({
   required String placeId,
 }) async {
-  final places = _placesNamespace();
-  if (places == null || placeId.trim().isEmpty) return null;
+  final maps = _mapsNamespace();
+  if (maps == null || placeId.trim().isEmpty) return null;
 
   final completer = Completer<WebPlaceDetails?>();
 
   try {
-    final document = js.context['document'];
-    final container = document.callMethod('createElement', ['div']);
-    final service = js.JsObject(places['PlacesService'], [container]);
+    final geocoderConstructor = maps['Geocoder'];
+    if (geocoderConstructor == null) return null;
+
+    final geocoder = js.JsObject(geocoderConstructor);
     final request = js.JsObject.jsify({
-      'placeId': placeId,
-      'fields': ['formatted_address', 'geometry', 'name'],
+      'placeId': placeId.trim(),
     });
 
-    service.callMethod('getDetails', [
+    geocoder.callMethod('geocode', [
       request,
-      js.allowInterop((dynamic result, dynamic status) {
+      js.allowInterop((dynamic results, dynamic status) {
         try {
+          if (results is! js.JsArray || results.isEmpty) {
+            if (!completer.isCompleted) completer.complete(null);
+            return;
+          }
+
+          final result = results.first;
           if (result is! js.JsObject) {
             if (!completer.isCompleted) completer.complete(null);
             return;
@@ -123,7 +134,7 @@ Future<WebPlaceDetails?> getWebPlaceDetails({
             return;
           }
 
-          final formattedAddress = '${result['formatted_address'] ?? result['name'] ?? ''}'.trim();
+          final formattedAddress = '${result['formatted_address'] ?? ''}'.trim();
           if (!completer.isCompleted) {
             completer.complete(
               WebPlaceDetails(

@@ -20,18 +20,19 @@ class SliderWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sliderData = controller.slider.isEmpty ? controller.defaultSlider : controller.slider;
+    final sliderData =
+        controller.slider.isEmpty ? controller.defaultSlider : controller.slider;
 
     if (sliderData.isEmpty) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 30, 16, 2),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 2),
       child: CustomSlider(
         color: AppColors.mainAppColor,
         hasDots: sliderData.length > 1,
         isDotsOnContent: false,
-        aspectRatio: 2.7,
-        radius: 22,
+        aspectRatio: 4.35,
+        radius: 18,
         sliderArguments: List.generate(
           sliderData.length,
           (index) => SliderArguments(
@@ -174,10 +175,15 @@ class SpecialRestaurantsSectionWidget extends StatelessWidget {
         10.sbH,
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text('favorableRestaurants'.tr, style: AppTextStyle.text16BS()),
+          child: Text(
+            'favorableRestaurants'.tr,
+            style: AppTextStyle.text16BS(),
+          ),
         ),
         16.sbH,
-        SpacialRestaurantsListViewWidget(spacialRest: controller.spacialRestaurants),
+        SpacialRestaurantsListViewWidget(
+          spacialRest: controller.spacialRestaurants,
+        ),
       ],
     );
   }

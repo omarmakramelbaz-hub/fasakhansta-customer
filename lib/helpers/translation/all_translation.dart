@@ -17,7 +17,8 @@ class GlobalTranslations {
   static Map<dynamic, dynamic>? _localizedValues;
   static VoidCallback? _onLocaleChangedCallback;
 
-  static Iterable<Locale> supportedLocales() => _supportedLanguages.map<Locale>((lang) => Locale(lang, ''));
+  static Iterable<Locale> supportedLocales() =>
+      _supportedLanguages.map<Locale>((lang) => Locale(lang, ''));
 
   static String text(String key, {List<String>? args}) {
     if (_localizedValues == null || !_localizedValues!.containsKey(key)) {
@@ -43,7 +44,8 @@ class GlobalTranslations {
 
   static Future<void> addMissingKeyToJsonFile(String key) async {
     try {
-      const filePath = '/Users/tolba/StudioProjects/faskhaNinja/assets/langs/missing_keys.json';
+      const filePath =
+          '/Users/tolba/StudioProjects/faskhaNinja/assets/langs/missing_keys.json';
       final file = File(filePath);
 
       if (!await file.exists()) {
@@ -70,7 +72,8 @@ class GlobalTranslations {
     }
   }
 
-  static String get currentLanguage => locale == null ? 'ar' : locale!.languageCode;
+  static String get currentLanguage =>
+      locale == null ? 'ar' : locale!.languageCode;
 
   static Future<void> init() async {
     if (locale == null) {
@@ -81,9 +84,14 @@ class GlobalTranslations {
 
   static Future<String> getPreferredLanguage() async => HiveMethods.getLang();
 
-  static Future<void> setPreferredLanguage(String value) async => HiveMethods.updateLang(value);
+  static Future<void> setPreferredLanguage(String value) async =>
+      HiveMethods.updateLang(value);
 
-  static Future<void> setNewLanguage([String? newLanguage, bool saveInPrefs = true, BuildContext? context]) async {
+  static Future<void> setNewLanguage([
+    String? newLanguage,
+    bool saveInPrefs = true,
+    BuildContext? context,
+  ]) async {
     String language = newLanguage ?? currentLanguage;
 
     if (language.isEmpty) {
@@ -92,16 +100,26 @@ class GlobalTranslations {
 
     if (saveInPrefs) {
       await setPreferredLanguage(language);
-      mainAppBloc.updateLang(language);
     }
 
-    locale = Locale(language, '');
+    // Load the selected locale and its translation map before notifying widgets.
+    // This prevents a rebuild where context already says English while `.tr`
+    // is still reading the previous Arabic translation map (or vice versa).
+    final nextLocale = Locale(language, '');
+    final jsonContent = await rootBundle.loadString(
+      'assets/langs/${nextLocale.languageCode}.json',
+    );
+    final localizedValues = json.decode(jsonContent);
 
-    String jsonContent = await rootBundle.loadString('assets/langs/${locale!.languageCode}.json');
-    _localizedValues = json.decode(jsonContent);
+    locale = nextLocale;
+    _localizedValues = localizedValues;
 
     if (_onLocaleChangedCallback != null) {
       _onLocaleChangedCallback!();
+    }
+
+    if (saveInPrefs) {
+      mainAppBloc.updateLang(language);
     }
 
     return;
@@ -111,7 +129,8 @@ class GlobalTranslations {
     _onLocaleChangedCallback = callback;
   }
 
-  static final GlobalTranslations _translations = GlobalTranslations._internal();
+  static final GlobalTranslations _translations =
+      GlobalTranslations._internal();
 
   factory GlobalTranslations() {
     return _translations;
@@ -158,5 +177,4 @@ extension AppLocal on BuildContext {
 
 Future<void> changeLanguage(String lang) async {
   await GlobalTranslations.setNewLanguage(lang, true);
-  await GlobalTranslations.setPreferredLanguage(lang);
 }

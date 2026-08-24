@@ -55,22 +55,22 @@ class AdvertisementContainerWidget extends StatelessWidget {
               imageUrl: images,
               width: double.infinity,
               height: double.infinity,
-              fit: BoxFit.cover,
+              fit: BoxFit.fill,
             )
           else
             Container(color: color),
           if (restaurantId != 0)
             PositionedDirectional(
-              end: 12,
-              bottom: 10,
+              end: 10,
+              bottom: 8,
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: openRestaurant,
                   borderRadius: BorderRadius.circular(11),
                   child: Container(
-                    height: 30,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    height: 28,
+                    padding: const EdgeInsets.symmetric(horizontal: 13),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: .96),

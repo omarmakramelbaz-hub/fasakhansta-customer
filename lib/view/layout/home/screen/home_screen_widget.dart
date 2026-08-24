@@ -25,7 +25,7 @@ class SliderWidget extends StatelessWidget {
     if (sliderData.isEmpty) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 2),
+      padding: const EdgeInsets.fromLTRB(16, 30, 16, 2),
       child: CustomSlider(
         color: AppColors.mainAppColor,
         hasDots: sliderData.length > 1,

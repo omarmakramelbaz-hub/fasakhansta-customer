@@ -45,8 +45,14 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _ensureProfileLoaded();
       if (!mounted) return;
-      await context.read<HomeController>().getHeaderImage();
-      await context.read<HomeController>().getSlider();
+      final homeController = context.read<HomeController>();
+      await homeController.getHeaderImage();
+      await homeController.getSlider();
+      await homeController.getRestaurantsNearYou(
+        lat: HiveMethods.getLat(),
+        lng: HiveMethods.getLan(),
+      );
+      if (!mounted) return;
       await _checkSelectedCity();
     });
 
@@ -264,8 +270,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Keep the first visible home card fully below the wallet.
-                    // Guests and users without a selected address don't render
-                    // the nearby-restaurants section that normally adds spacing.
                     SizedBox(height: topContentSpacer),
                     RestaurantsNearYouWidget(controller: controller),
                     SliderWidget(controller: controller),

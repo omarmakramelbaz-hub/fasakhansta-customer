@@ -244,32 +244,10 @@ class _LoginScreenState extends State<LoginScreen> with ValidationMixin {
           _primaryLoginButton(context),
           const SizedBox(height: 18),
           _socialDivider(context),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           const SocialLoginRowWidget(),
-          const SizedBox(height: 18),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Flexible(
-                child: Text(
-                  'youDontHaveAnAccount'.tr,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyle.text13MS().copyWith(color: _muted),
-                ),
-              ),
-              TextButton(
-                onPressed: () =>
-                    NamedNavigatorImpl.push(RegisterScreen.routeName),
-                child: Text(
-                  'createAnAccount'.tr,
-                  style: AppTextStyle.text13BS().copyWith(
-                    color: AppColors.mainAppColor,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ],
-          ),
+          const SizedBox(height: 12),
+          _accountCreationCard(context),
         ],
       ),
     );
@@ -336,15 +314,109 @@ class _LoginScreenState extends State<LoginScreen> with ValidationMixin {
         const Expanded(child: Divider(color: _border, height: 1)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: Text(
-            context.languageCode == 'ar'
-                ? 'أو تابع باستخدام'
-                : 'Or continue with',
-            style: AppTextStyle.text11RG().copyWith(color: _muted),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.verified_user_outlined,
+                size: 14,
+                color: AppColors.mainAppColor,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                context.languageCode == 'ar'
+                    ? 'دخول سريع وآمن'
+                    : 'Quick & secure sign in',
+                style: AppTextStyle.text11RG().copyWith(
+                  color: _muted,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
         const Expanded(child: Divider(color: _border, height: 1)),
       ],
+    );
+  }
+
+  Widget _accountCreationCard(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF8F2),
+        borderRadius: BorderRadius.circular(17),
+        border: Border.all(
+          color: AppColors.mainAppColor.withValues(alpha: .16),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFFFE2C8)),
+            ),
+            child: Icon(
+              Icons.person_add_alt_1_rounded,
+              color: AppColors.mainAppColor,
+              size: 21,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'youDontHaveAnAccount'.tr,
+                  style: AppTextStyle.text12BS().copyWith(
+                    color: _text,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  context.languageCode == 'ar'
+                      ? 'أنشئ حسابك في خطوات بسيطة وابدأ الطلب فورًا'
+                      : 'Create your account in a few simple steps',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyle.text10RG().copyWith(
+                    color: _muted,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          OutlinedButton(
+            onPressed: () => NamedNavigatorImpl.push(RegisterScreen.routeName),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.mainAppColor,
+              backgroundColor: Colors.white,
+              side: BorderSide(
+                color: AppColors.mainAppColor.withValues(alpha: .35),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            ),
+            child: Text(
+              'createAnAccount'.tr,
+              style: AppTextStyle.text11BS().copyWith(
+                color: AppColors.mainAppColor,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

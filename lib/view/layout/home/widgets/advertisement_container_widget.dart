@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../helpers/extensions/extensions.dart';
 import '../../../../helpers/routes/app_routers_import.dart';
 import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/theme/app_text_style.dart';
@@ -24,8 +23,6 @@ class AdvertisementContainerWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.languageCode == 'ar';
-
     void openRestaurant() {
       if (restaurantId == 0) return;
       NamedNavigatorImpl.push(
@@ -36,121 +33,72 @@ class AdvertisementContainerWidget extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [color, color.withOpacity(.92)],
+        color: color,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: AppColors.mainAppColor.withValues(alpha: .10),
         ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(.22), width: 1),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x26000000),
-            blurRadius: 16,
-            offset: Offset(0, 6),
+            color: Color(0x18000000),
+            blurRadius: 12,
+            offset: Offset(0, 4),
           ),
         ],
       ),
       clipBehavior: Clip.antiAlias,
-      child: Row(
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          Expanded(
-            flex: 54,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 8, 10, 8),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: isArabic
-                    ? CrossAxisAlignment.start
-                    : CrossAxisAlignment.end,
-                children: [
-                  Flexible(
-                    child: Text(
-                      title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyle.text16BS().copyWith(
-                        fontSize: 13.5,
-                        height: 1.15,
-                        color: AppColors.whiteColor,
+          if (images.trim().isNotEmpty)
+            CustomNetworkImage(
+              imageUrl: images,
+              width: double.infinity,
+              height: double.infinity,
+              fit: BoxFit.cover,
+            )
+          else
+            Container(color: color),
+          if (restaurantId != 0)
+            PositionedDirectional(
+              end: 12,
+              bottom: 10,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: openRestaurant,
+                  borderRadius: BorderRadius.circular(11),
+                  child: Container(
+                    height: 30,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: .96),
+                      borderRadius: BorderRadius.circular(11),
+                      border: Border.all(
+                        color: AppColors.mainAppColor.withValues(alpha: .18),
                       ),
-                      textAlign:
-                          isArabic ? TextAlign.start : TextAlign.end,
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x20000000),
+                          blurRadius: 7,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      'buyNow'.tr,
+                      style: AppTextStyle.text12BS().copyWith(
+                        color: AppColors.mainAppColor,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        height: 1,
+                      ),
                     ),
                   ),
-                  if (restaurantId != 0) ...[
-                    5.sbH,
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: openRestaurant,
-                        borderRadius: BorderRadius.circular(9),
-                        child: Container(
-                          height: 26,
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          decoration: BoxDecoration(
-                            color: AppColors.whiteColor,
-                            borderRadius: BorderRadius.circular(9),
-                            border: Border.all(
-                              color: AppColors.mainAppColor.withOpacity(.25),
-                              width: 1,
-                            ),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x22000000),
-                                blurRadius: 5,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'buyNow'.tr,
-                                style: AppTextStyle.text12BS().copyWith(
-                                  color: AppColors.blackColor,
-                                  fontSize: 9.5,
-                                  height: 1,
-                                ),
-                              ),
-                              4.sbW,
-                              Icon(
-                                isArabic
-                                    ? Icons.arrow_back_rounded
-                                    : Icons.arrow_forward_rounded,
-                                size: 13,
-                                color: AppColors.mainAppColor,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
+                ),
               ),
             ),
-          ),
-          Expanded(
-            flex: 46,
-            child: images.trim().isEmpty
-                ? const SizedBox.expand()
-                : ClipRRect(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(isArabic ? 0 : 20),
-                      bottomLeft: Radius.circular(isArabic ? 0 : 20),
-                      topRight: Radius.circular(isArabic ? 20 : 0),
-                      bottomRight: Radius.circular(isArabic ? 20 : 0),
-                    ),
-                    child: CustomNetworkImage(
-                      imageUrl: images,
-                      width: double.infinity,
-                      height: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-          ),
         ],
       ),
     );

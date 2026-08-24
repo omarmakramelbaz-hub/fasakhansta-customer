@@ -57,53 +57,101 @@ class RestaurantsNearYouWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (controller.restaurantsNearYou.isEmpty || HiveMethods.getLat() == null) {
+    if (controller.restaurantsNearYou.isEmpty) {
       return const SizedBox.shrink();
     }
+
+    final isGuest = HiveMethods.getToken() == null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         22.sbH,
-        if (HiveMethods.getToken() != null) ...[
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18),
-            child: Row(
-              textDirection: TextDirection.rtl,
-              children: [
-                Icon(Icons.location_on_rounded, size: 22, color: AppColors.mainAppColor),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Text(
-                    'مطاعم قريبة منك',
-                    style: AppTextStyle.text18BS(),
-                    textAlign: TextAlign.right,
-                  ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          child: Row(
+            textDirection: TextDirection.rtl,
+            children: [
+              Icon(
+                Icons.location_on_rounded,
+                size: 22,
+                color: AppColors.mainAppColor,
+              ),
+              const SizedBox(width: 5),
+              Expanded(
+                child: Text(
+                  'مطاعم قريبة منك',
+                  style: AppTextStyle.text18BS(),
+                  textAlign: TextAlign.right,
                 ),
+              ),
+              if (isGuest)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF3E7),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.mainAppColor.withValues(alpha: .18),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.lock_outline_rounded,
+                        size: 14,
+                        color: AppColors.mainAppColor,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'للمشاهدة فقط',
+                        style: AppTextStyle.text10BW(
+                          color: AppColors.mainAppColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
                 InkWell(
                   borderRadius: BorderRadius.circular(18),
-                  onTap: () => NamedNavigatorImpl.push(RestaurantsScreen.routeName),
+                  onTap: () =>
+                      NamedNavigatorImpl.push(RestaurantsScreen.routeName),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           'عرض الكل',
-                          style: AppTextStyle.text13BS().copyWith(color: AppColors.mainAppColor),
+                          style: AppTextStyle.text13BS()
+                              .copyWith(color: AppColors.mainAppColor),
                         ),
                         const SizedBox(width: 3),
-                        Icon(Icons.chevron_left_rounded, size: 22, color: AppColors.mainAppColor),
+                        Icon(
+                          Icons.chevron_left_rounded,
+                          size: 22,
+                          color: AppColors.mainAppColor,
+                        ),
                       ],
                     ),
                   ),
                 ),
-              ],
-            ),
+            ],
           ),
-          10.sbH,
-          RestaurantsNearYouListViewWidget(restaurantsNearYou: controller.restaurantsNearYou),
-        ],
+        ),
+        10.sbH,
+        IgnorePointer(
+          ignoring: isGuest,
+          child: RestaurantsNearYouListViewWidget(
+            restaurantsNearYou: controller.restaurantsNearYou,
+          ),
+        ),
       ],
     );
   }

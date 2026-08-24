@@ -89,6 +89,18 @@ class CommonMethods {
   }) {
     final normalizedMessage = message.trim().toLowerCase();
     final isSuccess = type == ToastType.success;
+    final isLoginSuccess = isSuccess &&
+        (message.contains('تسجيل الدخول') ||
+            normalizedMessage.contains('logged in') ||
+            normalizedMessage.contains('login success') ||
+            normalizedMessage.contains('login successfully') ||
+            normalizedMessage.contains('signed in'));
+    final isLogoutSuccess = isSuccess &&
+        (message.contains('تسجيل الخروج') ||
+            normalizedMessage.contains('logged out') ||
+            normalizedMessage.contains('logout success') ||
+            normalizedMessage.contains('logout successfully') ||
+            normalizedMessage.contains('signed out'));
     final isDeliveryCancellation = isSuccess &&
         (message.contains('تم الإلغاء') ||
             message.contains('تم الالغاء') ||
@@ -114,6 +126,32 @@ class CommonMethods {
         normalizedMessage.contains('success');
     final isDeliveryFareUpdate =
         isSuccess && hasFareKeyword && hasFareUpdateKeyword;
+
+    if (isLoginSuccess) {
+      _showGoDriveActionSuccess(
+        title: 'تم تسجيل الدخول بنجاح',
+        message: 'أهلًا بك من جديد، حسابك جاهز للاستخدام.',
+        icon: Icons.person_rounded,
+        accentColor: const Color(0xFF169B5B),
+        iconBackgroundColor: const Color(0xFFEAF8F0),
+        borderColor: const Color(0xFFCFEBDD),
+        seconds: seconds,
+      );
+      return;
+    }
+
+    if (isLogoutSuccess) {
+      _showGoDriveActionSuccess(
+        title: 'تم تسجيل الخروج',
+        message: 'تم إنهاء الجلسة بأمان. ننتظرك في أي وقت.',
+        icon: Icons.logout_rounded,
+        accentColor: AppColors.mainAppColor,
+        iconBackgroundColor: const Color(0xFFFFF2E7),
+        borderColor: const Color(0xFFFFD8B6),
+        seconds: seconds,
+      );
+      return;
+    }
 
     if (isDeliveryCancellation) {
       _showGoDriveActionSuccess(

@@ -7,7 +7,6 @@ import '../../../../helpers/routes/app_routers_import.dart';
 import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/theme/app_text_style.dart';
 import '../../../../helpers/translation/all_translation.dart';
-import '../../../../helpers/translation/main_app_bloc.dart';
 import '../../../custom_widgets/buttons/custom_button.dart';
 
 class ChangeLangBottomSheet extends StatefulWidget {
@@ -18,14 +17,17 @@ class ChangeLangBottomSheet extends StatefulWidget {
 }
 
 class _MenuBottomSheetWidgetState extends State<ChangeLangBottomSheet> {
-  // final int _currentIndex = 0;
+  bool _isChangingLanguage = false;
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      // height: context.height * .320,
       decoration: BoxDecoration(
         color: AppColors.whiteColor,
-        borderRadius: const BorderRadius.only(topLeft: Radius.circular(36), topRight: Radius.circular(36)),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(36),
+          topRight: Radius.circular(36),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 33, vertical: 20),
@@ -37,10 +39,14 @@ class _MenuBottomSheetWidgetState extends State<ChangeLangBottomSheet> {
               children: [
                 Text('changeLanguage'.tr, style: AppTextStyle.text16MS()),
                 InkWell(
-                  onTap: () => Navigator.pop(context),
+                  onTap: _isChangingLanguage
+                      ? null
+                      : () => Navigator.pop(context),
                   child: Card(
                     elevation: 10,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     child: CircleAvatar(
                       radius: 20,
                       backgroundColor: AppColors.whiteColor,
@@ -54,29 +60,33 @@ class _MenuBottomSheetWidgetState extends State<ChangeLangBottomSheet> {
             const Divider(thickness: 1),
             15.sbH,
             CustomButton(
-              gradient: isAr(context) ? buildLinearGradient(context) : buildLinearGradient2(context),
-              onPressed: () {
-                mainAppBloc.updateLang('ar');
-                changeLanguage('ar');
-                NamedNavigatorImpl.pop();
-                setState(() {});
-              },
-              style: isAr(context) ? AppTextStyle.text18BW() : AppTextStyle.text18BS(),
-              color: isAr(context) ? AppColors.whiteColor : AppColors.whiteColor,
+              gradient: isAr(context)
+                  ? buildLinearGradient(context)
+                  : buildLinearGradient2(context),
+              onPressed: _isChangingLanguage
+                  ? null
+                  : () => _selectLanguage('ar'),
+              style: isAr(context)
+                  ? AppTextStyle.text18BW()
+                  : AppTextStyle.text18BS(),
+              color: AppColors.whiteColor,
               borderColor: isAr(context) ? null : AppColors.mainAppColor,
               text: 'العربية',
             ),
             15.sbH,
             CustomButton(
-              gradient: context.isEn ? buildLinearGradient(context) : buildLinearGradient2(context),
-              onPressed: () {
-                mainAppBloc.updateLang('en');
-                changeLanguage('en');
-                NamedNavigatorImpl.pop();
-                setState(() {});
-              },
-              style: context.isEn ? AppTextStyle.text18BW() : AppTextStyle.text18BS(),
-              color: context.isEn ? AppColors.mainAppColor : AppColors.whiteColor,
+              gradient: context.isEn
+                  ? buildLinearGradient(context)
+                  : buildLinearGradient2(context),
+              onPressed: _isChangingLanguage
+                  ? null
+                  : () => _selectLanguage('en'),
+              style: context.isEn
+                  ? AppTextStyle.text18BW()
+                  : AppTextStyle.text18BS(),
+              color: context.isEn
+                  ? AppColors.mainAppColor
+                  : AppColors.whiteColor,
               borderColor: context.isEn ? null : AppColors.mainAppColor,
               text: 'English',
             ),
@@ -84,6 +94,20 @@ class _MenuBottomSheetWidgetState extends State<ChangeLangBottomSheet> {
         ),
       ),
     );
+  }
+
+  Future<void> _selectLanguage(String language) async {
+    if (_isChangingLanguage || context.languageCode == language) {
+      if (mounted) NamedNavigatorImpl.pop();
+      return;
+    }
+
+    setState(() => _isChangingLanguage = true);
+
+    await changeLanguage(language);
+
+    if (!mounted) return;
+    NamedNavigatorImpl.pop();
   }
 
   bool isAr(BuildContext context) => context.languageCode == 'ar';

@@ -1,9 +1,8 @@
-import 'dart:developer';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../helpers/hive/hive_methods.dart';
@@ -13,7 +12,6 @@ import '../../../../helpers/networking/urls.dart';
 import '../../../../helpers/notification_helper/notification_helper.dart';
 import '../../../../helpers/pusher_service/pusher_controller.dart';
 import '../../../../helpers/routes/app_routers_import.dart';
-import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/theme/app_text_style.dart';
 import '../../../../helpers/utils/common_methods.dart';
 import '../../../../helpers/utils/utils.dart';
@@ -100,6 +98,12 @@ class SocialBtn extends StatelessWidget {
 class SocialLoginRowWidget extends StatelessWidget {
   const SocialLoginRowWidget({super.key});
 
+  static const String _googleWebClientId = String.fromEnvironment(
+    'GOOGLE_WEB_CLIENT_ID',
+    defaultValue:
+        '224648167390-efdtr7rjcnept7eiml1d642sdn8n9ki7.apps.googleusercontent.com',
+  );
+
   void _onAuthSuccess(
     BuildContext context,
     int register,
@@ -167,102 +171,22 @@ class SocialLoginRowWidget extends StatelessWidget {
     return int.tryParse(value?.toString() ?? '');
   }
 
-  Future<Map<String, dynamic>> _facebookProfile(LoginResult result) async {
+  Future<void> _submitProviderToken(
+    BuildContext context, {
+    required String provider,
+    required String accessToken,
+  }) async {
+    Utils.loading();
+
     try {
-      // Use the package default profile fields first. This is the most stable
-      // route on Web and already requests name, email and picture.
-      return await FacebookAuth.instance.getUserData();
-    } catch (error) {
-      log('Facebook getUserData failed, trying Graph fallback: $error');
-
-      final token = result.accessToken?.tokenString;
-      if (token == null || token.isEmpty) rethrow;
-
-      final graphResponse = await Dio().get(
-        'https://graph.facebook.com/v21.0/me',
-        queryParameters: {
-          'fields': 'id,name,email,picture.width(200)',
-          'access_token': token,
-        },
-        options: Options(
-          validateStatus: (status) => status != null && status < 500,
-        ),
-      );
-
-      if (graphResponse.statusCode == 200 && graphResponse.data is Map) {
-        return Map<String, dynamic>.from(graphResponse.data as Map);
-      }
-
-      throw Exception(
-        _responseMessage(
-          graphResponse.data,
-          fallback: 'تعذر قراءة بيانات حساب Facebook.',
-        ),
-      );
-    }
-  }
-
-  Future<void> _signInWithFacebook(BuildContext context) async {
-    try {
-      if (kIsWeb && !FacebookAuth.i.isWebSdkInitialized) {
-        CommonMethods.showToast(
-          message: 'Facebook login is not configured on this build.',
-          type: ToastType.error,
-        );
-        return;
-      }
-
-      final result = await FacebookAuth.instance.login(
-        permissions: const ['email', 'public_profile'],
-      );
-
-      if (result.status == LoginStatus.cancelled) return;
-      if (result.status != LoginStatus.success) {
-        CommonMethods.showToast(
-          message: (result.message?.trim().isNotEmpty ?? false)
-              ? result.message!.trim()
-              : 'تعذر تسجيل الدخول باستخدام Facebook.',
-          type: ToastType.error,
-        );
-        return;
-      }
-
-      final profile = await _facebookProfile(result);
-      final tokenData = result.accessToken?.toJson() ?? const <String, dynamic>{};
-      final facebookId =
-          (profile['id'] ?? tokenData['userId'] ?? tokenData['user_id'])
-              ?.toString()
-              .trim();
-      final name = profile['name']?.toString().trim() ?? '';
-      final email = profile['email']?.toString().trim() ?? '';
-      final picture = profile['picture'] is Map
-          ? (profile['picture']['data'] is Map
-              ? profile['picture']['data']['url']?.toString()
-              : null)
-          : null;
-
-      if (facebookId == null || facebookId.isEmpty || name.isEmpty) {
-        CommonMethods.showToast(
-          message:
-              'Facebook لم يرجع بيانات الحساب المطلوبة. تأكد من السماح بالاسم والبريد الإلكتروني.',
-          type: ToastType.error,
-        );
-        return;
-      }
-
-      Utils.loading();
-
       final body = FormData.fromMap({
-        'name': name,
-        'email': email,
-        'facebook_uuid': facebookId,
-        'image_path': picture,
-        'provider': 'facebook',
+        'access_token': accessToken,
+        'provider': provider,
         'fcm_id': FirebaseNotifications.fcmToken ?? '',
       });
 
       final response = await ApiHelper.instance.post(
-        Urls.loginWithFacebook,
+        provider == 'facebook' ? Urls.loginWithFacebook : Urls.loginWithGoogle,
         body: body,
       );
       Utils.loadingOff();
@@ -271,7 +195,9 @@ class SocialLoginRowWidget extends StatelessWidget {
         CommonMethods.showError(
           message: _responseMessage(
             response.data,
-            fallback: 'تعذر إكمال تسجيل الدخول بحساب Facebook.',
+            fallback: provider == 'facebook'
+                ? 'تعذر إكمال تسجيل الدخول بحساب Facebook.'
+                : 'تعذر إكمال تسجيل الدخول بحساب Google.',
           ),
           apiResponse: response,
         );
@@ -304,23 +230,26 @@ class SocialLoginRowWidget extends StatelessWidget {
       final register = _toInt(data['register']) ?? 1;
       final mobileVerifiedAt = userData['mobile_verified_at']?.toString();
       final mobile = userData['mobile']?.toString().trim() ?? '';
-      final serverEmail = userData['email']?.toString().trim() ?? '';
 
-      if (token.isNotEmpty) {
-        HiveMethods.updateToken(token);
+      if (token.isEmpty) {
+        CommonMethods.showError(
+          message: 'السيرفر لم يرجع رمز جلسة صالح.',
+          apiResponse: response,
+        );
+        return;
       }
+
+      HiveMethods.updateToken(token);
+      HiveMethods.updateIsVisitor(false);
+
       if (register == 0 && mobileVerifiedAt != null && id != null) {
         HiveMethods.updateUserId(id);
       }
-      if (id != null && token.isNotEmpty) {
+      if (id != null) {
         _initPusher(context, id, token);
       }
 
-      HiveMethods.updateIsVisitor(false);
-
-      if (token.isNotEmpty) {
-        await context.read<AuthController>().getProfile();
-      }
+      await context.read<AuthController>().getProfile();
 
       CommonMethods.showToast(
         message: _responseMessage(
@@ -333,27 +262,107 @@ class SocialLoginRowWidget extends StatelessWidget {
         NamedNavigatorImpl.push(
           SocialAuthPhoneScreen.routeName,
           arguments: {
-            'provider': 'facebook',
-            'provider_uuid': facebookId,
-            'name': name,
-            'email': email,
+            'provider': provider,
+            'access_token': accessToken,
           },
         );
-      } else if (register == 0 && serverEmail.isNotEmpty) {
-        _onAuthSuccess(context, register, mobileVerifiedAt);
-      } else {
-        NamedNavigatorImpl.push(CreateNewAccountScreen.routeName);
+        return;
       }
-    } catch (error, stackTrace) {
+
+      _onAuthSuccess(context, register, mobileVerifiedAt);
+    } catch (error) {
       Utils.loadingOff();
-      log(
-        'Facebook Sign In Error: $error',
-        stackTrace: stackTrace,
-      );
       CommonMethods.showToast(
-        message: error.toString().trim().isNotEmpty
+        message: provider == 'facebook'
             ? 'Facebook: ${error.toString()}'
-            : 'تعذر تسجيل الدخول باستخدام Facebook.',
+            : 'Google: ${error.toString()}',
+        type: ToastType.error,
+      );
+    }
+  }
+
+  Future<void> _signInWithFacebook(BuildContext context) async {
+    try {
+      if (kIsWeb && !FacebookAuth.i.isWebSdkInitialized) {
+        CommonMethods.showToast(
+          message: 'Facebook login is not configured on this build.',
+          type: ToastType.error,
+        );
+        return;
+      }
+
+      final result = await FacebookAuth.instance.login(
+        permissions: const ['email', 'public_profile'],
+      );
+
+      if (result.status == LoginStatus.cancelled) return;
+      if (result.status != LoginStatus.success) {
+        CommonMethods.showToast(
+          message: (result.message?.trim().isNotEmpty ?? false)
+              ? result.message!.trim()
+              : 'تعذر تسجيل الدخول باستخدام Facebook.',
+          type: ToastType.error,
+        );
+        return;
+      }
+
+      final accessToken = result.accessToken?.tokenString ?? '';
+      if (accessToken.isEmpty) {
+        CommonMethods.showToast(
+          message: 'Facebook لم يرجع Access Token صالح.',
+          type: ToastType.error,
+        );
+        return;
+      }
+
+      await _submitProviderToken(
+        context,
+        provider: 'facebook',
+        accessToken: accessToken,
+      );
+    } catch (error) {
+      Utils.loadingOff();
+      CommonMethods.showToast(
+        message: 'Facebook: ${error.toString()}',
+        type: ToastType.error,
+      );
+    }
+  }
+
+  Future<void> _signInWithGoogle(BuildContext context) async {
+    try {
+      final googleSignIn = GoogleSignIn(
+        clientId: kIsWeb ? _googleWebClientId : null,
+        scopes: const ['email', 'profile'],
+      );
+
+      if (!kIsWeb) {
+        await googleSignIn.signOut();
+      }
+
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) return;
+
+      final authentication = await googleUser.authentication;
+      final accessToken = authentication.accessToken ?? '';
+
+      if (accessToken.isEmpty) {
+        CommonMethods.showToast(
+          message: 'Google لم يرجع Access Token صالح.',
+          type: ToastType.error,
+        );
+        return;
+      }
+
+      await _submitProviderToken(
+        context,
+        provider: 'google',
+        accessToken: accessToken,
+      );
+    } catch (error) {
+      Utils.loadingOff();
+      CommonMethods.showToast(
+        message: 'Google: ${error.toString()}',
         type: ToastType.error,
       );
     }
@@ -399,21 +408,7 @@ class SocialLoginRowWidget extends StatelessWidget {
           SocialBtn(
             image: AppImages.googleIcon,
             label: 'Google',
-            onTap: () {
-              context.read<AuthController>().signInWithGoogle(
-                    onSuccess: (register, mobileVerifiedAt) =>
-                        _onAuthSuccess(
-                      context,
-                      register,
-                      mobileVerifiedAt,
-                    ),
-                    onFirstTime: () => NamedNavigatorImpl.push(
-                      CreateNewAccountScreen.routeName,
-                    ),
-                    onHaveIdANDToken: (id, token) =>
-                        _initPusher(context, id, token),
-                  );
-            },
+            onTap: () => _signInWithGoogle(context),
           ),
           const SizedBox(width: 8),
           SocialBtn(

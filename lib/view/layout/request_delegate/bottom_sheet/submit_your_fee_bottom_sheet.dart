@@ -49,8 +49,11 @@ class _SubmitYourFeeBottomSheetState extends State<SubmitYourFeeBottomSheet> {
         double.tryParse(widget.requestDelegateController.priceEC.text.trim()) ?? 0;
 
     _referenceFare = currentFare > 0 ? currentFare : widget.distance.toDouble();
+    final dashboardReduction = widget.requestDelegateController.delegatesOnMap
+            ?.shippingMinPricePrecentage ??
+        widget.shippingPercentage;
     _maximumReductionPercentage =
-        widget.shippingPercentage.toDouble().clamp(0.0, 100.0).toDouble();
+        dashboardReduction.toDouble().clamp(0.0, 100.0).toDouble();
     _minimumFare = (_referenceFare *
             (1 - (_maximumReductionPercentage / 100)))
         .ceilToDouble();

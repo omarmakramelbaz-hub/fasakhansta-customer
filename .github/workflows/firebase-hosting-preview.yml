@@ -55,8 +55,23 @@ jobs:
               index.write_text(html, encoding='utf-8')
           PY
 
+      - name: Check Social Login Configuration
+        env:
+          FACEBOOK_APP_ID: ${{ secrets.FACEBOOK_APP_ID }}
+        run: |
+          if [ -z "$FACEBOOK_APP_ID" ]; then
+            echo "::warning::FACEBOOK_APP_ID is not configured. Facebook login will stay disabled on Web until this repository secret is added."
+          else
+            echo "Facebook App ID is configured for the Web build."
+          fi
+
       - name: Build Flutter Web
-        run: flutter build web --release
+        env:
+          FACEBOOK_APP_ID: ${{ secrets.FACEBOOK_APP_ID }}
+        run: |
+          flutter build web --release \
+            --dart-define=GOOGLE_WEB_CLIENT_ID=224648167390-efdtr7rjcnept7eiml1d642sdn8n9ki7.apps.googleusercontent.com \
+            --dart-define=FACEBOOK_APP_ID="$FACEBOOK_APP_ID"
 
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0

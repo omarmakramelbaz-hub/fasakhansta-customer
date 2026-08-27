@@ -149,32 +149,67 @@ class RequestDelegateController extends ChangeNotifier {
 
   //============================================== calculate distance ================================
 
-  double calculateDeliveryPrice({required num kmPrice}) {
-    if (_fromLat == null || _fromLan == null || _toLat == null || _toLan == null) {
-      return 0.0;
-    }
+  double? _routeDistanceKm() {
+    final fromLat = double.tryParse(_fromLat ?? '');
+    final fromLan = double.tryParse(_fromLan ?? '');
+    final toLat = double.tryParse(_toLat ?? '');
+    final toLan = double.tryParse(_toLan ?? '');
 
-    final double fromLat = double.parse(_fromLat!);
-    final double fromLan = double.parse(_fromLan!);
-    final double toLat = double.parse(_toLat!);
-    final double toLan = double.parse(_toLan!);
+    if (fromLat == null || fromLan == null || toLat == null || toLan == null) {
+      return null;
+    }
 
     const double earthRadiusKm = 6371.0;
-
     final double dLat = _degreesToRadians(toLat - fromLat);
     final double dLon = _degreesToRadians(toLan - fromLan);
-
     final double a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(_degreesToRadians(fromLat)) * cos(_degreesToRadians(toLat)) * sin(dLon / 2) * sin(dLon / 2);
-
+        cos(_degreesToRadians(fromLat)) *
+            cos(_degreesToRadians(toLat)) *
+            sin(dLon / 2) *
+            sin(dLon / 2);
     final double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    return earthRadiusKm * c;
+  }
 
-    if (priceEC.text.isEmpty) {
-      setPriceEC((c * earthRadiusKm * kmPrice).toStringAsFixed(0));
+  double _dashboardFareForDistance({
+    required double distanceKm,
+    required num fallbackKmPrice,
+  }) {
+    final kmPrice = (_delegatesOnMap?.shippingKmPrice ?? fallbackKmPrice).toDouble();
+    final default0To1 = (_delegatesOnMap?.default0To1 ?? 0).toDouble();
+    final default1To2 = (_delegatesOnMap?.default1To2 ?? 0).toDouble();
+    final default2To3 = (_delegatesOnMap?.default2To3 ?? 0).toDouble();
+
+    final hasDashboardTiers =
+        default0To1 > 0 && default1To2 > 0 && default2To3 > 0;
+
+    if (!hasDashboardTiers) {
+      return distanceKm * kmPrice;
     }
-    setDistance(double.parse((c * earthRadiusKm * kmPrice).toStringAsFixed(0)));
 
-    return earthRadiusKm * c * kmPrice;
+    if (distanceKm <= 1) return default0To1;
+    if (distanceKm <= 2) return default1To2;
+    if (distanceKm <= 3) return default2To3;
+
+    final extraKm = (distanceKm - 3).ceil();
+    return default2To3 + (extraKm * kmPrice);
+  }
+
+  double calculateDeliveryPrice({required num kmPrice}) {
+    final distanceKm = _routeDistanceKm();
+    if (distanceKm == null) return 0.0;
+
+    final fare = _dashboardFareForDistance(
+      distanceKm: distanceKm,
+      fallbackKmPrice: kmPrice,
+    );
+    final fareText = fare.round().toString();
+
+    setDistance(distanceKm);
+    setPriceEC(fareText);
+    setActualPrice(fareText);
+
+    return fare;
   }
 
   double _degreesToRadians(double degrees) {
@@ -183,37 +218,22 @@ class RequestDelegateController extends ChangeNotifier {
 
   //=======================================
   double calculateDistance({required num kmPrice}) {
-    if (_fromLat == null || _fromLan == null || _toLat == null || _toLan == null) {
-      return 0.0;
-    }
+    final distanceKm = _routeDistanceKm();
+    if (distanceKm == null) return 0.0;
 
-    final double fromLat = double.parse(_fromLat!);
-    final double fromLan = double.parse(_fromLan!);
-    final double toLat = double.parse(_toLat!);
-    final double toLan = double.parse(_toLan!);
-
-    const double earthRadiusKm = 6371.0;
-
-    final double dLat = _degreesToRadians(toLat - fromLat);
-    final double dLon = _degreesToRadians(toLan - fromLan);
-
-    final double a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(_degreesToRadians(fromLat)) * cos(_degreesToRadians(toLat)) * sin(dLon / 2) * sin(dLon / 2);
-
-    final double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    if (priceEC.text.isEmpty) {
-      setPriceEC((c * earthRadiusKm * kmPrice).toStringAsFixed(0));
-    }
-
-    setPriceEC((c * earthRadiusKm * kmPrice).toStringAsFixed(0));
-
-    return earthRadiusKm * c;
+    setDistance(distanceKm);
+    return distanceKm;
   }
 
   double calculateMinimumPrice({required num kmPrice, required num percentage}) {
-    final double distance = calculateDistance(kmPrice: kmPrice);
-    final double minAmount = distance - (distance * (percentage / 100));
-    return minAmount;
+    final distanceKm = _routeDistanceKm();
+    if (distanceKm == null) return 0.0;
+
+    final baseFare = _dashboardFareForDistance(
+      distanceKm: distanceKm,
+      fallbackKmPrice: kmPrice,
+    );
+    return baseFare - (baseFare * (percentage / 100));
   }
 
   //========================================== calculate Dlivery Time =================================
@@ -278,6 +298,7 @@ class RequestDelegateController extends ChangeNotifier {
   }
 
   //================================================== get all delegate orders =========================
+
   void updateShippingOrder(RequestDelegateOrderModel updatedOrder) {
     // Find the index of the order with the matching ID
     final index = _delegateOrders.indexWhere((order) => order.id == updatedOrder.id);

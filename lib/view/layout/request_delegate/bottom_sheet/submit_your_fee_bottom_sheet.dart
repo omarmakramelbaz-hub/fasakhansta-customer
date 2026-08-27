@@ -35,6 +35,7 @@ class _SubmitYourFeeBottomSheetState extends State<SubmitYourFeeBottomSheet> {
 
   late final double _referenceFare;
   late final double _minimumFare;
+  late final double _maximumReductionPercentage;
 
   bool get _isArabic => context.languageCode == 'ar';
 
@@ -47,10 +48,12 @@ class _SubmitYourFeeBottomSheetState extends State<SubmitYourFeeBottomSheet> {
     final currentFare =
         double.tryParse(widget.requestDelegateController.priceEC.text.trim()) ?? 0;
 
-    // The visible calculated fare is the reference amount. The customer can
-    // reduce it by no more than 10%.
     _referenceFare = currentFare > 0 ? currentFare : widget.distance.toDouble();
-    _minimumFare = (_referenceFare * .90).ceilToDouble();
+    _maximumReductionPercentage =
+        widget.shippingPercentage.toDouble().clamp(0.0, 100.0).toDouble();
+    _minimumFare = (_referenceFare *
+            (1 - (_maximumReductionPercentage / 100)))
+        .ceilToDouble();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -85,6 +88,9 @@ class _SubmitYourFeeBottomSheetState extends State<SubmitYourFeeBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final viewInsets = MediaQuery.of(context).viewInsets;
+    final reductionLabel = _maximumReductionPercentage.toStringAsFixed(
+      _maximumReductionPercentage % 1 == 0 ? 0 : 1,
+    );
 
     return Padding(
       padding: EdgeInsets.only(bottom: viewInsets.bottom),
@@ -140,8 +146,8 @@ class _SubmitYourFeeBottomSheetState extends State<SubmitYourFeeBottomSheet> {
                     const SizedBox(height: 5),
                     Text(
                       _isArabic
-                          ? 'حدد المبلغ المناسب ليك، ويمكن تقليله بحد أقصى 10%.'
-                          : 'Choose your fare. You can reduce it by up to 10%.',
+                          ? 'حدد المبلغ المناسب ليك، ويمكن تقليله بحد أقصى $reductionLabel%.'
+                          : 'Choose your fare. You can reduce it by up to $reductionLabel%.',
                       style: const TextStyle(
                         color: Color(0xFF8A9098),
                         fontSize: 12,

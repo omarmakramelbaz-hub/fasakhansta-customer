@@ -4,100 +4,172 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../helpers/extensions/extensions.dart';
 import '../../../helpers/images/app_images.dart';
 import '../../../helpers/theme/app_colors.dart';
+import '../../../helpers/theme/app_text_style.dart';
 import '../../../helpers/translation/all_translation.dart';
-import '../buttons/custom_button.dart';
 
 class ExceptionWidget extends StatelessWidget {
   final Axis axis;
   final String? message;
   final void Function()? onReload;
-  const ExceptionWidget({super.key, this.axis = Axis.vertical, this.message, this.onReload});
+
+  const ExceptionWidget({
+    super.key,
+    this.axis = Axis.vertical,
+    this.message,
+    this.onReload,
+  });
 
   @override
   Widget build(BuildContext context) {
-    switch (axis) {
-      case Axis.horizontal:
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-          decoration: BoxDecoration(
-            color: AppColors.mainAppColor.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(7),
-          ),
-          child: IntrinsicHeight(
-            child: Row(
-              children: [
-                SvgPicture.asset(
-                  AppImages.errorIcon,
-                  colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
-                  width: 40,
-                  height: 40,
-                  fit: BoxFit.contain,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    message ?? 'An error occurred'.tr,
-                    style: const TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.w500),
-                    textAlign: TextAlign.justify,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                IconButton(
-                  onPressed: onReload,
-                  icon: SvgPicture.asset(
-                    AppImages.refreshIcon,
-                    colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
-                    width: 25,
-                    height: 25,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
+    return axis == Axis.horizontal
+        ? _horizontalError(context)
+        : _verticalError(context);
+  }
 
-      case Axis.vertical:
-        return Container(
+  Widget _verticalError(BuildContext context) {
+    final isArabic = context.languageCode == 'ar';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+      child: Center(
+        child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+          constraints: const BoxConstraints(maxWidth: 430),
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
           decoration: BoxDecoration(
-            color: AppColors.mainAppColor.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(7),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: const Color(0xFFEEEFF2)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0D000000),
+                blurRadius: 24,
+                offset: Offset(0, 10),
+              ),
+            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SvgPicture.asset(
-                AppImages.errorIcon,
-                colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                width: 80,
-                height: 80,
-                fit: BoxFit.contain,
-              ),
-              10.sbH,
-              Text(
-                message ?? 'An error occurred'.tr,
-                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
-                textAlign: TextAlign.center,
-              ),
-              10.sbH,
-              CustomButton(
-                text: 'Reload'.tr,
-                width: context.width * 0.5,
-                prefixIcon: SvgPicture.asset(
-                  AppImages.refreshIcon,
-                  colorFilter: ColorFilter.mode(AppColors.buttonTextColor, BlendMode.srcIn),
-                  width: 20,
-                  height: 20,
+              Container(
+                width: 96,
+                height: 96,
+                padding: const EdgeInsets.all(23),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF4EA),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColors.mainAppColor.withValues(alpha: .16),
+                  ),
+                ),
+                child: SvgPicture.asset(
+                  AppImages.errorIcon,
+                  colorFilter: ColorFilter.mode(
+                    AppColors.mainAppColor,
+                    BlendMode.srcIn,
+                  ),
                   fit: BoxFit.contain,
                 ),
-                height: 40,
-                onPressed: onReload,
+              ),
+              const SizedBox(height: 20),
+              Text(
+                message ?? 'An error occurred'.tr,
+                textAlign: TextAlign.center,
+                style: AppTextStyle.text18BS().copyWith(
+                  color: const Color(0xFF181A1F),
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                isArabic
+                    ? 'تعذر تحميل المحتوى في الوقت الحالي. حاول مرة أخرى بعد لحظات.'
+                    : 'We couldn’t load this content right now. Please try again in a moment.',
+                textAlign: TextAlign.center,
+                style: AppTextStyle.text13RM().copyWith(
+                  color: const Color(0xFF8A8F98),
+                  height: 1.55,
+                ),
+              ),
+              const SizedBox(height: 22),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton.icon(
+                  onPressed: onReload,
+                  icon: const Icon(Icons.refresh_rounded, size: 21),
+                  label: Text(
+                    'Reload'.tr,
+                    style: AppTextStyle.text15BS().copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.mainAppColor,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
-        );
-    }
+        ),
+      ),
+    );
+  }
+
+  Widget _horizontalError(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFEEEFF2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            padding: const EdgeInsets.all(10),
+            decoration: const BoxDecoration(
+              color: Color(0xFFFFF4EA),
+              shape: BoxShape.circle,
+            ),
+            child: SvgPicture.asset(
+              AppImages.errorIcon,
+              colorFilter: ColorFilter.mode(
+                AppColors.mainAppColor,
+                BlendMode.srcIn,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message ?? 'An error occurred'.tr,
+              style: AppTextStyle.text13MS().copyWith(
+                color: const Color(0xFF31343A),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            onPressed: onReload,
+            tooltip: 'Reload'.tr,
+            icon: Icon(
+              Icons.refresh_rounded,
+              color: AppColors.mainAppColor,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

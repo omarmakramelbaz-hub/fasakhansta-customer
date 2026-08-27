@@ -6,9 +6,9 @@ class Urls {
   );
   static const String login = '${baseUrl}user/login';
   static const String codeActivate = '${baseUrl}user/code_activate';
-  static const String loginWithGoogle = '${baseUrl}auth/google/callback';
+  static const String loginWithGoogle = '${baseUrl}auth/social/google/token';
   static const String loginWithApple = '${baseUrl}auth/apple/callback';
-  static const String loginWithFacebook = '${baseUrl}auth/facebook/callback';
+  static const String loginWithFacebook = '${baseUrl}auth/social/facebook/token';
   static const String profile = '${baseUrl}user/profile';
   static const String help = '${baseUrl}help';
   static const String setting = '${baseUrl}setting';

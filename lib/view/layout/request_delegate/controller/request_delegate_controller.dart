@@ -82,6 +82,7 @@ class RequestDelegateController extends ChangeNotifier {
   String? get fromLat => _fromLat;
   void setFromLat(String value) {
     _fromLat = value;
+    _syncFareAfterCoordinateChange();
     notifyListeners();
   }
 
@@ -89,6 +90,7 @@ class RequestDelegateController extends ChangeNotifier {
   String? get fromLan => _fromLan;
   void setFromLan(String value) {
     _fromLan = value;
+    _syncFareAfterCoordinateChange();
     notifyListeners();
   }
 
@@ -96,6 +98,7 @@ class RequestDelegateController extends ChangeNotifier {
   String? get toLat => _toLat;
   void setToLat(String value) {
     _toLat = value;
+    _syncFareAfterCoordinateChange();
     notifyListeners();
   }
 
@@ -103,6 +106,7 @@ class RequestDelegateController extends ChangeNotifier {
   String? get toLan => _toLan;
   void setToLan(String value) {
     _toLan = value;
+    _syncFareAfterCoordinateChange();
     notifyListeners();
   }
 
@@ -131,6 +135,7 @@ class RequestDelegateController extends ChangeNotifier {
   LatLng? get fromLatLng => _fromLatLng;
   void setFromLatLng(LatLng value) {
     _fromLatLng = value;
+    _syncFareAfterCoordinateChange();
     notifyListeners();
   }
 
@@ -138,6 +143,7 @@ class RequestDelegateController extends ChangeNotifier {
   LatLng? get toLatLng => _toLatLng;
   void setToLatLng(LatLng value) {
     _toLatLng = value;
+    _syncFareAfterCoordinateChange();
     notifyListeners();
   }
 
@@ -193,6 +199,22 @@ class RequestDelegateController extends ChangeNotifier {
 
     final extraKm = (distanceKm - 3).ceil();
     return default2To3 + (extraKm * kmPrice);
+  }
+
+  void _syncFareAfterCoordinateChange() {
+    final distanceKm = _routeDistanceKm();
+    final kmPrice = _delegatesOnMap?.shippingKmPrice;
+    if (distanceKm == null || kmPrice == null || kmPrice <= 0) return;
+
+    final fare = _dashboardFareForDistance(
+      distanceKm: distanceKm,
+      fallbackKmPrice: kmPrice,
+    );
+    final fareText = fare.round().toString();
+
+    _distance = distanceKm;
+    _priceEC.text = fareText;
+    _actualPrice = fareText;
   }
 
   double calculateDeliveryPrice({required num kmPrice}) {
@@ -386,6 +408,7 @@ class RequestDelegateController extends ChangeNotifier {
 
     if (_delegateOnMapApiResponse.state == ResponseState.complete) {
       _delegatesOnMap = DelegateOnMapModel.fromJson(_delegateOnMapApiResponse.data['data']);
+      _syncFareAfterCoordinateChange();
       notifyListeners();
     }
   }

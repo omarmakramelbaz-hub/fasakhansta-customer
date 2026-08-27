@@ -2,8 +2,11 @@ class DelegateOnMapModel {
   List<UserData>? userData;
   int? shippingOrderId;
   OrderData? orderData;
-  int? shippingMinPricePrecentage;
-  int? shippingKmPrice;
+  num? shippingMinPricePrecentage;
+  num? shippingKmPrice;
+  num? default0To1;
+  num? default1To2;
+  num? default2To3;
   int? goDriveBlock;
 
   DelegateOnMapModel({
@@ -12,6 +15,9 @@ class DelegateOnMapModel {
     this.orderData,
     this.shippingMinPricePrecentage,
     this.shippingKmPrice,
+    this.default0To1,
+    this.default1To2,
+    this.default2To3,
     this.goDriveBlock,
   });
 
@@ -26,6 +32,9 @@ class DelegateOnMapModel {
     orderData = json['order_data'] != null ? OrderData.fromJson(json['order_data']) : null;
     shippingMinPricePrecentage = json['shipping_min_price_precentage'];
     shippingKmPrice = json['shipping_km_price'];
+    default0To1 = json['default_0_1'];
+    default1To2 = json['default_1_2'];
+    default2To3 = json['default_2_3'];
     goDriveBlock = json['go_drive_block'];
   }
 
@@ -40,6 +49,9 @@ class DelegateOnMapModel {
     }
     data['shipping_min_price_precentage'] = shippingMinPricePrecentage;
     data['shipping_km_price'] = shippingKmPrice;
+    data['default_0_1'] = default0To1;
+    data['default_1_2'] = default1To2;
+    data['default_2_3'] = default2To3;
     data['go_drive_block'] = goDriveBlock;
     return data;
   }

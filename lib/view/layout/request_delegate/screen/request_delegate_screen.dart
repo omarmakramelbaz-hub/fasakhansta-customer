@@ -51,6 +51,9 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
   String? _routeRequestKey;
   String? _fareRouteKey;
   double? _cachedShippingKmPrice;
+  double? _cachedDefault0To1;
+  double? _cachedDefault1To2;
+  double? _cachedDefault2To3;
   Set<Marker> markers = {};
   bool isLocationLoaded = false;
   bool isCheckingLocation = false;
@@ -262,10 +265,9 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
               fee: int.parse(
                 delegatesOnMap?.orderData?.actualPrice.toString() ?? '0',
               ),
-              kmPrice: int.parse('${delegatesOnMap?.shippingKmPrice}'),
-              shippingPercentage: int.parse(
-                '${delegatesOnMap?.shippingMinPricePrecentage}',
-              ),
+              kmPrice: (delegatesOnMap?.shippingKmPrice ?? 0).round(),
+              shippingPercentage:
+                  (delegatesOnMap?.shippingMinPricePrecentage ?? 10).round(),
               distance: num.parse('${controller.distance ?? 0}'),
             ),
           );
@@ -351,8 +353,96 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
     return _cachedShippingKmPrice;
   }
 
-  String _fareKey(LatLng pickup, LatLng delivery, double kmPrice) =>
-      '${pickup.latitude},${pickup.longitude}|${delivery.latitude},${delivery.longitude}|$kmPrice';
+  double? _resolveDefault0To1(RequestDelegateController controller) {
+    final value = double.tryParse('${controller.delegatesOnMap?.default0To1}');
+    if (value != null && value > 0) {
+      _cachedDefault0To1 = value;
+      return value;
+    }
+    return _cachedDefault0To1;
+  }
+
+  double? _resolveDefault1To2(RequestDelegateController controller) {
+    final value = double.tryParse('${controller.delegatesOnMap?.default1To2}');
+    if (value != null && value > 0) {
+      _cachedDefault1To2 = value;
+      return value;
+    }
+    return _cachedDefault1To2;
+  }
+
+  double? _resolveDefault2To3(RequestDelegateController controller) {
+    final value = double.tryParse('${controller.delegatesOnMap?.default2To3}');
+    if (value != null && value > 0) {
+      _cachedDefault2To3 = value;
+      return value;
+    }
+    return _cachedDefault2To3;
+  }
+
+  double _calculateDashboardFare({
+    required double distanceKm,
+    required double kmPrice,
+    required double default0To1,
+    required double default1To2,
+    required double default2To3,
+  }) {
+    if (default0To1 <= 0 || default1To2 <= 0 || default2To3 <= 0) {
+      return distanceKm * kmPrice;
+    }
+    if (distanceKm <= 1) return default0To1;
+    if (distanceKm <= 2) return default1To2;
+    if (distanceKm <= 3) return default2To3;
+
+    final extraKm = (distanceKm - 3).ceil();
+    return default2To3 + (extraKm * kmPrice);
+  }
+
+  String _fareKey(
+    LatLng pickup,
+    LatLng delivery,
+    double kmPrice,
+    double default0To1,
+    double default1To2,
+    double default2To3,
+  ) =>
+      '${pickup.latitude},${pickup.longitude}|${delivery.latitude},${delivery.longitude}|$kmPrice|$default0To1|$default1To2|$default2To3';
+
+  String? _calculateExpectedFareForCurrentRoute(
+    RequestDelegateController controller,
+  ) {
+    final pickup = _pickupPoint(controller);
+    final delivery = _deliveryPoint(controller);
+    final kmPrice = _resolveShippingKmPrice(controller);
+    final default0To1 = _resolveDefault0To1(controller);
+    final default1To2 = _resolveDefault1To2(controller);
+    final default2To3 = _resolveDefault2To3(controller);
+
+    if (pickup == null ||
+        delivery == null ||
+        kmPrice == null ||
+        kmPrice <= 0 ||
+        default0To1 == null ||
+        default1To2 == null ||
+        default2To3 == null) {
+      return null;
+    }
+
+    final distanceKm = Geolocator.distanceBetween(
+          pickup.latitude,
+          pickup.longitude,
+          delivery.latitude,
+          delivery.longitude,
+        ) /
+        1000;
+    return _calculateDashboardFare(
+      distanceKm: distanceKm,
+      kmPrice: kmPrice,
+      default0To1: default0To1,
+      default1To2: default1To2,
+      default2To3: default2To3,
+    ).round().toString();
+  }
 
   void _recalculateFareForCurrentRoute(
     RequestDelegateController controller,
@@ -362,13 +452,19 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
     final toLat = double.tryParse(controller.toLat ?? '');
     final toLng = double.tryParse(controller.toLan ?? '');
     final kmPrice = _resolveShippingKmPrice(controller);
+    final default0To1 = _resolveDefault0To1(controller);
+    final default1To2 = _resolveDefault1To2(controller);
+    final default2To3 = _resolveDefault2To3(controller);
 
     if (fromLat == null ||
         fromLng == null ||
         toLat == null ||
         toLng == null ||
         kmPrice == null ||
-        kmPrice <= 0) {
+        kmPrice <= 0 ||
+        default0To1 == null ||
+        default1To2 == null ||
+        default2To3 == null) {
       return;
     }
 
@@ -381,9 +477,22 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
           toLng,
         ) /
         1000;
-    final updatedFare = (distanceKm * kmPrice).toStringAsFixed(0);
+    final updatedFare = _calculateDashboardFare(
+      distanceKm: distanceKm,
+      kmPrice: kmPrice,
+      default0To1: default0To1,
+      default1To2: default1To2,
+      default2To3: default2To3,
+    ).round().toString();
 
-    _fareRouteKey = _fareKey(pickup, delivery, kmPrice);
+    _fareRouteKey = _fareKey(
+      pickup,
+      delivery,
+      kmPrice,
+      default0To1,
+      default1To2,
+      default2To3,
+    );
     controller.setDistance(distanceKm);
     controller.setPriceEC(updatedFare);
     controller.setActualPrice(updatedFare);
@@ -395,11 +504,29 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
     final pickup = _pickupPoint(controller);
     final delivery = _deliveryPoint(controller);
     final kmPrice = _resolveShippingKmPrice(controller);
-    if (pickup == null || delivery == null || kmPrice == null || kmPrice <= 0) {
+    final default0To1 = _resolveDefault0To1(controller);
+    final default1To2 = _resolveDefault1To2(controller);
+    final default2To3 = _resolveDefault2To3(controller);
+    if (pickup == null ||
+        delivery == null ||
+        kmPrice == null ||
+        kmPrice <= 0 ||
+        default0To1 == null ||
+        default1To2 == null ||
+        default2To3 == null) {
       return;
     }
 
-    final key = _fareKey(pickup, delivery, kmPrice);
+    final key = _fareKey(
+      pickup,
+      delivery,
+      kmPrice,
+      default0To1,
+      default1To2,
+      default2To3,
+    );
+    if (_fareRouteKey == key) return;
+
     final distanceKm = Geolocator.distanceBetween(
           pickup.latitude,
           pickup.longitude,
@@ -407,13 +534,13 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
           delivery.longitude,
         ) /
         1000;
-    final updatedFare = (distanceKm * kmPrice).toStringAsFixed(0);
-
-    if (_fareRouteKey == key &&
-        controller.priceEC.text.trim() == updatedFare &&
-        controller.actualPrice == updatedFare) {
-      return;
-    }
+    final updatedFare = _calculateDashboardFare(
+      distanceKm: distanceKm,
+      kmPrice: kmPrice,
+      default0To1: default0To1,
+      default1To2: default1To2,
+      default2To3: default2To3,
+    ).round().toString();
 
     _fareRouteKey = key;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -422,11 +549,25 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
       final latestPickup = _pickupPoint(controller);
       final latestDelivery = _deliveryPoint(controller);
       final latestKmPrice = _resolveShippingKmPrice(controller);
+      final latestDefault0To1 = _resolveDefault0To1(controller);
+      final latestDefault1To2 = _resolveDefault1To2(controller);
+      final latestDefault2To3 = _resolveDefault2To3(controller);
       if (latestPickup == null ||
           latestDelivery == null ||
           latestKmPrice == null ||
           latestKmPrice <= 0 ||
-          _fareKey(latestPickup, latestDelivery, latestKmPrice) != key) {
+          latestDefault0To1 == null ||
+          latestDefault1To2 == null ||
+          latestDefault2To3 == null ||
+          _fareKey(
+                latestPickup,
+                latestDelivery,
+                latestKmPrice,
+                latestDefault0To1,
+                latestDefault1To2,
+                latestDefault2To3,
+              ) !=
+              key) {
         return;
       }
 
@@ -948,10 +1089,8 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
   }
 
   void _onConfirmOrder(RequestDelegateController controller) {
-    final shippingKmPrice =
-        double.tryParse('${controller.delegatesOnMap?.shippingKmPrice}') ?? 0;
-    final expectedPrice =
-        controller.calculateDeliveryPrice(kmPrice: shippingKmPrice).toString();
+    final expectedPrice = _calculateExpectedFareForCurrentRoute(controller) ??
+        controller.priceEC.text.trim();
     final serviceActivated = controller.delegatesOnMap?.goDriveBlock == 0;
 
     if (controller.isDataValid()) {
@@ -977,12 +1116,12 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
                 arguments: ShowDelegateOnMapArgs(
                   orderId: controller.orderId,
                   fee: int.parse(controller.actualPrice ?? '0'),
-                  kmPrice: int.parse(
-                    '${controller.delegatesOnMap?.shippingKmPrice}',
-                  ),
-                  shippingPercentage: int.parse(
-                    '${controller.delegatesOnMap?.shippingMinPricePrecentage}',
-                  ),
+                  kmPrice:
+                      (controller.delegatesOnMap?.shippingKmPrice ?? 0).round(),
+                  shippingPercentage:
+                      (controller.delegatesOnMap?.shippingMinPricePrecentage ??
+                              10)
+                          .round(),
                   distance: num.parse('${controller.distance}'),
                 ),
               );
@@ -1004,12 +1143,13 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
                       arguments: ShowDelegateOnMapArgs(
                         orderId: controller.orderId,
                         fee: int.parse(controller.actualPrice ?? '0'),
-                        kmPrice: int.parse(
-                          '${controller.delegatesOnMap?.shippingKmPrice}',
-                        ),
-                        shippingPercentage: int.parse(
-                          '${controller.delegatesOnMap?.shippingMinPricePrecentage}',
-                        ),
+                        kmPrice:
+                            (controller.delegatesOnMap?.shippingKmPrice ?? 0)
+                                .round(),
+                        shippingPercentage: (controller.delegatesOnMap
+                                    ?.shippingMinPricePrecentage ??
+                                10)
+                            .round(),
                         distance: num.parse('${controller.distance}'),
                       ),
                     );

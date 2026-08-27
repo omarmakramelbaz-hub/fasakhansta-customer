@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -20,6 +21,11 @@ import '../screen/login_screen.dart';
 import '../screen/social_auth_phone_screen.dart';
 
 class AuthController extends ChangeNotifier {
+  static const String _googleWebClientId = String.fromEnvironment(
+    'GOOGLE_WEB_CLIENT_ID',
+    defaultValue: '224648167390-efdtr7rjcnept7eiml1d642sdn8n9ki7.apps.googleusercontent.com',
+  );
+
   void initialProfile() {
     _profileResponse = ApiResponse(state: ResponseState.sleep, data: null);
     _profile = null;
@@ -117,8 +123,18 @@ class AuthController extends ChangeNotifier {
     void Function(int id, String token)? onHaveIdANDToken,
   }) async {
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
-      await googleSignIn.signOut();
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        clientId: kIsWeb ? _googleWebClientId : null,
+        scopes: const ['email', 'profile'],
+      );
+
+      // On Web, open the Google popup immediately from the user's tap.
+      // Awaiting signOut() first can lose browser user-activation and cause
+      // the popup to be silently blocked.
+      if (!kIsWeb) {
+        await googleSignIn.signOut();
+      }
+
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
       if (googleUser != null) {
@@ -148,7 +164,10 @@ class AuthController extends ChangeNotifier {
     } catch (error) {
       Utils.loadingOff();
       log('Google Sign In Error: $error');
-      CommonMethods.showToast(message: 'Google Sign In Failed: $error', type: ToastType.error);
+      CommonMethods.showToast(
+        message: 'Google Sign In Failed: $error',
+        type: ToastType.error,
+      );
     }
   }
 
@@ -210,10 +229,22 @@ class AuthController extends ChangeNotifier {
     void Function(int id, String token)? onHaveIdANDToken,
   }) async {
     try {
-      final LoginResult result = await FacebookAuth.instance.login();
+      if (kIsWeb && !FacebookAuth.i.isWebSdkInitialized) {
+        CommonMethods.showToast(
+          message: 'Facebook login is not configured yet. Please add the Facebook App ID.',
+          type: ToastType.error,
+        );
+        return;
+      }
+
+      final LoginResult result = await FacebookAuth.instance.login(
+        permissions: const ['email', 'public_profile'],
+      );
 
       if (result.status == LoginStatus.success) {
-        final userData = await FacebookAuth.instance.getUserData();
+        final userData = await FacebookAuth.instance.getUserData(
+          fields: 'id,name,email,picture.width(200)',
+        );
 
         Utils.loading();
 
@@ -234,14 +265,20 @@ class AuthController extends ChangeNotifier {
           onHaveIdANDToken: onHaveIdANDToken,
         );
       } else if (result.status == LoginStatus.cancelled) {
-        // User cancelled
+        return;
       } else {
-        CommonMethods.showToast(message: 'Facebook Sign In Failed: ${result.message}', type: ToastType.error);
+        CommonMethods.showToast(
+          message: 'Facebook Sign In Failed: ${result.message}',
+          type: ToastType.error,
+        );
       }
     } catch (error) {
       Utils.loadingOff();
       log('Facebook Sign In Error: $error');
-      CommonMethods.showToast(message: 'Facebook Sign In Failed: $error', type: ToastType.error);
+      CommonMethods.showToast(
+        message: 'Facebook Sign In Failed: $error',
+        type: ToastType.error,
+      );
     }
   }
 
@@ -272,9 +309,7 @@ class AuthController extends ChangeNotifier {
 
         CommonMethods.showToast(message: response.data['message']);
 
-        // Check if phone number is missing
         if (_profile?.mobile == null || _profile?.mobile?.isEmpty == true) {
-          // Navigate to phone number screen
           NamedNavigatorImpl.push(
             SocialAuthPhoneScreen.routeName,
             arguments: {

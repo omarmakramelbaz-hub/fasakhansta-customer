@@ -55,23 +55,124 @@ jobs:
               index.write_text(html, encoding='utf-8')
           PY
 
-      - name: Check Social Login Configuration
-        env:
-          FACEBOOK_APP_ID: ${{ secrets.FACEBOOK_APP_ID }}
-        run: |
-          if [ -z "$FACEBOOK_APP_ID" ]; then
-            echo "::warning::FACEBOOK_APP_ID is not configured. Facebook login will stay disabled on Web until this repository secret is added."
-          else
-            echo "Facebook App ID is configured for the Web build."
-          fi
-
       - name: Build Flutter Web
-        env:
-          FACEBOOK_APP_ID: ${{ secrets.FACEBOOK_APP_ID }}
         run: |
           flutter build web --release \
             --dart-define=GOOGLE_WEB_CLIENT_ID=224648167390-efdtr7rjcnept7eiml1d642sdn8n9ki7.apps.googleusercontent.com \
-            --dart-define=FACEBOOK_APP_ID="$FACEBOOK_APP_ID"
+            --dart-define=FACEBOOK_APP_ID=997704678612295
+
+      - name: Add Meta policy pages
+        run: |
+          cat > build/web/privacy-policy.html <<'HTML'
+          <!doctype html>
+          <html lang="en" dir="ltr">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width,initial-scale=1">
+            <title>Fasakhansta Privacy Policy</title>
+            <style>
+              body{font-family:Arial,sans-serif;max-width:860px;margin:40px auto;padding:0 20px;line-height:1.7;color:#222}h1,h2{color:#ff6f00}a{color:#d85e00}hr{border:0;border-top:1px solid #eee;margin:32px 0}.ar{direction:rtl;text-align:right}
+            </style>
+          </head>
+          <body>
+            <h1>Fasakhansta Privacy Policy</h1>
+            <p>Last updated: August 28, 2026</p>
+            <p>Fasakhansta uses account information to provide sign-in, account creation, ordering, delivery, support, and other app features. When you choose Facebook or Google sign-in, we may receive your name, email address, provider user ID, and profile image when available.</p>
+            <h2>How we use information</h2>
+            <p>We use information to authenticate users, create and manage accounts, provide requested services, communicate about orders or support, prevent abuse, and improve the service. We do not sell personal information to advertisers.</p>
+            <h2>Sharing and retention</h2>
+            <p>Information may be processed by service providers needed to operate the app and is retained only as long as necessary for account, legal, security, and operational purposes.</p>
+            <h2>Your choices</h2>
+            <p>You may request access, correction, or deletion of your account and associated personal information. See our <a href="/data-deletion.html">Data Deletion Instructions</a>.</p>
+            <h2>Contact</h2>
+            <p>For privacy questions, use our <a href="https://fasakhaninja.com/contact-us">Contact Us</a> page.</p>
+            <hr>
+            <div class="ar">
+              <h1>سياسة الخصوصية - فسخانستا</h1>
+              <p>آخر تحديث: 28 أغسطس 2026</p>
+              <p>تستخدم فسخانستا بيانات الحساب لتوفير تسجيل الدخول وإنشاء الحساب والطلبات والتوصيل والدعم وباقي خدمات التطبيق. عند اختيار تسجيل الدخول عبر Facebook أو Google قد نستلم الاسم والبريد الإلكتروني ومعرّف المستخدم لدى مزود الخدمة وصورة الملف الشخصي عند توفرها.</p>
+              <h2>استخدام البيانات</h2>
+              <p>نستخدم البيانات لتأكيد هوية المستخدم وإدارة الحساب وتقديم الخدمات المطلوبة والتواصل بخصوص الطلبات أو الدعم ومنع إساءة الاستخدام وتحسين الخدمة. نحن لا نبيع البيانات الشخصية للمعلنين.</p>
+              <h2>الحذف والحقوق</h2>
+              <p>يمكنك طلب تصحيح أو حذف حسابك والبيانات المرتبطة به من خلال <a href="/data-deletion.html">تعليمات حذف البيانات</a>.</p>
+              <h2>التواصل</h2>
+              <p>لأي استفسار بخصوص الخصوصية استخدم صفحة <a href="https://fasakhaninja.com/contact-us">تواصل معنا</a>.</p>
+            </div>
+          </body>
+          </html>
+          HTML
+
+          cat > build/web/terms.html <<'HTML'
+          <!doctype html>
+          <html lang="en" dir="ltr">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width,initial-scale=1">
+            <title>Fasakhansta Terms of Service</title>
+            <style>
+              body{font-family:Arial,sans-serif;max-width:860px;margin:40px auto;padding:0 20px;line-height:1.7;color:#222}h1,h2{color:#ff6f00}a{color:#d85e00}hr{border:0;border-top:1px solid #eee;margin:32px 0}.ar{direction:rtl;text-align:right}
+            </style>
+          </head>
+          <body>
+            <h1>Fasakhansta Terms of Service</h1>
+            <p>Last updated: August 28, 2026</p>
+            <p>By using Fasakhansta you agree to provide accurate account information, use the service lawfully, and follow applicable ordering, payment, delivery, and marketplace rules shown in the app.</p>
+            <h2>Accounts</h2>
+            <p>You are responsible for activity on your account and for keeping your access credentials secure. Social sign-in is provided as an optional authentication method.</p>
+            <h2>Orders and services</h2>
+            <p>Availability, pricing, delivery areas, payment methods, promotions, and estimated times may vary and are shown in the app when relevant.</p>
+            <h2>Acceptable use</h2>
+            <p>You may not misuse the app, attempt unauthorized access, interfere with service operation, or use the service for unlawful activity.</p>
+            <h2>Contact</h2>
+            <p>Questions about these terms can be submitted through our <a href="https://fasakhaninja.com/contact-us">Contact Us</a> page.</p>
+            <hr>
+            <div class="ar">
+              <h1>شروط استخدام فسخانستا</h1>
+              <p>آخر تحديث: 28 أغسطس 2026</p>
+              <p>باستخدام فسخانستا فإنك توافق على تقديم بيانات حساب صحيحة واستخدام الخدمة بصورة قانونية والالتزام بقواعد الطلب والدفع والتوصيل وأي شروط تظهر داخل التطبيق.</p>
+              <h2>الحساب</h2>
+              <p>أنت مسؤول عن النشاط الذي يتم من خلال حسابك وعن الحفاظ على أمان بيانات الدخول. تسجيل الدخول عبر الشبكات الاجتماعية هو وسيلة اختيارية لتسجيل الدخول.</p>
+              <h2>الطلبات والخدمات</h2>
+              <p>قد تختلف الأسعار والتوافر ومناطق التوصيل ووسائل الدفع والعروض والأوقات التقديرية، ويتم عرض التفاصيل المناسبة داخل التطبيق.</p>
+              <h2>الاستخدام المقبول</h2>
+              <p>لا يجوز إساءة استخدام التطبيق أو محاولة الوصول غير المصرح به أو تعطيل الخدمة أو استخدامها في نشاط غير قانوني.</p>
+              <h2>التواصل</h2>
+              <p>للاستفسارات استخدم صفحة <a href="https://fasakhaninja.com/contact-us">تواصل معنا</a>.</p>
+            </div>
+          </body>
+          </html>
+          HTML
+
+          cat > build/web/data-deletion.html <<'HTML'
+          <!doctype html>
+          <html lang="en" dir="ltr">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width,initial-scale=1">
+            <title>Fasakhansta Data Deletion Instructions</title>
+            <style>
+              body{font-family:Arial,sans-serif;max-width:860px;margin:40px auto;padding:0 20px;line-height:1.7;color:#222}h1,h2{color:#ff6f00}a{color:#d85e00}hr{border:0;border-top:1px solid #eee;margin:32px 0}.ar{direction:rtl;text-align:right}
+            </style>
+          </head>
+          <body>
+            <h1>Fasakhansta Data Deletion Instructions</h1>
+            <p>You can request deletion of your Fasakhansta account and personal data at any time.</p>
+            <h2>How to request deletion</h2>
+            <p>Open our <a href="https://fasakhaninja.com/contact-us">Contact Us</a> page and submit a request titled <strong>Delete My Account</strong>. Include the phone number or email linked to your Fasakhansta account so we can verify the request.</p>
+            <p>After verification, we will delete or anonymize account data that is not required to be retained for legal, security, fraud-prevention, accounting, or transaction-record obligations.</p>
+            <p>You may also remove Fasakhansta from your Facebook account settings; this stops future Facebook access but does not by itself delete your Fasakhansta account. Use the deletion request above to request full account deletion.</p>
+            <hr>
+            <div class="ar">
+              <h1>تعليمات حذف بيانات فسخانستا</h1>
+              <p>يمكنك طلب حذف حساب فسخانستا وبياناتك الشخصية في أي وقت.</p>
+              <h2>طريقة طلب الحذف</h2>
+              <p>افتح صفحة <a href="https://fasakhaninja.com/contact-us">تواصل معنا</a> وأرسل طلبًا بعنوان <strong>حذف حسابي</strong>، مع كتابة رقم الهاتف أو البريد الإلكتروني المرتبط بالحساب حتى نتمكن من التحقق من الطلب.</p>
+              <p>بعد التحقق نقوم بحذف أو إخفاء هوية البيانات التي لا يلزم الاحتفاظ بها لأسباب قانونية أو أمنية أو محاسبية أو لمنع الاحتيال أو حفظ سجلات المعاملات.</p>
+              <p>يمكنك أيضًا إزالة فسخانستا من إعدادات حساب Facebook لإيقاف وصول Facebook مستقبلًا، لكن ذلك لا يحذف حساب فسخانستا تلقائيًا. استخدم طلب الحذف أعلاه لحذف الحساب والبيانات المرتبطة به.</p>
+            </div>
+          </body>
+          </html>
+          HTML
 
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0

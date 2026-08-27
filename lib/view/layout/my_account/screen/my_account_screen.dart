@@ -76,13 +76,14 @@ class MyAccountScreen extends StatelessWidget {
                 ]),
                 const SizedBox(height: 10),
                 const DeleteAccountBtn(),
+                const SizedBox(height: 22),
+                _extraActions(context),
+              ] else ...[
+                const SizedBox(height: 14),
+                _guestLoginCard(context),
+                const SizedBox(height: 14),
+                _guestPartnerCard(context),
               ],
-              if (!loggedIn) ...[
-                const SizedBox(height: 18),
-                _loginCard(context),
-              ],
-              const SizedBox(height: 22),
-              _extraActions(context),
             ],
           ),
         ),
@@ -243,11 +244,222 @@ class MyAccountScreen extends StatelessWidget {
     );
   }
 
-  Widget _loginCard(BuildContext context) {
+  Widget _guestLoginCard(BuildContext context) {
+    final isArabic = context.languageCode == 'ar';
+
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppColors.borderColor.withValues(alpha: .55))),
-      child: Column(children: [Icon(Icons.person_outline_rounded, size: 48, color: AppColors.mainAppColor), const SizedBox(height: 8), Text('youMustLoginFirst'.tr, textAlign: TextAlign.center, style: AppTextStyle.text15BS()), const SizedBox(height: 14), SizedBox(width: double.infinity, child: ElevatedButton(onPressed: () => NamedNavigatorImpl.push(clean: true, LoginScreen.routeName), style: ElevatedButton.styleFrom(backgroundColor: AppColors.mainAppColor, foregroundColor: Colors.white, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)), padding: const EdgeInsets.symmetric(vertical: 14)), child: Text('signIn'.tr, style: AppTextStyle.text15BS().copyWith(color: Colors.white))))]),
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(18, 20, 18, 18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: AppColors.borderColor.withValues(alpha: .55)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 18,
+            offset: Offset(0, 7),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 62,
+            height: 62,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF2E5),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(
+              Icons.person_rounded,
+              size: 34,
+              color: AppColors.mainAppColor,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            isArabic ? 'سجل دخولك لإدارة حسابك' : 'Sign in to manage your account',
+            textAlign: TextAlign.center,
+            style: AppTextStyle.text18BS(),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            isArabic
+                ? 'تابع طلباتك واحفظ عناوينك واستفد من كل المميزات بسهولة.'
+                : 'Track orders, save addresses and enjoy all features easily.',
+            textAlign: TextAlign.center,
+            style: AppTextStyle.text12RG().copyWith(
+              color: const Color(0xFF858A92),
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: () => NamedNavigatorImpl.push(clean: true, LoginScreen.routeName),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.mainAppColor,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.login_rounded, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    'signIn'.tr,
+                    style: AppTextStyle.text15BS().copyWith(color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _guestPartnerCard(BuildContext context) {
+    final isArabic = context.languageCode == 'ar';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 15, 14, 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.borderColor.withValues(alpha: .55)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsetsDirectional.only(start: 4, end: 4, bottom: 10),
+            child: Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF2E5),
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: Icon(
+                    Icons.handshake_outlined,
+                    color: AppColors.mainAppColor,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isArabic ? 'انضم كشريك' : 'Join as a partner',
+                        style: AppTextStyle.text15BS(),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        isArabic
+                            ? 'اختار الطريقة المناسبة ليك وابدأ معانا'
+                            : 'Choose how you want to partner with us',
+                        style: AppTextStyle.text11RG().copyWith(
+                          color: const Color(0xFF8B9098),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _guestPartnerRow(
+            context: context,
+            icon: Icons.delivery_dining_rounded,
+            title: 'registerAsADelegate'.tr,
+            subtitle: isArabic
+                ? 'وصّل الطلبات وحقق دخل إضافي'
+                : 'Deliver orders and earn extra income',
+            onTap: () => NamedNavigatorImpl.push(RegisterAsDeliveryScreen.routeName),
+          ),
+          Divider(
+            height: 1,
+            indent: 58,
+            color: AppColors.borderColor.withValues(alpha: .42),
+          ),
+          _guestPartnerRow(
+            context: context,
+            icon: Icons.storefront_outlined,
+            title: 'registerAsAMerchant'.tr,
+            subtitle: isArabic
+                ? 'اعرض منتجاتك وابدأ البيع'
+                : 'Show your products and start selling',
+            onTap: () => NamedNavigatorImpl.push(RegisterAsVendorScreen.routeName),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _guestPartnerRow({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 11),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF5EC),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Icon(icon, color: AppColors.mainAppColor, size: 24),
+            ),
+            const SizedBox(width: 11),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: AppTextStyle.text14BS()),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyle.text11RG().copyWith(
+                      color: const Color(0xFF8B9098),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              context.languageCode == 'en'
+                  ? Icons.chevron_right_rounded
+                  : Icons.chevron_left_rounded,
+              size: 24,
+              color: const Color(0xFFA7ABB2),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

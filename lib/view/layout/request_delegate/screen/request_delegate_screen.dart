@@ -874,41 +874,6 @@ class _RequestDelegateScreenState extends State<RequestDelegateScreen>
               ),
               Positioned(
                 top: MediaQuery.of(context).padding.top + 10,
-                left: 0,
-                right: 0,
-                child: IgnorePointer(
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(.96),
-                        borderRadius: BorderRadius.circular(26),
-                        border: Border.all(color: const Color(0xFFF0F1F3)),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x18000000),
-                            blurRadius: 18,
-                            offset: Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        context.languageCode == 'ar' ? 'الدليفري' : 'Delivery',
-                        style: const TextStyle(
-                          color: Color(0xFF171A1F),
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: MediaQuery.of(context).padding.top + 10,
                 right: context.languageCode == 'ar' ? 12 : null,
                 left: context.languageCode == 'ar' ? null : 12,
                 child: Material(

@@ -6,10 +6,8 @@ import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../helpers/hive/hive_methods.dart';
-import '../../../../helpers/images/app_images.dart';
 import '../../../../helpers/pusher_service/pusher_controller.dart';
 import '../../../../helpers/routes/app_routers_import.dart';
-import '../../../custom_widgets/custom_image/custom_image.dart';
 import '../../auth/controller/auth_controller.dart';
 import '../../auth/screen/login_screen.dart';
 import '../../bottom_navigation/bottom_navigation_bar_screen.dart';
@@ -26,7 +24,6 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  static const Duration _minimumSplashDuration = Duration(milliseconds: 6300);
   static const List<String> _videoChunks = [
     'assets/splash_video/part_00.b64',
     'assets/splash_video/part_01.b64',
@@ -39,9 +36,10 @@ class _SplashScreenState extends State<SplashScreen> {
   ];
 
   final LocalAuthentication _localAuth = LocalAuthentication();
-  late final DateTime _minimumSplashEndsAt;
   VideoPlayerController? _videoController;
+  String? _pendingRouteName;
   bool _videoReady = false;
+  bool _videoFinished = false;
   bool _videoFailed = false;
   bool _isBiometricCheckComplete = false;
   bool _isNavigationPending = false;
@@ -50,21 +48,21 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _minimumSplashEndsAt = DateTime.now().add(_minimumSplashDuration);
     _prepareOpeningVideo();
     WidgetsBinding.instance.addPostFrameCallback((_) => _initial());
   }
 
   Future<void> _prepareOpeningVideo() async {
     try {
-      final encoded = StringBuffer();
-      for (final path in _videoChunks) {
-        final chunk = await rootBundle.loadString(path);
-        encoded.write(chunk.replaceAll(RegExp(r'\s+'), ''));
-      }
+      final chunks = await Future.wait(
+        _videoChunks.map(rootBundle.loadString),
+      );
+      final encoded = chunks
+          .map((chunk) => chunk.replaceAll(RegExp(r'\s+'), ''))
+          .join();
 
       final controller = VideoPlayerController.networkUrl(
-        Uri.parse('data:video/mp4;base64,${encoded.toString()}'),
+        Uri.parse('data:video/mp4;base64,$encoded'),
         videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
       );
       _videoController = controller;
@@ -72,8 +70,10 @@ class _SplashScreenState extends State<SplashScreen> {
       await controller.initialize();
       await controller.setLooping(false);
       await controller.setVolume(0);
+      controller.addListener(_handleVideoProgress);
 
       if (!mounted) {
+        controller.removeListener(_handleVideoProgress);
         await controller.dispose();
         return;
       }
@@ -83,14 +83,33 @@ class _SplashScreenState extends State<SplashScreen> {
     } catch (error, stackTrace) {
       debugPrint('Opening splash video error: $error');
       debugPrintStack(stackTrace: stackTrace);
-      if (mounted) {
-        setState(() => _videoFailed = true);
-      }
+
+      if (!mounted) return;
+      setState(() {
+        _videoFailed = true;
+        _videoFinished = true;
+      });
+      _tryNavigate();
+    }
+  }
+
+  void _handleVideoProgress() {
+    final controller = _videoController;
+    if (controller == null || _videoFinished) return;
+
+    final value = controller.value;
+    if (!value.isInitialized || value.duration == Duration.zero) return;
+
+    final remaining = value.duration - value.position;
+    if (remaining <= const Duration(milliseconds: 120)) {
+      _videoFinished = true;
+      _tryNavigate();
     }
   }
 
   @override
   void dispose() {
+    _videoController?.removeListener(_handleVideoProgress);
     _videoController?.dispose();
     super.dispose();
   }
@@ -100,21 +119,14 @@ class _SplashScreenState extends State<SplashScreen> {
     final controller = _videoController;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF69B7CF),
+      backgroundColor: const Color(0xFF6DB8CF),
       body: Stack(
         fit: StackFit.expand,
         children: [
-          if (_videoReady && controller != null)
-            _buildVideo(controller)
-          else
-            _buildLoadingFallback(),
+          const ColoredBox(color: Color(0xFF6DB8CF)),
+          if (_videoReady && controller != null) _buildVideo(controller),
           if (_videoFailed)
-            const Positioned(
-              left: 0,
-              right: 0,
-              bottom: 24,
-              child: SizedBox.shrink(),
-            ),
+            const ColoredBox(color: Color(0xFF6DB8CF)),
         ],
       ),
     );
@@ -137,60 +149,35 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 
-  Widget _buildLoadingFallback() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF72BED3), Color(0xFF2D88AC)],
-        ),
-      ),
-      alignment: Alignment.center,
-      child: Container(
-        width: 132,
-        height: 132,
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.94),
-          shape: BoxShape.circle,
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x25000000),
-              blurRadius: 26,
-              offset: Offset(0, 10),
-            ),
-          ],
-        ),
-        child: const CustomImage(
-          path: AppImages.appLogo,
-          type: ImageType.asset,
-          fit: BoxFit.contain,
-        ),
-      ),
-    );
-  }
-
-  Duration get _remainingSplashDuration {
-    final remaining = _minimumSplashEndsAt.difference(DateTime.now());
-    return remaining.isNegative ? Duration.zero : remaining;
-  }
-
   void _initial() {
-    // Web is used as a UI review preview. Keep the same routing behaviour,
-    // but let the complete opening video play before leaving the splash.
     if (kIsWeb) {
-      _delayedNavigation(BottomNavigationBarScreen.routeName, seconds: 2);
+      _requestNavigation(BottomNavigationBarScreen.routeName);
       return;
     }
 
     if (HiveMethods.isFirstTime()) {
-      _delayedNavigation(OnBoardingScreen.routeName, seconds: 2);
+      _requestNavigation(OnBoardingScreen.routeName);
     } else if (HiveMethods.getToken() != null) {
       _getData();
     } else {
-      _delayedNavigation(LoginScreen.routeName, seconds: 2);
+      _requestNavigation(LoginScreen.routeName);
     }
+  }
+
+  void _requestNavigation(String routeName) {
+    if (!mounted || _isNavigationPending) return;
+    _pendingRouteName = routeName;
+    _tryNavigate();
+  }
+
+  void _tryNavigate() {
+    if (!mounted || _isNavigationPending || !_videoFinished) return;
+
+    final routeName = _pendingRouteName;
+    if (routeName == null) return;
+
+    _isNavigationPending = true;
+    NamedNavigatorImpl.push(clean: true, routeName);
   }
 
   Future<bool> _checkBiometrics() async {
@@ -230,12 +217,9 @@ class _SplashScreenState extends State<SplashScreen> {
       onSuccess: () async {
         if (!mounted || _isNavigationPending) return;
 
-        await Future.delayed(const Duration(milliseconds: 5500));
-        if (!mounted || _isNavigationPending) return;
-
         final authController = context.read<AuthController>();
         if (authController.profile?.email == null) {
-          _navigateToLogin();
+          _requestNavigation(LoginScreen.routeName);
           return;
         }
 
@@ -243,7 +227,7 @@ class _SplashScreenState extends State<SplashScreen> {
         _isBiometricCheckComplete = true;
 
         if (bioSuccess) {
-          _navigateToHome();
+          _requestNavigation(BottomNavigationBarScreen.routeName);
         } else {
           _handleBiometricFailure();
         }
@@ -252,39 +236,8 @@ class _SplashScreenState extends State<SplashScreen> {
         if (!mounted || _isNavigationPending || _isBiometricCheckComplete) {
           return;
         }
-        _delayedNavigation(LoginScreen.routeName, seconds: 4);
+        _requestNavigation(LoginScreen.routeName);
       },
-    );
-  }
-
-  void _delayedNavigation(String routeName, {int seconds = 0}) {
-    final requestedDelay = Duration(seconds: seconds);
-    final remaining = _remainingSplashDuration;
-    final delay = requestedDelay > remaining ? requestedDelay : remaining;
-    _scheduleNavigation(routeName, delay);
-  }
-
-  void _scheduleNavigation(String routeName, Duration delay) {
-    if (!mounted || _isNavigationPending) return;
-    _isNavigationPending = true;
-
-    Future.delayed(delay, () {
-      if (!mounted) return;
-      NamedNavigatorImpl.push(clean: true, routeName);
-    });
-  }
-
-  void _navigateToHome() {
-    _scheduleNavigation(
-      BottomNavigationBarScreen.routeName,
-      _remainingSplashDuration,
-    );
-  }
-
-  void _navigateToLogin() {
-    _scheduleNavigation(
-      LoginScreen.routeName,
-      _remainingSplashDuration,
     );
   }
 
@@ -305,7 +258,7 @@ class _SplashScreenState extends State<SplashScreen> {
             onPressed: () {
               Navigator.pop(context);
               _isBiometricDialogOpen = false;
-              _navigateToLogin();
+              _requestNavigation(LoginScreen.routeName);
             },
             child: const Text('OK'),
           ),

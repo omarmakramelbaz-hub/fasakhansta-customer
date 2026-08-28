@@ -7,6 +7,7 @@ import '../../view/layout/auth/controller/auth_controller.dart';
 import '../../view/layout/bottom_navigation/controller/advertising_controller.dart';
 import '../../view/layout/cart/controller/cart_controller.dart';
 import '../../view/layout/home/controller/home_controller.dart';
+import '../../view/layout/my_account/controller/my_account_controller.dart';
 import '../../view/layout/on_boarding/screen/splash_screen.dart';
 import '../../view/layout/orders/controller/last_order_controller.dart';
 import '../../view/layout/request_delegate/controller/request_delegate_controller.dart';
@@ -40,6 +41,11 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider(create: (_) => AuthController()),
         ChangeNotifierProvider(create: (_) => HomeController()),
         ChangeNotifierProvider(create: (_) => WalletController()),
+        ChangeNotifierProvider(
+          create: (_) => MyAccountController()
+            ..initialSetting()
+            ..getSetting(),
+        ),
         ChangeNotifierProvider(create: (_) => AddressController()),
         ChangeNotifierProvider(create: (_) => RequestDelegateController()),
         ChangeNotifierProvider(create: (_) => AdvertisingController()..init()),

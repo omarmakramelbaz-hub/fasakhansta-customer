@@ -1,3 +1,4 @@
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -7,6 +8,7 @@ import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/theme/app_text_style.dart';
 import '../../../../helpers/translation/all_translation.dart';
 import '../../../../helpers/utils/common_methods.dart';
+import '../../../custom_widgets/custom_toast/custom_toast.dart';
 import '../../auth/screen/register_screen.dart';
 import '../../cart/controller/cart_controller.dart';
 import '../controller/restaurants_controller.dart';
@@ -203,14 +205,38 @@ class _CustomButtonBottomNavigationState extends State<CustomButtonBottomNavigat
     return restaurantIds.length > 1 || !restaurantIds.contains(restaurantId);
   }
 
-  void _showDifferentRestaurantError(BuildContext context) {
+  void _showDifferentRestaurantError(
+    BuildContext context,
+    CartController cartController,
+  ) {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    CommonMethods.showError(
-      title: isArabic ? 'سلة من مطعم آخر' : 'Different restaurant cart',
-      message: isArabic
-          ? 'السلة الحالية تحتوي على منتجات من مطعم آخر. احذف السلة أولاً ثم أضف منتجات هذا المطعم.'
-          : 'Your current cart contains items from another restaurant. Clear the cart first, then add items from this restaurant.',
-      seconds: 5,
+
+    BotToast.showCustomText(
+      duration: const Duration(seconds: 8),
+      toastBuilder: (cancelFunc) => CustomToast(
+        type: ToastType.error,
+        title: isArabic ? 'سلة من مطعم آخر' : 'Different restaurant cart',
+        message: isArabic
+            ? 'السلة الحالية تحتوي على منتجات من مطعم آخر. يمكنك حذفها الآن وإنشاء سلة جديدة لهذا المطعم.'
+            : 'Your current cart contains items from another restaurant. Clear it now to start a new cart for this restaurant.',
+        onClose: cancelFunc,
+        actionLabel: isArabic ? 'حذف السلة الحالية' : 'Clear current cart',
+        actionIcon: Icons.delete_outline_rounded,
+        onAction: () {
+          cancelFunc();
+          cartController.emptyCart(
+            onSuccess: () async {
+              await cartController.getCart();
+              if (!mounted) return;
+              setState(() {
+                addToCartSelected = true;
+                count = 1;
+                cartController.totalCountAddTCart = null;
+              });
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -243,7 +269,7 @@ class _CustomButtonBottomNavigationState extends State<CustomButtonBottomNavigat
       }
 
       if (_cartContainsAnotherRestaurant(cartController, currentRestaurantId)) {
-        _showDifferentRestaurantError(context);
+        _showDifferentRestaurantError(context, cartController);
         return;
       }
     }
@@ -257,7 +283,10 @@ class _CustomButtonBottomNavigationState extends State<CustomButtonBottomNavigat
         widget.onSuccessAddItems?.call();
         cartController.getCart();
       },
-      anotherCart: () => _showDifferentRestaurantError(context),
+      anotherCart: () => _showDifferentRestaurantError(
+        context,
+        cartController,
+      ),
     );
   }
 }

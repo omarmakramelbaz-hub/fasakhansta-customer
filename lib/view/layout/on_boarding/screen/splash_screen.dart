@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
@@ -13,6 +12,8 @@ import '../../auth/screen/login_screen.dart';
 import '../../bottom_navigation/bottom_navigation_bar_screen.dart';
 import '../../bottom_navigation/controller/advertising_controller.dart';
 import 'on_boarding_screen.dart';
+import 'opening_video_controller_stub.dart'
+    if (dart.library.html) 'opening_video_controller_web.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -35,6 +36,8 @@ class _SplashScreenState extends State<SplashScreen> {
     'assets/splash_video/part_07.b64',
   ];
 
+  static const Color _openingBackground = Color(0xFF58A8C2);
+
   final LocalAuthentication _localAuth = LocalAuthentication();
   VideoPlayerController? _videoController;
   String? _pendingRouteName;
@@ -54,20 +57,10 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _prepareOpeningVideo() async {
     try {
-      final chunks = await Future.wait(
-        _videoChunks.map(rootBundle.loadString),
-      );
-      final encoded = chunks
-          .map((chunk) => chunk.replaceAll(RegExp(r'\s+'), ''))
-          .join();
-
-      final controller = VideoPlayerController.networkUrl(
-        Uri.parse('data:video/mp4;base64,$encoded'),
-        videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
-      );
+      final controller = await createOpeningVideoController(_videoChunks);
       _videoController = controller;
 
-      await controller.initialize();
+      await controller.initialize().timeout(const Duration(seconds: 8));
       await controller.setLooping(false);
       await controller.setVolume(0);
       controller.addListener(_handleVideoProgress);
@@ -80,16 +73,19 @@ class _SplashScreenState extends State<SplashScreen> {
 
       setState(() => _videoReady = true);
       await controller.play();
+
+      final safetyDelay = controller.value.duration + const Duration(seconds: 2);
+      Future.delayed(safetyDelay, () {
+        if (!mounted || _videoFinished) return;
+        _finishOpeningVideo();
+      });
     } catch (error, stackTrace) {
       debugPrint('Opening splash video error: $error');
       debugPrintStack(stackTrace: stackTrace);
 
       if (!mounted) return;
-      setState(() {
-        _videoFailed = true;
-        _videoFinished = true;
-      });
-      _tryNavigate();
+      setState(() => _videoFailed = true);
+      _finishOpeningVideo();
     }
   }
 
@@ -101,10 +97,15 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!value.isInitialized || value.duration == Duration.zero) return;
 
     final remaining = value.duration - value.position;
-    if (remaining <= const Duration(milliseconds: 120)) {
-      _videoFinished = true;
-      _tryNavigate();
+    if (remaining <= const Duration(milliseconds: 150)) {
+      _finishOpeningVideo();
     }
+  }
+
+  void _finishOpeningVideo() {
+    if (_videoFinished) return;
+    _videoFinished = true;
+    _tryNavigate();
   }
 
   @override
@@ -119,14 +120,13 @@ class _SplashScreenState extends State<SplashScreen> {
     final controller = _videoController;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF6DB8CF),
+      backgroundColor: _openingBackground,
       body: Stack(
         fit: StackFit.expand,
         children: [
-          const ColoredBox(color: Color(0xFF6DB8CF)),
-          if (_videoReady && controller != null) _buildVideo(controller),
-          if (_videoFailed)
-            const ColoredBox(color: Color(0xFF6DB8CF)),
+          const ColoredBox(color: _openingBackground),
+          if (_videoReady && !_videoFailed && controller != null)
+            _buildVideo(controller),
         ],
       ),
     );

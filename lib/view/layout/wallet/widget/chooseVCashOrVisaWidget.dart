@@ -36,44 +36,44 @@ class _ChooseVCashOrVisaWidgetState extends State<ChooseVCashOrVisaWidget> {
       if (walletEnabled)
         _PaymentOptionData(
           keyName: 'orange_cash',
-          label: isArabic ? 'أورنج كاش' : 'Orange Cash',
+          label: isArabic ? 'أورنج' : 'Orange',
           backendMethod: 'v_cash',
           brand: const _BrandMark(
             text: 'orange',
-            fontSize: 10,
+            fontSize: 8.5,
             fontWeight: FontWeight.w800,
           ),
         ),
       if (walletEnabled)
         _PaymentOptionData(
           keyName: 'etisalat_cash',
-          label: isArabic ? 'اتصالات كاش' : 'Etisalat Cash',
+          label: isArabic ? 'اتصالات' : 'Etisalat',
           backendMethod: 'v_cash',
           brand: const _BrandMark(
             text: 'e&',
-            fontSize: 17,
+            fontSize: 15,
             fontWeight: FontWeight.w800,
           ),
         ),
       if (walletEnabled)
         _PaymentOptionData(
           keyName: 'vodafone_cash',
-          label: isArabic ? 'فودافون كاش' : 'Vodafone Cash',
+          label: isArabic ? 'فودافون' : 'Vodafone',
           backendMethod: 'v_cash',
           brand: Image.asset(
             AppImages.vfCash,
-            height: 22,
+            height: 19,
             fit: BoxFit.contain,
           ),
         ),
       if (cardEnabled)
         _PaymentOptionData(
           keyName: 'bank_card',
-          label: isArabic ? 'فيزا / ماستركارد' : 'Visa / Mastercard',
+          label: isArabic ? 'فيزا / ماستر' : 'Visa / MC',
           backendMethod: 'online',
           brand: SvgPicture.asset(
             AppImages.visaIcon,
-            height: 22,
+            height: 19,
             fit: BoxFit.contain,
           ),
         ),
@@ -100,26 +100,32 @@ class _ChooseVCashOrVisaWidgetState extends State<ChooseVCashOrVisaWidget> {
 
     return SizedBox(
       height: 76,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: methods.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final method = methods[index];
-          final selected = _selectedOptionKey == method.keyName &&
-              walletController.selectedPayment == method.backendMethod;
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var index = 0; index < methods.length; index++) ...[
+            if (index > 0) const SizedBox(width: 5),
+            Expanded(
+              child: Builder(
+                builder: (context) {
+                  final method = methods[index];
+                  final selected = _selectedOptionKey == method.keyName &&
+                      walletController.selectedPayment == method.backendMethod;
 
-          return PaymentMethodWidget(
-            label: method.label,
-            brand: method.brand,
-            isSelected: selected,
-            onTap: () {
-              setState(() => _selectedOptionKey = method.keyName);
-              walletController.setSelectedPayment(method.backendMethod);
-            },
-          );
-        },
+                  return PaymentMethodWidget(
+                    label: method.label,
+                    brand: method.brand,
+                    isSelected: selected,
+                    onTap: () {
+                      setState(() => _selectedOptionKey = method.keyName);
+                      walletController.setSelectedPayment(method.backendMethod);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -156,15 +162,15 @@ class PaymentMethodWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(12),
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
-        width: 104,
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 7),
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(4, 7, 4, 6),
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFFFFF7F0) : Colors.white,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? AppColors.mainAppColor : const Color(0xFFE6E6E6),
             width: isSelected ? 1.5 : 1,
@@ -173,8 +179,8 @@ class PaymentMethodWidget extends StatelessWidget {
               ? const [
                   BoxShadow(
                     color: Color(0x18FD7201),
-                    blurRadius: 10,
-                    offset: Offset(0, 3),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
                   ),
                 ]
               : null,
@@ -184,16 +190,24 @@ class PaymentMethodWidget extends StatelessWidget {
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(height: 24, child: Center(child: brand)),
+                SizedBox(
+                  height: 21,
+                  width: double.infinity,
+                  child: Center(child: brand),
+                ),
                 const SizedBox(height: 5),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyle.text11RG().copyWith(
-                    color: AppColors.darkTextColor,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                SizedBox(
+                  width: double.infinity,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyle.text10RG().copyWith(
+                      color: AppColors.darkTextColor,
+                      fontSize: 9,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    ),
                   ),
                 ),
               ],
@@ -203,8 +217,8 @@ class PaymentMethodWidget extends StatelessWidget {
               left: 0,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 160),
-                width: 16,
-                height: 16,
+                width: 14,
+                height: 14,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: isSelected ? AppColors.mainAppColor : Colors.white,
@@ -212,11 +226,11 @@ class PaymentMethodWidget extends StatelessWidget {
                     color: isSelected
                         ? AppColors.mainAppColor
                         : const Color(0xFFBDBDBD),
-                    width: 1.3,
+                    width: 1.2,
                   ),
                 ),
                 child: isSelected
-                    ? const Icon(Icons.check_rounded, size: 11, color: Colors.white)
+                    ? const Icon(Icons.check_rounded, size: 9, color: Colors.white)
                     : null,
               ),
             ),
@@ -243,6 +257,7 @@ class _BrandMark extends StatelessWidget {
     return Text(
       text,
       maxLines: 1,
+      overflow: TextOverflow.ellipsis,
       style: TextStyle(
         fontSize: fontSize,
         height: 1,

@@ -40,37 +40,167 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      backgroundColor: AppColors.splachScreenColor,
-      body: const Center(
-        child: CustomImage(
-          path: AppImages.userSplashGif,
-          type: ImageType.asset,
-          width: double.infinity,
-          height: double.infinity,
-          fit: BoxFit.cover,
-        ),
-      ),
+      backgroundColor: const Color(0xFFF7F8FA),
+      body: _buildOpeningView(),
       bottomNavigationBar: _buildApiStatusBar(),
     );
   }
 
+  Widget _buildOpeningView() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 390;
+        final logoCardSize = isCompact ? 178.0 : 205.0;
+        final logoSize = isCompact ? 122.0 : 142.0;
+
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            const _SplashDecoration(),
+            SafeArea(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 28),
+                    child: TweenAnimationBuilder<double>(
+                      duration: const Duration(milliseconds: 850),
+                      tween: Tween(begin: 0, end: 1),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, value, child) {
+                        return Opacity(
+                          opacity: value,
+                          child: Transform.translate(
+                            offset: Offset(0, 18 * (1 - value)),
+                            child: Transform.scale(
+                              scale: 0.94 + (0.06 * value),
+                              child: child,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: logoCardSize,
+                            height: logoCardSize,
+                            padding: const EdgeInsets.all(22),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF8F1),
+                              borderRadius: BorderRadius.circular(38),
+                              border: Border.all(
+                                color: const Color(0xFFFFD6B4),
+                                width: 1.15,
+                              ),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x17000000),
+                                  blurRadius: 34,
+                                  offset: Offset(0, 14),
+                                ),
+                                BoxShadow(
+                                  color: Color(0x16FD7201),
+                                  blurRadius: 42,
+                                  spreadRadius: 2,
+                                  offset: Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(28),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x0D000000),
+                                    blurRadius: 16,
+                                    offset: Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: CustomImage(
+                                  path: AppImages.appLogo,
+                                  type: ImageType.asset,
+                                  width: logoSize,
+                                  height: logoSize,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                          Container(
+                            width: 104,
+                            height: 5,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFE6D1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            alignment: Alignment.centerLeft,
+                            child: TweenAnimationBuilder<double>(
+                              duration: const Duration(milliseconds: 1500),
+                              tween: Tween(begin: 0.18, end: 0.72),
+                              curve: Curves.easeInOutCubic,
+                              builder: (context, value, _) {
+                                return FractionallySizedBox(
+                                  widthFactor: value,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          AppColors.mainAppColor,
+                                          AppColors.gridTwoButtonColor,
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          const Text(
+                            'FASAKHANSTA',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Color(0xFF9A704F),
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 2.6,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildApiStatusBar() {
-    return SizedBox(
-      height: 80,
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Consumer<AuthController>(
-          builder: (context, authController, _) {
-            return ApiResponseWidget(
-              apiResponse: authController.profileResponse,
-              onReload: _getData,
-              isEmpty: false,
-              unauthorizedWidget: const SizedBox(),
-              axis: Axis.horizontal,
-              child: const SizedBox(),
-            );
-          },
-        ),
+    return Container(
+      height: 68,
+      color: const Color(0xFFF7F8FA),
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+      child: Consumer<AuthController>(
+        builder: (context, authController, _) {
+          return ApiResponseWidget(
+            apiResponse: authController.profileResponse,
+            onReload: _getData,
+            isEmpty: false,
+            unauthorizedWidget: const SizedBox(),
+            axis: Axis.horizontal,
+            child: const SizedBox(),
+          );
+        },
       ),
     );
   }
@@ -121,7 +251,11 @@ class _SplashScreenState extends State<SplashScreen> {
 
     context.read<AuthController>().getProfile(
       onHaveIdANDToken: (id, token) {
-        context.read<PusherController>().initPusher(channelName: 'private-user.$id', userId: id, token: token);
+        context.read<PusherController>().initPusher(
+              channelName: 'private-user.$id',
+              userId: id,
+              token: token,
+            );
       },
       onSuccess: () async {
         if (!mounted || _isNavigationPending) return;
@@ -182,7 +316,9 @@ class _SplashScreenState extends State<SplashScreen> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text('Authentication Required'),
-        content: const Text('Biometric authentication failed. Please login again.'),
+        content: const Text(
+          'Biometric authentication failed. Please login again.',
+        ),
         actions: [
           TextButton(
             onPressed: () {
@@ -190,6 +326,76 @@ class _SplashScreenState extends State<SplashScreen> {
               _navigateToLogin();
             },
             child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SplashDecoration extends StatelessWidget {
+  const _SplashDecoration();
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Stack(
+        children: [
+          Positioned(
+            top: -115,
+            right: -95,
+            child: Container(
+              width: 285,
+              height: 285,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0xFFFFE8D3),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 58,
+            right: 48,
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+                border: Border.all(color: const Color(0xFFFFD6B4)),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x0E000000),
+                    blurRadius: 12,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -130,
+            left: -105,
+            child: Container(
+              width: 310,
+              height: 310,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0xFFFFF0E3),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 102,
+            left: 34,
+            child: Container(
+              width: 18,
+              height: 18,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0xFFFD7201),
+              ),
+            ),
           ),
         ],
       ),

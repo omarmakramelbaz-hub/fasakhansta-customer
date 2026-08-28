@@ -1,0 +1,1 @@
+Fasakhansta opening splash video data. Generated from the user-provided MP4 and optimized for app startup.

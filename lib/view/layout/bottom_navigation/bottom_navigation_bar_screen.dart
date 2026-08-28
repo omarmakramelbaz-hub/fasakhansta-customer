@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:upgrader/upgrader.dart';
 
 import '../../../helpers/hive/hive_methods.dart';
-import '../../../helpers/images/app_images.dart';
 import '../../../helpers/routes/app_routers_import.dart';
 import '../../../helpers/theme/app_colors.dart';
 import '../../../helpers/theme/app_text_style.dart';
@@ -21,10 +19,12 @@ class BottomNavigationBarScreen extends StatefulWidget {
   const BottomNavigationBarScreen({super.key});
 
   @override
-  State<BottomNavigationBarScreen> createState() => _BottomNavigationBarScreenState();
+  State<BottomNavigationBarScreen> createState() =>
+      _BottomNavigationBarScreenState();
 }
 
-class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
+class _BottomNavigationBarScreenState
+    extends State<BottomNavigationBarScreen> {
   late BottomNavLogicController logic;
 
   @override
@@ -76,33 +76,34 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
     return SafeArea(
       top: false,
       child: Container(
-        margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+        margin: const EdgeInsets.fromLTRB(12, 0, 12, 9),
         decoration: BoxDecoration(
           color: AppColors.whiteColor,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(26),
           border: Border.all(
-            color: AppColors.borderColor.withValues(alpha: 0.45),
+            color: const Color(0xFFEDEFF2),
+            width: 1,
           ),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
-              color: AppColors.blackColor.withValues(alpha: 0.10),
+              color: Color(0x12000000),
               blurRadius: 22,
-              offset: const Offset(0, 6),
+              offset: Offset(0, -3),
             ),
           ],
         ),
         child: SizedBox(
-          height: 74,
+          height: 70,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 7),
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
             child: Row(
               children: [
                 Expanded(
                   child: _navItem(
                     index: 0,
                     controller: controller,
-                    iconSelected: AppImages.homeIcon,
-                    iconUnselected: AppImages.homeUnselectedIcon,
+                    iconSelected: Icons.home_rounded,
+                    iconUnselected: Icons.home_outlined,
                     title: 'home'.tr,
                     onTap: () => controller.updateIndex(0),
                   ),
@@ -114,8 +115,8 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
                   child: _navItem(
                     index: 3,
                     controller: controller,
-                    iconSelected: AppImages.accountFillIcon,
-                    iconUnselected: AppImages.myAccountIcon,
+                    iconSelected: Icons.person_rounded,
+                    iconUnselected: Icons.person_outline_rounded,
                     title: 'account'.tr,
                     onTap: () => controller.updateIndex(3),
                   ),
@@ -131,8 +132,8 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
   Widget _navItem({
     required int index,
     required BottomNavigationController controller,
-    required String iconSelected,
-    required String iconUnselected,
+    required IconData iconSelected,
+    required IconData iconUnselected,
     required String title,
     required VoidCallback onTap,
   }) {
@@ -154,7 +155,7 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
     return _navButton(
       selected: false,
       title: context.languageCode == 'ar' ? 'السلة' : 'Cart',
-      icon: AppImages.nCartIcon,
+      icon: Icons.shopping_cart_outlined,
       badgeCount: cartCount,
       onTap: () {
         if (HiveMethods.getToken() == null) {
@@ -194,7 +195,7 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
           controller.updateIndex(1);
         }
       },
-      icon: selected ? AppImages.orderFillIcon : AppImages.ordersIcon,
+      icon: selected ? Icons.receipt_long_rounded : Icons.receipt_long_outlined,
     );
   }
 
@@ -224,7 +225,9 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
           controller.updateIndex(2);
         }
       },
-      icon: selected ? AppImages.billFillIcon : AppImages.notificationsIcon,
+      icon: selected
+          ? Icons.notifications_rounded
+          : Icons.notifications_none_rounded,
       showBadge: hasNewNotifications,
     );
   }
@@ -233,99 +236,132 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
     required bool selected,
     required String title,
     required VoidCallback onTap,
-    required String icon,
+    required IconData icon,
     bool showBadge = false,
     int badgeCount = 0,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOut,
-        margin: const EdgeInsets.symmetric(horizontal: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppColors.mainAppColor.withValues(alpha: 0.11)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                SizedBox(
-                  width: 25,
-                  height: 25,
-                  child: SvgPicture.asset(
-                    icon,
-                    colorFilter: ColorFilter.mode(
-                      selected ? AppColors.mainAppColor : AppColors.greyColor,
-                      BlendMode.srcIn,
+    final inactiveColor = const Color(0xFF8A8F98);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        splashColor: AppColors.mainAppColor.withValues(alpha: .07),
+        highlightColor: Colors.transparent,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 210),
+                    curve: Curves.easeOutCubic,
+                    width: 46,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? AppColors.mainAppColor.withValues(alpha: .11)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(13),
+                      border: selected
+                          ? Border.all(
+                              color: AppColors.mainAppColor
+                                  .withValues(alpha: .10),
+                            )
+                          : null,
+                    ),
+                    alignment: Alignment.center,
+                    child: AnimatedScale(
+                      duration: const Duration(milliseconds: 190),
+                      curve: Curves.easeOutBack,
+                      scale: selected ? 1.04 : 1,
+                      child: Icon(
+                        icon,
+                        size: selected ? 24 : 23,
+                        color:
+                            selected ? AppColors.mainAppColor : inactiveColor,
+                      ),
                     ),
                   ),
+                  if (badgeCount > 0)
+                    Positioned(
+                      right: -4,
+                      top: -5,
+                      child: Container(
+                        height: 17,
+                        constraints: const BoxConstraints(minWidth: 17),
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: AppColors.mainAppColor,
+                          borderRadius: BorderRadius.circular(9),
+                          border: Border.all(
+                            color: AppColors.whiteColor,
+                            width: 1.5,
+                          ),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x22FD7201),
+                              blurRadius: 5,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          badgeCount > 99 ? '99+' : '$badgeCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.w800,
+                            height: 1,
+                          ),
+                        ),
+                      ),
+                    )
+                  else if (showBadge)
+                    Positioned(
+                      right: 1,
+                      top: -2,
+                      child: Container(
+                        width: 9,
+                        height: 9,
+                        decoration: BoxDecoration(
+                          color: AppColors.mainAppColor,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppColors.whiteColor,
+                            width: 1.7,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 180),
+                style: (selected
+                        ? AppTextStyle.text12RM()
+                        : AppTextStyle.text12RG())
+                    .copyWith(
+                  fontSize: 10.3,
+                  height: 1.05,
+                  color: selected ? AppColors.mainAppColor : inactiveColor,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 ),
-                if (badgeCount > 0)
-                  Positioned(
-                    right: -10,
-                    top: -8,
-                    child: Container(
-                      height: 18,
-                      constraints: const BoxConstraints(minWidth: 18),
-                      padding: const EdgeInsets.symmetric(horizontal: 5),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: AppColors.mainAppColor,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: AppColors.whiteColor,
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Text(
-                        badgeCount > 99 ? '99+' : '$badgeCount',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          height: 1,
-                        ),
-                      ),
-                    ),
-                  )
-                else if (showBadge)
-                  Positioned(
-                    right: -5,
-                    top: -4,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: AppColors.mainAppColor,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppColors.whiteColor,
-                          width: 1.5,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: (selected
-                      ? AppTextStyle.text12RM()
-                      : AppTextStyle.text12RG())
-                  .copyWith(fontSize: 11),
-            ),
-          ],
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

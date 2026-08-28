@@ -1,0 +1,1 @@
+Preparing higher-quality 540x960 H.264 splash asset with a one-second final-frame hold. This marker will be replaced by the binary asset in the same update sequence.

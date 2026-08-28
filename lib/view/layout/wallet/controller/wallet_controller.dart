@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../helpers/hive/hive_methods.dart';
 import '../../../../helpers/networking/api_helper.dart';
 import '../../../../helpers/networking/urls.dart';
 import '../../../../helpers/utils/common_methods.dart';
@@ -11,6 +12,9 @@ class WalletController extends ChangeNotifier {
   final chargeWalletFormKey = GlobalKey<FormState>();
   final chargeAmountEc = TextEditingController();
   final chargeAmountFocusNode = FocusNode();
+
+  bool get _isGuestSession =>
+      HiveMethods.isVisitor() || HiveMethods.getToken() == null;
 
   void updateWallet({required WalletModel transaction}) {
     getWallet();
@@ -26,9 +30,20 @@ class WalletController extends ChangeNotifier {
   ApiResponse _walletResponse = ApiResponse(state: ResponseState.sleep, data: null);
   ApiResponse get walletResponse => _walletResponse;
   WalletResponse? _wallet;
-  WalletResponse? get wallet => _wallet;
+
+  // Never expose a previously loaded user's wallet during a guest session.
+  // WalletController is provided globally, so its in-memory state can survive
+  // navigation from an authenticated session to guest mode unless we guard it.
+  WalletResponse? get wallet => _isGuestSession ? null : _wallet;
 
   Future<void> getWallet() async {
+    if (_isGuestSession) {
+      _walletResponse = ApiResponse(state: ResponseState.sleep, data: null);
+      _wallet = null;
+      notifyListeners();
+      return;
+    }
+
     _walletResponse = ApiResponse(state: ResponseState.loading, data: null);
     _wallet = null;
     notifyListeners();

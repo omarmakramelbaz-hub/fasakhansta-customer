@@ -42,7 +42,7 @@ jobs:
           html = index.read_text(encoding='utf-8')
 
           maps_script = '<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBDfirv6d7BiO-9YnsU5zCHEn9iM9iNtuM&libraries=places&language=ar&region=EG&v=weekly"></script>'
-          google_signin_meta = '<meta name="google-signin-client_id" content="224648167390-efdtr7rjcnept7eiml1d642sdn8n9ki7.apps.googleusercontent.com">'
+          google_signin_meta = '<meta name="google-signin-client_id" content="284797821306-sgmrmkr2ibd1nan66svmn9d3oq76vtj1.apps.googleusercontent.com">'
 
           additions = []
           if 'maps.googleapis.com/maps/api/js' not in html:
@@ -58,7 +58,7 @@ jobs:
       - name: Build Flutter Web
         run: |
           flutter build web --release \
-            --dart-define=GOOGLE_WEB_CLIENT_ID=224648167390-efdtr7rjcnept7eiml1d642sdn8n9ki7.apps.googleusercontent.com \
+            --dart-define=GOOGLE_WEB_CLIENT_ID=284797821306-sgmrmkr2ibd1nan66svmn9d3oq76vtj1.apps.googleusercontent.com \
             --dart-define=FACEBOOK_APP_ID=997704678612295
 
       - name: Add Meta policy pages

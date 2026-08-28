@@ -12,6 +12,8 @@ import '../../../helpers/translation/all_translation.dart';
 import '../../../helpers/utils/common_methods.dart';
 import '../auth/controller/auth_controller.dart';
 import '../auth/screen/register_screen.dart';
+import '../cart/controller/cart_controller.dart';
+import '../cart/screen/cart_screen.dart';
 import 'controller/bottom_nav_controller.dart';
 
 class BottomNavigationBarScreen extends StatefulWidget {
@@ -78,7 +80,9 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
         decoration: BoxDecoration(
           color: AppColors.whiteColor,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.borderColor.withValues(alpha: 0.45)),
+          border: Border.all(
+            color: AppColors.borderColor.withValues(alpha: 0.45),
+          ),
           boxShadow: [
             BoxShadow(
               color: AppColors.blackColor.withValues(alpha: 0.10),
@@ -90,7 +94,7 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
         child: SizedBox(
           height: 74,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 7),
             child: Row(
               children: [
                 Expanded(
@@ -103,6 +107,7 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
                     onTap: () => controller.updateIndex(0),
                   ),
                 ),
+                Expanded(child: _navCart()),
                 Expanded(child: _navOrders(controller)),
                 Expanded(child: _navNotifications(controller)),
                 Expanded(
@@ -141,6 +146,34 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
     );
   }
 
+  Widget _navCart() {
+    final cartCount = HiveMethods.getToken() == null
+        ? 0
+        : (context.watch<CartController>().cart?.carts?.length ?? 0);
+
+    return _navButton(
+      selected: false,
+      title: context.languageCode == 'ar' ? 'السلة' : 'Cart',
+      icon: AppImages.nCartIcon,
+      badgeCount: cartCount,
+      onTap: () {
+        if (HiveMethods.getToken() == null) {
+          CommonMethods.showChooseDialog(
+            context,
+            onPressed: () {
+              Navigator.pop(context);
+              NamedNavigatorImpl.push(RegisterScreen.routeName);
+            },
+            message: 'youMustLoginFirst'.tr,
+          );
+          return;
+        }
+
+        NamedNavigatorImpl.push(CartScreen.routeName);
+      },
+    );
+  }
+
   Widget _navOrders(BottomNavigationController controller) {
     final selected = controller.screenIndex == 1;
 
@@ -168,7 +201,8 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
   Widget _navNotifications(BottomNavigationController controller) {
     final selected = controller.screenIndex == 2;
     final hasNewNotifications = HiveMethods.getNotificationsCount() != null &&
-        HiveMethods.getNotificationsCount() != context.read<AuthController>().profile?.notificaionsCount;
+        HiveMethods.getNotificationsCount() !=
+            context.read<AuthController>().profile?.notificaionsCount;
 
     return _navButton(
       selected: selected,
@@ -201,6 +235,7 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
     required VoidCallback onTap,
     required String icon,
     bool showBadge = false,
+    int badgeCount = 0,
   }) {
     return InkWell(
       onTap: onTap,
@@ -208,8 +243,8 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
-        margin: const EdgeInsets.symmetric(horizontal: 3),
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+        margin: const EdgeInsets.symmetric(horizontal: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),
         decoration: BoxDecoration(
           color: selected
               ? AppColors.mainAppColor.withValues(alpha: 0.11)
@@ -233,7 +268,35 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
                     ),
                   ),
                 ),
-                if (showBadge)
+                if (badgeCount > 0)
+                  Positioned(
+                    right: -10,
+                    top: -8,
+                    child: Container(
+                      height: 18,
+                      constraints: const BoxConstraints(minWidth: 18),
+                      padding: const EdgeInsets.symmetric(horizontal: 5),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: AppColors.mainAppColor,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: AppColors.whiteColor,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Text(
+                        badgeCount > 99 ? '99+' : '$badgeCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          height: 1,
+                        ),
+                      ),
+                    ),
+                  )
+                else if (showBadge)
                   Positioned(
                     right: -5,
                     top: -4,
@@ -243,7 +306,10 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
                       decoration: BoxDecoration(
                         color: AppColors.mainAppColor,
                         shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.whiteColor, width: 1.5),
+                        border: Border.all(
+                          color: AppColors.whiteColor,
+                          width: 1.5,
+                        ),
                       ),
                     ),
                   ),
@@ -254,7 +320,10 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
               title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: selected ? AppTextStyle.text12RM() : AppTextStyle.text12RG(),
+              style: (selected
+                      ? AppTextStyle.text12RM()
+                      : AppTextStyle.text12RG())
+                  .copyWith(fontSize: 11),
             ),
           ],
         ),

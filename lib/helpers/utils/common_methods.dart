@@ -19,18 +19,30 @@ class CommonMethods {
         title: title != null
             ? Text(
                 title,
-                style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               )
             : null,
         content: Text(
           message,
-          style: const TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.w500),
+          style: const TextStyle(
+            color: Colors.black,
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         actions: [
           CupertinoDialogAction(
             child: Text(
               'ok'.tr,
-              style: const TextStyle(color: Colors.red, fontSize: 16, fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                color: Colors.red,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             onPressed: () => Navigator.of(context).pop(true),
           ),
@@ -51,18 +63,30 @@ class CommonMethods {
         title: title != null
             ? Text(
                 title,
-                style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               )
             : null,
         content: Text(
           message,
-          style: const TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.w500),
+          style: const TextStyle(
+            color: Colors.black,
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         actions: [
           CupertinoDialogAction(
             child: Text(
               'no'.tr,
-              style: TextStyle(color: AppColors.darkTextColor, fontSize: 16, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                color: AppColors.darkTextColor,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             onPressed: () => Navigator.of(context).pop(),
           ),
@@ -70,7 +94,11 @@ class CommonMethods {
             onPressed: onPressed,
             child: Text(
               'yes'.tr,
-              style: TextStyle(color: AppColors.darkTextColor, fontSize: 16, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                color: AppColors.darkTextColor,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],
@@ -88,19 +116,24 @@ class CommonMethods {
     int seconds = 3,
   }) {
     final normalizedMessage = message.trim().toLowerCase();
+    final isArabic = _isArabic();
     final isSuccess = type == ToastType.success;
+
     final isLoginSuccess = isSuccess &&
         (message.contains('تسجيل الدخول') ||
+            message.contains('تم الدخول') ||
             normalizedMessage.contains('logged in') ||
             normalizedMessage.contains('login success') ||
             normalizedMessage.contains('login successfully') ||
             normalizedMessage.contains('signed in'));
+
     final isLogoutSuccess = isSuccess &&
         (message.contains('تسجيل الخروج') ||
             normalizedMessage.contains('logged out') ||
             normalizedMessage.contains('logout success') ||
             normalizedMessage.contains('logout successfully') ||
             normalizedMessage.contains('signed out'));
+
     final isDeliveryCancellation = isSuccess &&
         (message.contains('تم الإلغاء') ||
             message.contains('تم الالغاء') ||
@@ -108,6 +141,7 @@ class CommonMethods {
             (normalizedMessage.contains('cancel') &&
                 (normalizedMessage.contains('order') ||
                     normalizedMessage.contains('success'))));
+
     final hasFareKeyword = message.contains('أجرة') ||
         message.contains('اجرة') ||
         message.contains('تسعير') ||
@@ -115,6 +149,7 @@ class CommonMethods {
         message.contains('سعر') ||
         normalizedMessage.contains('fare') ||
         normalizedMessage.contains('price');
+
     final hasFareUpdateKeyword = message.contains('تم') ||
         message.contains('تحديث') ||
         message.contains('تعديل') ||
@@ -124,361 +159,94 @@ class CommonMethods {
         normalizedMessage.contains('updated') ||
         normalizedMessage.contains('increased') ||
         normalizedMessage.contains('success');
+
     final isDeliveryFareUpdate =
         isSuccess && hasFareKeyword && hasFareUpdateKeyword;
 
+    final isAddToCartSuccess = isSuccess &&
+        ((message.contains('إضاف') && message.contains('السلة')) ||
+            (normalizedMessage.contains('add') &&
+                normalizedMessage.contains('cart')));
+
+    if (isAddToCartSuccess) {
+      showCartSuccess(message: message, seconds: seconds);
+      return;
+    }
+
     if (isLoginSuccess) {
-      _showGoDriveActionSuccess(
-        title: 'تم تسجيل الدخول بنجاح',
-        message: 'أهلًا بك من جديد، حسابك جاهز للاستخدام.',
-        icon: Icons.person_rounded,
-        accentColor: const Color(0xFF169B5B),
-        iconBackgroundColor: const Color(0xFFEAF8F0),
-        borderColor: const Color(0xFFCFEBDD),
+      _showBrandedToast(
+        type: ToastType.success,
+        title: isArabic ? 'تم الدخول بنجاح' : 'Login successful',
+        message: isArabic
+            ? 'أهلاً بك، تم تسجيل دخولك إلى حسابك بنجاح'
+            : 'Welcome back. You are signed in successfully.',
         seconds: seconds,
       );
       return;
     }
 
     if (isLogoutSuccess) {
-      _showGoDriveActionSuccess(
-        title: 'تم تسجيل الخروج',
-        message: 'تم إنهاء الجلسة بأمان. ننتظرك في أي وقت.',
-        icon: Icons.logout_rounded,
-        accentColor: AppColors.mainAppColor,
-        iconBackgroundColor: const Color(0xFFFFF2E7),
-        borderColor: const Color(0xFFFFD8B6),
+      _showBrandedToast(
+        type: ToastType.success,
+        title: isArabic ? 'تم تسجيل الخروج' : 'Logged out',
+        message: isArabic
+            ? 'تم إنهاء الجلسة بأمان. ننتظرك في أي وقت.'
+            : 'Your session ended safely. See you again soon.',
         seconds: seconds,
       );
       return;
     }
 
     if (isDeliveryCancellation) {
-      _showGoDriveActionSuccess(
-        title: 'تم إلغاء طلب التوصيل',
-        message: 'تم إيقاف البحث عن مندوب ولن يتم تنفيذ الطلب.',
-        icon: Icons.close_rounded,
+      _showBrandedToast(
+        type: ToastType.warning,
+        title: isArabic ? 'تم إلغاء طلب التوصيل' : 'Delivery request cancelled',
+        message: isArabic
+            ? 'تم إيقاف البحث عن مندوب ولن يتم تنفيذ الطلب.'
+            : 'The courier search has stopped and the request will not be processed.',
         accentColor: const Color(0xFFD84A4A),
-        iconBackgroundColor: const Color(0xFFFFEEEE),
-        borderColor: const Color(0xFFF3CCCC),
         seconds: seconds,
       );
       return;
     }
 
     if (isDeliveryFareUpdate) {
-      _showGoDriveActionSuccess(
-        title: 'تم تحديث أجرة التوصيل',
-        message: 'تم تحديث الطلب وإرساله للمندوبين بالأجرة الجديدة.',
-        icon: Icons.payments_outlined,
-        accentColor: AppColors.mainAppColor,
-        iconBackgroundColor: const Color(0xFFFFF2E7),
-        borderColor: const Color(0xFFFFD8B6),
+      _showBrandedToast(
+        type: ToastType.success,
+        title: isArabic ? 'تم تحديث أجرة التوصيل' : 'Delivery fare updated',
+        message: isArabic
+            ? 'تم تحديث الطلب وإرساله للمندوبين بالأجرة الجديدة.'
+            : 'The request was updated and sent with the new delivery fare.',
         seconds: seconds,
       );
       return;
     }
 
-    final isAddToCartSuccess = type == ToastType.success && message.contains('إضاف') && message.contains('السلة');
-    if (isAddToCartSuccess) {
-      showCartSuccess(message: message, seconds: seconds);
-      return;
-    }
-
-    BotToast.showCustomText(
-      duration: Duration(seconds: seconds),
-      toastBuilder: (cancelFunc) => SizedBox(
-        height: 80,
-        child: CustomToast(
-          type: type,
-          title: title,
-          message: message,
-          backgroundColor: backgroundColor,
-          icon: icon,
-          textColor: textColor,
-        ),
-      ),
+    _showBrandedToast(
+      type: type,
+      title: title,
+      message: message,
+      icon: icon,
+      accentColor: backgroundColor,
+      textColor: textColor,
+      seconds: seconds,
     );
   }
 
-  static void showCartSuccess({required String message, int seconds = 3}) {
-    BotToast.showCustomText(
-      duration: Duration(seconds: seconds),
-      toastBuilder: (cancelFunc) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: Container(
-          width: double.infinity,
-          margin: const EdgeInsets.symmetric(horizontal: 14),
-          padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFDCEFE3)),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x22000000),
-                blurRadius: 20,
-                offset: Offset(0, 7),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE7F7ED),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.check_rounded,
-                  color: Color(0xFF16A45B),
-                  size: 30,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'تمت الإضافة إلى السلة',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Color(0xFF163A26),
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      message,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF7B827E),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: () {
-                        cancelFunc();
-                        NamedNavigatorImpl.push('CartScreen');
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF5FBF7),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFBFDAC9)),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.shopping_cart_outlined, size: 17, color: Color(0xFF168B50)),
-                            SizedBox(width: 5),
-                            Text(
-                              'عرض السلة',
-                              style: TextStyle(
-                                color: Color(0xFF168B50),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              InkWell(
-                borderRadius: BorderRadius.circular(20),
-                onTap: cancelFunc,
-                child: const Padding(
-                  padding: EdgeInsets.all(6),
-                  child: Icon(Icons.close_rounded, size: 20, color: Color(0xFF9A9A9A)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  static void _showGoDriveActionSuccess({
-    required String title,
-    required String message,
-    required IconData icon,
-    required Color accentColor,
-    required Color iconBackgroundColor,
-    required Color borderColor,
-    int seconds = 3,
-  }) {
-    BotToast.showCustomText(
-      duration: Duration(seconds: seconds),
-      toastBuilder: (cancelFunc) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: Container(
-          width: double.infinity,
-          margin: const EdgeInsets.symmetric(horizontal: 14),
-          padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: borderColor),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x22000000),
-                blurRadius: 20,
-                offset: Offset(0, 7),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: iconBackgroundColor,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  color: accentColor,
-                  size: 25,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF202328),
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      message,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF7C828A),
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w500,
-                        height: 1.25,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              InkWell(
-                borderRadius: BorderRadius.circular(20),
-                onTap: cancelFunc,
-                child: const Padding(
-                  padding: EdgeInsets.all(6),
-                  child: Icon(
-                    Icons.close_rounded,
-                    size: 20,
-                    color: Color(0xFF9A9A9A),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  static void _showDeliveryLocationWarning({
+  static void showCartSuccess({
     required String message,
     int seconds = 3,
   }) {
-    BotToast.showCustomText(
-      duration: Duration(seconds: seconds),
-      toastBuilder: (cancelFunc) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: Container(
-          width: double.infinity,
-          margin: const EdgeInsets.symmetric(horizontal: 14),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFF5E8),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFFFD7AD)),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x1A000000),
-                blurRadius: 16,
-                offset: Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFFE8CF),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.location_on_outlined,
-                  color: AppColors.mainAppColor,
-                  size: 21,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  message,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFF5D4A37),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    height: 1.25,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              InkWell(
-                borderRadius: BorderRadius.circular(18),
-                onTap: cancelFunc,
-                child: const Padding(
-                  padding: EdgeInsets.all(5),
-                  child: Icon(
-                    Icons.close_rounded,
-                    size: 19,
-                    color: Color(0xFF9A8D80),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    final isArabic = _isArabic();
+
+    _showBrandedToast(
+      type: ToastType.success,
+      title: isArabic ? 'تمت الإضافة إلى السلة' : 'Added to cart',
+      message: message,
+      seconds: seconds,
+      actionLabel: isArabic ? 'عرض السلة' : 'View cart',
+      actionIcon: Icons.shopping_cart_outlined,
+      onAction: () => NamedNavigatorImpl.push('CartScreen'),
     );
   }
 
@@ -492,53 +260,80 @@ class CommonMethods {
     int seconds = 3,
     VoidCallback? onTap,
   }) {
+    final isArabic = _isArabic();
+
     if (message == 'chooseDeliveryLocationsFirst'.tr) {
-      _showDeliveryLocationWarning(
+      _showBrandedToast(
+        type: ToastType.warning,
+        title: isArabic ? 'حدد موقع التوصيل أولاً' : 'Choose delivery location',
         message: message,
+        icon: icon,
+        accentColor: backgroundColor,
+        textColor: textColor,
         seconds: seconds,
+        onTap: onTap,
       );
       return;
     }
 
+    final isOffline = apiResponse?.state == ResponseState.offline;
+
+    _showBrandedToast(
+      type: isOffline ? ToastType.offline : ToastType.error,
+      title: title ??
+          (isOffline
+              ? (isArabic ? 'لا يوجد اتصال بالإنترنت' : 'No internet connection')
+              : (isArabic ? 'تعذر إتمام العملية' : 'Something went wrong')),
+      message: message,
+      icon: icon,
+      accentColor: backgroundColor,
+      textColor: textColor,
+      seconds: seconds,
+      onTap: onTap,
+    );
+  }
+
+  static void _showBrandedToast({
+    required ToastType type,
+    required String message,
+    String? title,
+    String? icon,
+    Color? accentColor,
+    Color? textColor,
+    int seconds = 3,
+    VoidCallback? onTap,
+    String? actionLabel,
+    IconData? actionIcon,
+    VoidCallback? onAction,
+  }) {
     BotToast.showCustomText(
       duration: Duration(seconds: seconds),
-      toastBuilder: (context) => SizedBox(
-        height: 80,
-        child: CustomToast(
-          title: title,
-          message: message,
-          type: apiResponse?.state == ResponseState.offline ? ToastType.offline : ToastType.error,
-          backgroundColor: backgroundColor,
-          icon: icon,
-          textColor: textColor,
-        ),
+      toastBuilder: (cancelFunc) => CustomToast(
+        type: type,
+        title: title,
+        message: message,
+        icon: icon,
+        backgroundColor: accentColor,
+        textColor: textColor,
+        onClose: cancelFunc,
+        onTap: onTap,
+        actionLabel: actionLabel,
+        actionIcon: actionIcon,
+        onAction: onAction == null
+            ? null
+            : () {
+                cancelFunc();
+                onAction();
+              },
       ),
     );
   }
 
-  // static void showSuccess({
-  //   required String message,
-  //   String? title,
-  //   String? icon,
-  //   Color? backgroundColor,
-  //   Color? textColor,
-  //   int seconds = 3,
-  // }) {
-  //   BotToast.showCustomText(
-  //     duration: Duration(seconds: seconds),
-  //     toastBuilder: (cancelFunc) => SizedBox(
-  //       height: 80,
-  //       child: CustomToast(
-  //         type: ToastType.success,
-  //         title: title,
-  //         message: message,
-  //         backgroundColor: backgroundColor,
-  //         icon: icon,
-  //         textColor: textColor,
-  //       ),
-  //     ),
-  //   );
-  // }
+  static bool _isArabic() {
+    final context = NamedNavigatorImpl.navigatorState.currentContext;
+    if (context == null) return true;
+    return Localizations.localeOf(context).languageCode == 'ar';
+  }
 
   static Future<bool> hasConnection() async {
     bool result = await InternetConnection().hasInternetAccess;

@@ -62,7 +62,7 @@ class _ChooseVCashOrVisaWidgetState extends State<ChooseVCashOrVisaWidget> {
           backendMethod: 'v_cash',
           brand: Image.asset(
             AppImages.vfCash,
-            height: 19,
+            height: 18,
             fit: BoxFit.contain,
           ),
         ),
@@ -73,7 +73,7 @@ class _ChooseVCashOrVisaWidgetState extends State<ChooseVCashOrVisaWidget> {
           backendMethod: 'online',
           brand: SvgPicture.asset(
             AppImages.visaIcon,
-            height: 19,
+            height: 18,
             fit: BoxFit.contain,
           ),
         ),
@@ -98,35 +98,70 @@ class _ChooseVCashOrVisaWidgetState extends State<ChooseVCashOrVisaWidget> {
       );
     }
 
-    return SizedBox(
-      height: 76,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (var index = 0; index < methods.length; index++) ...[
-            if (index > 0) const SizedBox(width: 5),
-            Expanded(
-              child: Builder(
-                builder: (context) {
-                  final method = methods[index];
-                  final selected = _selectedOptionKey == method.keyName &&
-                      walletController.selectedPayment == method.backendMethod;
-
-                  return PaymentMethodWidget(
-                    label: method.label,
-                    brand: method.brand,
-                    isSelected: selected,
-                    onTap: () {
-                      setState(() => _selectedOptionKey = method.keyName);
-                      walletController.setSelectedPayment(method.backendMethod);
-                    },
-                  );
-                },
+    // Keep the compact one-row layout while only the 3 wallet methods are
+    // available. As soon as card payment becomes available, switch to a 2x2
+    // grid so Visa/Mastercard is always visible without horizontal scrolling.
+    if (methods.length <= 3) {
+      return SizedBox(
+        height: 76,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var index = 0; index < methods.length; index++) ...[
+              if (index > 0) const SizedBox(width: 7),
+              Expanded(
+                child: _buildMethod(
+                  method: methods[index],
+                  walletController: walletController,
+                ),
               ),
-            ),
+            ],
           ],
-        ],
-      ),
+        ),
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final itemWidth = (constraints.maxWidth - 8) / 2;
+        return Wrap(
+          spacing: 8,
+          runSpacing: 7,
+          children: methods
+              .map(
+                (method) => SizedBox(
+                  width: itemWidth,
+                  height: 50,
+                  child: _buildMethod(
+                    method: method,
+                    walletController: walletController,
+                    compactHorizontal: true,
+                  ),
+                ),
+              )
+              .toList(),
+        );
+      },
+    );
+  }
+
+  Widget _buildMethod({
+    required _PaymentOptionData method,
+    required WalletController walletController,
+    bool compactHorizontal = false,
+  }) {
+    final selected = _selectedOptionKey == method.keyName &&
+        walletController.selectedPayment == method.backendMethod;
+
+    return PaymentMethodWidget(
+      label: method.label,
+      brand: method.brand,
+      isSelected: selected,
+      compactHorizontal: compactHorizontal,
+      onTap: () {
+        setState(() => _selectedOptionKey = method.keyName);
+        walletController.setSelectedPayment(method.backendMethod);
+      },
     );
   }
 }
@@ -149,6 +184,7 @@ class PaymentMethodWidget extends StatelessWidget {
   final String label;
   final Widget brand;
   final bool isSelected;
+  final bool compactHorizontal;
   final VoidCallback onTap;
 
   const PaymentMethodWidget({
@@ -157,6 +193,7 @@ class PaymentMethodWidget extends StatelessWidget {
     required this.brand,
     required this.isSelected,
     required this.onTap,
+    this.compactHorizontal = false,
   });
 
   @override
@@ -167,7 +204,9 @@ class PaymentMethodWidget extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
         width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(4, 7, 4, 6),
+        padding: compactHorizontal
+            ? const EdgeInsets.symmetric(horizontal: 8, vertical: 6)
+            : const EdgeInsets.fromLTRB(4, 7, 4, 6),
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFFFFF7F0) : Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -185,58 +224,77 @@ class PaymentMethodWidget extends StatelessWidget {
                 ]
               : null,
         ),
-        child: Stack(
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  height: 21,
-                  width: double.infinity,
-                  child: Center(child: brand),
-                ),
-                const SizedBox(height: 5),
-                SizedBox(
-                  width: double.infinity,
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: AppTextStyle.text10RG().copyWith(
-                      color: AppColors.darkTextColor,
-                      fontSize: 9,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+        child: compactHorizontal
+            ? Row(
+                children: [
+                  _selectionDot(),
+                  const SizedBox(width: 7),
+                  SizedBox(width: 28, child: Center(child: brand)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyle.text10RG().copyWith(
+                        color: AppColors.darkTextColor,
+                        fontSize: 9.5,
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            Positioned(
-              top: 0,
-              left: 0,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 160),
-                width: 14,
-                height: 14,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isSelected ? AppColors.mainAppColor : Colors.white,
-                  border: Border.all(
-                    color: isSelected
-                        ? AppColors.mainAppColor
-                        : const Color(0xFFBDBDBD),
-                    width: 1.2,
+                ],
+              )
+            : Stack(
+                children: [
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        height: 21,
+                        width: double.infinity,
+                        child: Center(child: brand),
+                      ),
+                      const SizedBox(height: 5),
+                      SizedBox(
+                        width: double.infinity,
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: AppTextStyle.text10RG().copyWith(
+                            color: AppColors.darkTextColor,
+                            fontSize: 9,
+                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                child: isSelected
-                    ? const Icon(Icons.check_rounded, size: 9, color: Colors.white)
-                    : null,
+                  Positioned(top: 0, left: 0, child: _selectionDot()),
+                ],
               ),
-            ),
-          ],
+      ),
+    );
+  }
+
+  Widget _selectionDot() {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 160),
+      width: 14,
+      height: 14,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: isSelected ? AppColors.mainAppColor : Colors.white,
+        border: Border.all(
+          color: isSelected ? AppColors.mainAppColor : const Color(0xFFBDBDBD),
+          width: 1.2,
         ),
       ),
+      child: isSelected
+          ? const Icon(Icons.check_rounded, size: 9, color: Colors.white)
+          : null,
     );
   }
 }

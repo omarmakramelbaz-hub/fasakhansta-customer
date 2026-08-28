@@ -62,9 +62,14 @@ class _SplashScreenState extends State<SplashScreen> {
       final controller = await createOpeningVideoController(_videoChunks);
       _videoController = controller;
 
-      await controller.initialize().timeout(const Duration(seconds: 8));
+      // The HQ asset is several MB, so allow enough time on a cold web load.
+      await controller.initialize().timeout(const Duration(seconds: 20));
       await controller.setLooping(false);
-      await controller.setVolume(1.0);
+
+      // Browsers block autoplay with audible audio unless the user has already
+      // interacted with the page. Keep the web preview muted so the opening
+      // video always plays; Android/iOS keep the requested full-volume audio.
+      await controller.setVolume(kIsWeb ? 0.0 : 1.0);
       controller.addListener(_handleVideoProgress);
 
       if (!mounted) {
@@ -74,10 +79,19 @@ class _SplashScreenState extends State<SplashScreen> {
       }
 
       setState(() => _videoReady = true);
-      await controller.play();
+
+      try {
+        await controller.play();
+      } catch (playError) {
+        // Some browsers can still reject the first autoplay attempt. Retry once
+        // explicitly muted before treating the splash as failed.
+        if (!kIsWeb) rethrow;
+        await controller.setVolume(0.0);
+        await controller.play();
+      }
 
       final safetyDelay =
-          controller.value.duration + _finalFrameHold + const Duration(seconds: 2);
+          controller.value.duration + _finalFrameHold + const Duration(seconds: 3);
       Future.delayed(safetyDelay, () {
         if (!mounted || _videoFinished) return;
         _finishOpeningVideo();

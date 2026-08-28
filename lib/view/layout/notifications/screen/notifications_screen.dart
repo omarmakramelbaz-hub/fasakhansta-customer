@@ -104,6 +104,130 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
+  Future<void> _showClearAllDialog(
+    NotificationsController controller,
+  ) async {
+    if (controller.notifications.isEmpty) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x1A000000),
+                  blurRadius: 28,
+                  offset: Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 58,
+                  height: 58,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF1F0),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: const Icon(
+                    Icons.delete_sweep_rounded,
+                    size: 30,
+                    color: Color(0xFFE64949),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'حذف جميع الإشعارات؟',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyle.text18BS().copyWith(
+                    color: const Color(0xFF181A1F),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'سيتم حذف كل الإشعارات الظاهرة حالياً من قائمة الإشعارات. الإشعارات الجديدة ستظهر بشكل طبيعي.',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyle.text13RM().copyWith(
+                    color: const Color(0xFF7E838C),
+                    height: 1.55,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(dialogContext, false),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF555A64),
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          side: const BorderSide(color: Color(0xFFE2E4E8)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Text('إلغاء'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: () => Navigator.pop(dialogContext, true),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFFE64949),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                        label: const Text('حذف الكل'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    await controller.clearAllNotifications();
+    if (!mounted) return;
+
+    setState(() => _selectedCategory = 0);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: const Text(
+            'تم حذف جميع الإشعارات',
+            textAlign: TextAlign.center,
+          ),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+  }
+
   Widget _notificationsList(
     List<NotificationsModel> notifications,
     NotificationsController controller,
@@ -241,7 +365,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   children: [
                     const SizedBox(height: 8),
                     _TopBar(
+                      hasNotifications: all.isNotEmpty,
                       onBack: () => Navigator.of(context).maybePop(),
+                      onClearAll: () =>
+                          _showClearAllDialog(notificationsController),
                       onMarkAllRead: () {
                         // The current API/model does not expose persisted read state yet.
                       },
@@ -304,10 +431,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.onBack, required this.onMarkAllRead});
+  const _TopBar({
+    required this.onBack,
+    required this.onMarkAllRead,
+    required this.onClearAll,
+    required this.hasNotifications,
+  });
 
   final VoidCallback onBack;
   final VoidCallback onMarkAllRead;
+  final VoidCallback onClearAll;
+  final bool hasNotifications;
 
   @override
   Widget build(BuildContext context) {
@@ -317,7 +451,7 @@ class _TopBar extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 126),
+            padding: const EdgeInsets.symmetric(horizontal: 156),
             child: Text(
               'notifications'.tr,
               maxLines: 1,
@@ -349,32 +483,60 @@ class _TopBar extends StatelessWidget {
             ),
           ),
           Positioned(
-            right: 12,
-            child: SizedBox(
-              width: 112,
-              child: TextButton(
-                onPressed: onMarkAllRead,
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 8,
+            right: 10,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              textDirection: TextDirection.rtl,
+              children: [
+                AnimatedOpacity(
+                  duration: const Duration(milliseconds: 180),
+                  opacity: hasNotifications ? 1 : .35,
+                  child: Material(
+                    color: const Color(0xFFFFF1F0),
+                    borderRadius: BorderRadius.circular(13),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(13),
+                      onTap: hasNotifications ? onClearAll : null,
+                      child: const SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: Icon(
+                          Icons.delete_sweep_rounded,
+                          size: 21,
+                          color: Color(0xFFE64949),
+                        ),
+                      ),
+                    ),
                   ),
-                  foregroundColor: AppColors.mainAppColor,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: Text(
-                  'تحديد الكل كمقروء',
-                  maxLines: 2,
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyle.text13MS().copyWith(
-                    color: AppColors.mainAppColor,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11.5,
-                    height: 1.15,
+                const SizedBox(width: 4),
+                SizedBox(
+                  width: 92,
+                  child: TextButton(
+                    onPressed: onMarkAllRead,
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 3,
+                        vertical: 8,
+                      ),
+                      foregroundColor: AppColors.mainAppColor,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      'تحديد الكل كمقروء',
+                      maxLines: 2,
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyle.text13MS().copyWith(
+                        color: AppColors.mainAppColor,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 10.5,
+                        height: 1.15,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         ],

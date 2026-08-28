@@ -37,7 +37,7 @@ class _SplashScreenState extends State<SplashScreen> {
   ];
 
   static const Color _openingBackground = Color(0xFF58A8C2);
-  static const Duration _finalFrameHold = Duration(seconds: 1);
+  static const Duration _maxOpeningDuration = Duration(seconds: 5);
 
   final LocalAuthentication _localAuth = LocalAuthentication();
   VideoPlayerController? _videoController;
@@ -45,7 +45,6 @@ class _SplashScreenState extends State<SplashScreen> {
   bool _videoReady = false;
   bool _videoFinished = false;
   bool _videoFailed = false;
-  bool _finishHoldScheduled = false;
   bool _isBiometricCheckComplete = false;
   bool _isNavigationPending = false;
   bool _isBiometricDialogOpen = false;
@@ -66,9 +65,9 @@ class _SplashScreenState extends State<SplashScreen> {
       await controller.initialize().timeout(const Duration(seconds: 20));
       await controller.setLooping(false);
 
-      // Browsers block autoplay with audible audio unless the user has already
-      // interacted with the page. Keep the web preview muted so the opening
-      // video always plays; Android/iOS keep the requested full-volume audio.
+      // Web autoplay must stay muted. On Android/iOS we only set the player
+      // volume and never change the device media/ringer settings, so the app
+      // does not force audio outside the user's current device configuration.
       await controller.setVolume(kIsWeb ? 0.0 : 1.0);
       controller.addListener(_handleVideoProgress);
 
@@ -90,9 +89,9 @@ class _SplashScreenState extends State<SplashScreen> {
         await controller.play();
       }
 
-      final safetyDelay =
-          controller.value.duration + _finalFrameHold + const Duration(seconds: 3);
-      Future.delayed(safetyDelay, () {
+      // Never hold the user on the branding screen for more than five seconds.
+      // If the source video ends sooner, the progress listener exits earlier.
+      Future.delayed(_maxOpeningDuration, () {
         if (!mounted || _videoFinished) return;
         _finishOpeningVideo();
       });
@@ -108,18 +107,14 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _handleVideoProgress() {
     final controller = _videoController;
-    if (controller == null || _videoFinished || _finishHoldScheduled) return;
+    if (controller == null || _videoFinished) return;
 
     final value = controller.value;
     if (!value.isInitialized || value.duration == Duration.zero) return;
 
     final remaining = value.duration - value.position;
     if (remaining <= const Duration(milliseconds: 150)) {
-      _finishHoldScheduled = true;
-      Future.delayed(_finalFrameHold, () {
-        if (!mounted || _videoFinished) return;
-        _finishOpeningVideo();
-      });
+      _finishOpeningVideo();
     }
   }
 

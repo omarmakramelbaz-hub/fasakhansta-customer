@@ -120,7 +120,7 @@ class _CartScreenState extends State<CartScreen> {
   Widget _buildRestaurantHeader(CartController controller) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.whiteColor,
         borderRadius: BorderRadius.circular(16),
@@ -144,13 +144,112 @@ class _CartScreenState extends State<CartScreen> {
               children: [
                 Text('yourOrderFrom'.tr, style: AppTextStyle.text12RG()),
                 2.sbH,
-                Text(controller.cart?.resturant?.resturantName ?? '', style: AppTextStyle.text16BS()),
+                Text(
+                  controller.cart?.resturant?.resturantName ?? '',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyle.text16BS(),
+                ),
               ],
             ),
           ),
-          Icon(Icons.chevron_right_rounded, color: AppColors.greyColor),
+          8.sbW,
+          InkWell(
+            onTap: () => _showClearCartDialog(controller),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.redColor.withValues(alpha: .07),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.redColor.withValues(alpha: .22)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.redColor),
+                  5.sbW,
+                  Text(
+                    context.languageCode == 'ar' ? 'حذف السلة' : 'Clear cart',
+                    style: AppTextStyle.text12MS().copyWith(color: AppColors.redColor),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  Future<void> _showClearCartDialog(CartController controller) async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        final isArabic = context.languageCode == 'ar';
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+          titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+          contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          title: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.redColor.withValues(alpha: .08),
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: Icon(Icons.delete_sweep_rounded, color: AppColors.redColor),
+              ),
+              10.sbW,
+              Expanded(
+                child: Text(
+                  isArabic ? 'حذف السلة' : 'Clear cart',
+                  style: AppTextStyle.text18BS(),
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            isArabic
+                ? 'هل أنت متأكد أنك تريد حذف جميع المنتجات من السلة؟'
+                : 'Are you sure you want to remove all products from your cart?',
+            style: AppTextStyle.text14RG(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(
+                isArabic ? 'إلغاء' : 'Cancel',
+                style: AppTextStyle.text14MS().copyWith(color: AppColors.greyColor),
+              ),
+            ),
+            FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.redColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                controller.emptyCart(
+                  onSuccess: () {
+                    controller.initialCart();
+                    controller.getCart();
+                  },
+                );
+              },
+              icon: const Icon(Icons.delete_outline_rounded, size: 18),
+              label: Text(isArabic ? 'حذف السلة' : 'Clear cart'),
+            ),
+          ],
+        );
+      },
     );
   }
 

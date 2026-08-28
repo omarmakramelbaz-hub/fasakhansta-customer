@@ -61,7 +61,37 @@ class HiveMethods {
 
   static int? getNotificationsCount() => _box.get('notificationsCount');
 
-  static void updateNotificationCount(int? notificationsCount) => _box.put('notificationsCount', notificationsCount);
+  static void updateNotificationCount(int? notificationsCount) =>
+      _box.put('notificationsCount', notificationsCount);
+
+  static String _hiddenNotificationsKey() =>
+      'hiddenNotificationIds_${getUserId() ?? 0}';
+
+  static Set<String> getHiddenNotificationIds() {
+    final stored = _box.get(
+      _hiddenNotificationsKey(),
+      defaultValue: <dynamic>[],
+    );
+    if (stored is! List) return <String>{};
+    return stored.map((e) => e.toString()).toSet();
+  }
+
+  static bool isNotificationHidden(String? id) {
+    if (id == null || id.isEmpty) return false;
+    return getHiddenNotificationIds().contains(id);
+  }
+
+  static Future<void> hideNotificationIds(Iterable<String> ids) async {
+    final merged = getHiddenNotificationIds()
+      ..addAll(ids.where((id) => id.isNotEmpty));
+
+    // Keep the local tombstone list bounded while preserving recent dismissals.
+    final values = merged.toList();
+    final limited = values.length > 5000
+        ? values.sublist(values.length - 5000)
+        : values;
+    await _box.put(_hiddenNotificationsKey(), limited);
+  }
 
   static bool isVisitor() => _box.get('isVisitor', defaultValue: false);
 

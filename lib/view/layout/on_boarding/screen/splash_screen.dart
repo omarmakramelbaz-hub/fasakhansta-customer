@@ -36,7 +36,8 @@ class _SplashScreenState extends State<SplashScreen> {
     'assets/splash_video/part_07.b64',
   ];
 
-  static const Color _openingBackground = Color(0xFF58A8C2);
+  // Match the very first frame of the opening video as closely as possible.
+  static const Color _openingBackground = Color(0xFF3788B6);
   static const Duration _maxOpeningDuration = Duration(seconds: 5);
 
   final LocalAuthentication _localAuth = LocalAuthentication();
@@ -48,12 +49,27 @@ class _SplashScreenState extends State<SplashScreen> {
   bool _isBiometricCheckComplete = false;
   bool _isNavigationPending = false;
   bool _isBiometricDialogOpen = false;
+  bool _firstFrameReleased = false;
 
   @override
   void initState() {
     super.initState();
+
+    // Keep the native launch surface visible while the MP4 texture is being
+    // prepared. This prevents Flutter from briefly painting a plain color
+    // screen between the OS launch screen and the actual opening video.
+    if (!kIsWeb) {
+      WidgetsBinding.instance.deferFirstFrame();
+    }
+
     _prepareOpeningVideo();
     WidgetsBinding.instance.addPostFrameCallback((_) => _initial());
+  }
+
+  void _releaseFirstFrame() {
+    if (kIsWeb || _firstFrameReleased) return;
+    _firstFrameReleased = true;
+    WidgetsBinding.instance.allowFirstFrame();
   }
 
   Future<void> _prepareOpeningVideo() async {
@@ -64,6 +80,7 @@ class _SplashScreenState extends State<SplashScreen> {
       // The HQ asset is several MB, so allow enough time on a cold web load.
       await controller.initialize().timeout(const Duration(seconds: 20));
       await controller.setLooping(false);
+      await controller.seekTo(Duration.zero);
 
       // Web autoplay must stay muted. On Android/iOS we only set the player
       // volume and never change the device media/ringer settings, so the app
@@ -74,6 +91,7 @@ class _SplashScreenState extends State<SplashScreen> {
       if (!mounted) {
         controller.removeListener(_handleVideoProgress);
         await controller.dispose();
+        _releaseFirstFrame();
         return;
       }
 
@@ -89,6 +107,10 @@ class _SplashScreenState extends State<SplashScreen> {
         await controller.play();
       }
 
+      // Only now let Flutter replace the native launch surface. The first
+      // Flutter frame already contains the initialized playing video.
+      _releaseFirstFrame();
+
       // Never hold the user on the branding screen for more than five seconds.
       // If the source video ends sooner, the progress listener exits earlier.
       Future.delayed(_maxOpeningDuration, () {
@@ -99,6 +121,7 @@ class _SplashScreenState extends State<SplashScreen> {
       debugPrint('Opening splash video error: $error');
       debugPrintStack(stackTrace: stackTrace);
 
+      _releaseFirstFrame();
       if (!mounted) return;
       setState(() => _videoFailed = true);
       _finishOpeningVideo();
@@ -126,6 +149,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   void dispose() {
+    _releaseFirstFrame();
     _videoController?.removeListener(_handleVideoProgress);
     _videoController?.dispose();
     super.dispose();

@@ -98,29 +98,9 @@ class _ChooseVCashOrVisaWidgetState extends State<ChooseVCashOrVisaWidget> {
       );
     }
 
-    // Keep the compact one-row layout while only the 3 wallet methods are
-    // available. As soon as card payment becomes available, switch to a 2x2
-    // grid so Visa/Mastercard is always visible without horizontal scrolling.
-    if (methods.length <= 3) {
-      return SizedBox(
-        height: 76,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (var index = 0; index < methods.length; index++) ...[
-              if (index > 0) const SizedBox(width: 7),
-              Expanded(
-                child: _buildMethod(
-                  method: methods[index],
-                  walletController: walletController,
-                ),
-              ),
-            ],
-          ],
-        ),
-      );
-    }
-
+    // Always keep payment methods on a two-column grid. This leaves a clear
+    // fourth position when only the three mobile-wallet options are enabled,
+    // and Visa/Mastercard fills that position automatically when activated.
     return LayoutBuilder(
       builder: (context, constraints) {
         final itemWidth = (constraints.maxWidth - 8) / 2;
@@ -131,7 +111,7 @@ class _ChooseVCashOrVisaWidgetState extends State<ChooseVCashOrVisaWidget> {
               .map(
                 (method) => SizedBox(
                   width: itemWidth,
-                  height: 50,
+                  height: 52,
                   child: _buildMethod(
                     method: method,
                     walletController: walletController,

@@ -101,7 +101,7 @@ class SocialLoginRowWidget extends StatelessWidget {
   static const String _googleWebClientId = String.fromEnvironment(
     'GOOGLE_WEB_CLIENT_ID',
     defaultValue:
-        '224648167390-efdtr7rjcnept7eiml1d642sdn8n9ki7.apps.googleusercontent.com',
+        '284797821306-sgmrmkr2ibd1nan66svmn9d3oq76vtj1.apps.googleusercontent.com',
   );
 
   void _onAuthSuccess(

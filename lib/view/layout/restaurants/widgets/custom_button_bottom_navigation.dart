@@ -9,6 +9,7 @@ import '../../../../helpers/translation/all_translation.dart';
 import '../../../../helpers/utils/common_methods.dart';
 import '../../auth/screen/register_screen.dart';
 import '../../cart/controller/cart_controller.dart';
+import '../controller/restaurants_controller.dart';
 
 class CustomButtonBottomNavigation extends StatefulWidget {
   final int restaurantProductId;
@@ -178,7 +179,41 @@ class _CustomButtonBottomNavigationState extends State<CustomButtonBottomNavigat
     );
   }
 
-  void _handleAddTap(BuildContext context, CartController cartController) {
+  int? _currentRestaurantId(BuildContext context) {
+    try {
+      return context.read<RestaurantsController>().productsDetailsRestaurant?.resturantId;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  bool _cartContainsAnotherRestaurant(CartController controller, int restaurantId) {
+    final restaurantIds = <int>{};
+    final cart = controller.cart;
+
+    final cartRestaurantId = cart?.resturant?.resturantId;
+    if (cartRestaurantId != null) restaurantIds.add(cartRestaurantId);
+
+    for (final item in cart?.carts ?? const []) {
+      final id = item.resturantId ?? item.resturantProduct?.resturantId;
+      if (id != null) restaurantIds.add(id);
+    }
+
+    if (restaurantIds.isEmpty) return false;
+    return restaurantIds.length > 1 || !restaurantIds.contains(restaurantId);
+  }
+
+  void _showDifferentRestaurantError(BuildContext context) {
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    CommonMethods.showAlertDialog(
+      title: isArabic ? 'تعذر إضافة المنتج' : 'Unable to add item',
+      message: isArabic
+          ? 'لديك منتجات من مطعم آخر في السلة. احذف السلة الحالية أولاً لإنشاء سلة جديدة من هذا المطعم.'
+          : 'Your cart already contains items from another restaurant. Please delete the current cart first to create a new cart for this restaurant.',
+    );
+  }
+
+  Future<void> _handleAddTap(BuildContext context, CartController cartController) async {
     if (HiveMethods.getToken() == null) {
       CommonMethods.showChooseDialog(
         context,
@@ -200,6 +235,18 @@ class _CustomButtonBottomNavigationState extends State<CustomButtonBottomNavigat
       return;
     }
 
+    final currentRestaurantId = _currentRestaurantId(context);
+    if (currentRestaurantId != null) {
+      if (cartController.cart == null) {
+        await cartController.getCart();
+      }
+
+      if (_cartContainsAnotherRestaurant(cartController, currentRestaurantId)) {
+        _showDifferentRestaurantError(context);
+        return;
+      }
+    }
+
     cartController.addToCart(
       restaurantProductId: widget.restaurantProductId,
       productFeature: widget.featureId,
@@ -209,15 +256,7 @@ class _CustomButtonBottomNavigationState extends State<CustomButtonBottomNavigat
         widget.onSuccessAddItems?.call();
         cartController.getCart();
       },
-      anotherCart: () {
-        final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-        CommonMethods.showAlertDialog(
-          title: isArabic ? 'تعذر إضافة المنتج' : 'Unable to add item',
-          message: isArabic
-              ? 'لديك منتجات من مطعم آخر في السلة. احذف السلة الحالية أولاً لإنشاء سلة جديدة من هذا المطعم.'
-              : 'Your cart already contains items from another restaurant. Please delete the current cart first to create a new cart for this restaurant.',
-        );
-      },
+      anotherCart: () => _showDifferentRestaurantError(context),
     );
   }
 }

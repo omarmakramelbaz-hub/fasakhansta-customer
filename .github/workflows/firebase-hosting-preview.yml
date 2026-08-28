@@ -175,11 +175,12 @@ jobs:
           HTML
 
       - name: Prune old Firebase Hosting versions before deploy
+        if: github.event_name != 'pull_request'
         env:
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_FASAKHANINJATEST }}
         run: |
           python3 -m pip install --quiet google-auth requests
-          python3 - <<'PY'
+          cat > /tmp/prune_firebase_hosting.py <<'PY'
           import json
           import os
           import requests
@@ -204,7 +205,7 @@ jobs:
               if page_token:
                   params['pageToken'] = page_token
               response = requests.get(
-                  f'https://firebasehosting.googleapis.com/v1beta1/sites/{SITE_ID}/channels/live/versions',
+                  f'https://firebasehosting.googleapis.com/v1beta1/sites/{SITE_ID}/versions',
                   headers=headers,
                   params=params,
                   timeout=60,
@@ -216,24 +217,28 @@ jobs:
               if not page_token:
                   break
 
+          versions = [v for v in versions if v.get('status') != 'DELETED']
           versions.sort(key=lambda item: item.get('createTime', ''), reverse=True)
           old_versions = versions[KEEP:]
-          print(f'Found {len(versions)} live Hosting versions; keeping newest {min(KEEP, len(versions))}.')
+          print(f'Found {len(versions)} active Hosting versions; keeping newest {min(KEEP, len(versions))}.')
 
           for version in old_versions:
               name = version['name']
-              delete_response = requests.delete(
+              response = requests.delete(
                   f'https://firebasehosting.googleapis.com/v1beta1/{name}',
                   headers=headers,
                   timeout=60,
               )
-              if delete_response.status_code not in (200, 204, 404):
-                  print(f'Warning: could not delete {name}: {delete_response.status_code} {delete_response.text}')
-              else:
-                  print(f'Deleted old Hosting version: {name}')
+              if response.status_code not in (200, 204, 404):
+                  raise RuntimeError(
+                      f'Could not delete {name}: {response.status_code} {response.text}'
+                  )
+              print(f'Deleted old Hosting version: {name}')
           PY
+          python3 /tmp/prune_firebase_hosting.py
 
       - name: Deploy to Firebase Hosting
+        if: github.event_name != 'pull_request'
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
@@ -242,59 +247,9 @@ jobs:
           channelId: live
 
       - name: Enforce last 5 Firebase Hosting versions
-        if: success()
+        if: success() && github.event_name != 'pull_request'
         env:
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_FASAKHANINJATEST }}
-        run: |
-          python3 - <<'PY'
-          import json
-          import os
-          import requests
-          from google.oauth2 import service_account
-          from google.auth.transport.requests import Request
+        run: python3 /tmp/prune_firebase_hosting.py
 
-          SITE_ID = 'fasakhaninjatest'
-          KEEP = 5
-
-          info = json.loads(os.environ['FIREBASE_SERVICE_ACCOUNT_JSON'])
-          creds = service_account.Credentials.from_service_account_info(
-              info,
-              scopes=['https://www.googleapis.com/auth/cloud-platform'],
-          )
-          creds.refresh(Request())
-          headers = {'Authorization': f'Bearer {creds.token}'}
-
-          versions = []
-          page_token = None
-          while True:
-              params = {'pageSize': 100}
-              if page_token:
-                  params['pageToken'] = page_token
-              response = requests.get(
-                  f'https://firebasehosting.googleapis.com/v1beta1/sites/{SITE_ID}/channels/live/versions',
-                  headers=headers,
-                  params=params,
-                  timeout=60,
-              )
-              response.raise_for_status()
-              data = response.json()
-              versions.extend(data.get('versions', []))
-              page_token = data.get('nextPageToken')
-              if not page_token:
-                  break
-
-          versions.sort(key=lambda item: item.get('createTime', ''), reverse=True)
-          for version in versions[KEEP:]:
-              name = version['name']
-              response = requests.delete(
-                  f'https://firebasehosting.googleapis.com/v1beta1/{name}',
-                  headers=headers,
-                  timeout=60,
-              )
-              if response.status_code not in (200, 204, 404):
-                  print(f'Warning: could not delete {name}: {response.status_code} {response.text}')
-              else:
-                  print(f'Deleted old Hosting version: {name}')
-          PY
-
-# Only main may deploy the live review URL.
+# Only main pushes/workflow_dispatch may deploy the live review URL.

@@ -37,6 +37,7 @@ class _SplashScreenState extends State<SplashScreen> {
   ];
 
   static const Color _openingBackground = Color(0xFF58A8C2);
+  static const Duration _finalFrameHold = Duration(seconds: 1);
 
   final LocalAuthentication _localAuth = LocalAuthentication();
   VideoPlayerController? _videoController;
@@ -44,6 +45,7 @@ class _SplashScreenState extends State<SplashScreen> {
   bool _videoReady = false;
   bool _videoFinished = false;
   bool _videoFailed = false;
+  bool _finishHoldScheduled = false;
   bool _isBiometricCheckComplete = false;
   bool _isNavigationPending = false;
   bool _isBiometricDialogOpen = false;
@@ -62,7 +64,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
       await controller.initialize().timeout(const Duration(seconds: 8));
       await controller.setLooping(false);
-      await controller.setVolume(0);
+      await controller.setVolume(1.0);
       controller.addListener(_handleVideoProgress);
 
       if (!mounted) {
@@ -74,7 +76,8 @@ class _SplashScreenState extends State<SplashScreen> {
       setState(() => _videoReady = true);
       await controller.play();
 
-      final safetyDelay = controller.value.duration + const Duration(seconds: 2);
+      final safetyDelay =
+          controller.value.duration + _finalFrameHold + const Duration(seconds: 2);
       Future.delayed(safetyDelay, () {
         if (!mounted || _videoFinished) return;
         _finishOpeningVideo();
@@ -91,14 +94,18 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _handleVideoProgress() {
     final controller = _videoController;
-    if (controller == null || _videoFinished) return;
+    if (controller == null || _videoFinished || _finishHoldScheduled) return;
 
     final value = controller.value;
     if (!value.isInitialized || value.duration == Duration.zero) return;
 
     final remaining = value.duration - value.position;
     if (remaining <= const Duration(milliseconds: 150)) {
-      _finishOpeningVideo();
+      _finishHoldScheduled = true;
+      Future.delayed(_finalFrameHold, () {
+        if (!mounted || _videoFinished) return;
+        _finishOpeningVideo();
+      });
     }
   }
 

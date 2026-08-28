@@ -5,6 +5,11 @@ import 'package:provider/provider.dart';
 
 import '../../../../helpers/routes/app_routers_import.dart';
 import '../../../../helpers/theme/app_text_style.dart';
+import '../../../../helpers/utils/utils.dart';
+import '../../auth/controller/auth_controller.dart';
+import '../../my_account/controller/my_account_controller.dart';
+import '../../my_account/screen/personal_information_screen.dart';
+import '../../wallet/bottom_sheet/charge_wallet_bottom_sheet.dart';
 import '../../wallet/controller/wallet_controller.dart';
 import '../../wallet/screen/wallet_screen.dart';
 
@@ -39,6 +44,29 @@ class _WalletContent extends StatelessWidget {
   final double balance;
 
   const _WalletContent({required this.balance});
+
+  void _openWalletCharge(BuildContext context) {
+    final authController = context.read<AuthController>();
+    final walletController = context.read<WalletController>();
+    final myAccountController = context.read<MyAccountController>();
+
+    if (authController.profile?.email == null) {
+      NamedNavigatorImpl.push(PersonalInformationScreen.routeName);
+      return;
+    }
+
+    Utils.showAppBottomSheet(
+      enableDrag: true,
+      isScrollControlled: true,
+      ChangeNotifierProvider.value(
+        value: walletController,
+        child: ChargeWalletBottomSheet(
+          walletController: walletController,
+          myAccountController: myAccountController,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -139,9 +167,7 @@ class _WalletContent extends StatelessWidget {
                                 filled: true,
                                 stitchColor: const Color(0xFF000000),
                                 icon: Icons.add_rounded,
-                                onTap: () => NamedNavigatorImpl.push(
-                                  WalletScreen.routeName,
-                                ),
+                                onTap: () => _openWalletCharge(context),
                               ),
                             ),
                             const SizedBox(width: 8),

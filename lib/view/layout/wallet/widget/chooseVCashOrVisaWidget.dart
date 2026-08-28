@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../helpers/images/app_images.dart';
+import '../../../../helpers/networking/api_helper.dart';
 import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/theme/app_text_style.dart';
 import '../../my_account/controller/my_account_controller.dart';
@@ -26,11 +27,19 @@ class _ChooseVCashOrVisaWidgetState extends State<ChooseVCashOrVisaWidget> {
   @override
   Widget build(BuildContext context) {
     final walletController = context.watch<WalletController>();
+    // Listen to the shared settings controller so the sheet rebuilds as soon
+    // as payment settings finish loading. Previously we only read the passed
+    // controller value, so the first open could stay stuck on an empty state
+    // until the sheet was closed and opened again.
+    final liveAccountController = context.watch<MyAccountController>();
+    final accountController = liveAccountController.setting != null
+        ? liveAccountController
+        : widget.myAccountController;
+    final setting = accountController.setting;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    final walletEnabled =
-        widget.myAccountController.setting?.walletCardActivate == 'true';
-    final cardEnabled =
-        widget.myAccountController.setting?.paymentCardActivate == 'true';
+
+    final walletEnabled = setting?.walletCardActivate == 'true';
+    final cardEnabled = setting?.paymentCardActivate == 'true';
 
     final methods = <_PaymentOptionData>[
       if (walletEnabled)
@@ -80,20 +89,77 @@ class _ChooseVCashOrVisaWidgetState extends State<ChooseVCashOrVisaWidget> {
     ];
 
     if (methods.isEmpty) {
-      return Container(
-        height: 66,
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: AppColors.lightGreyColor,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Text(
-          isArabic
-              ? 'لا توجد وسائل دفع متاحة حالياً'
-              : 'No payment methods are currently available',
-          textAlign: TextAlign.center,
-          style: AppTextStyle.text12RG(),
+      final settingsState = liveAccountController.settingResponse.state;
+      final isLoading = setting == null &&
+          (settingsState == ResponseState.loading ||
+              settingsState == ResponseState.sleep);
+
+      if (isLoading) {
+        return Container(
+          height: 66,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: AppColors.lightGreyColor,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.mainAppColor,
+                ),
+              ),
+              const SizedBox(width: 9),
+              Flexible(
+                child: Text(
+                  isArabic
+                      ? 'جاري تحميل وسائل الدفع...'
+                      : 'Loading payment methods...',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyle.text12RG(),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+
+      return InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => liveAccountController.getSetting(),
+        child: Container(
+          height: 66,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: AppColors.lightGreyColor,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.refresh_rounded,
+                size: 18,
+                color: AppColors.mainAppColor,
+              ),
+              const SizedBox(width: 7),
+              Flexible(
+                child: Text(
+                  isArabic
+                      ? 'تعذر تحميل وسائل الدفع، اضغط لإعادة المحاولة'
+                      : 'Could not load payment methods. Tap to retry',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyle.text11RG(),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -191,7 +257,9 @@ class PaymentMethodWidget extends StatelessWidget {
           color: isSelected ? const Color(0xFFFFF7F0) : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.mainAppColor : const Color(0xFFE6E6E6),
+            color: isSelected
+                ? AppColors.mainAppColor
+                : const Color(0xFFE6E6E6),
             width: isSelected ? 1.5 : 1,
           ),
           boxShadow: isSelected
@@ -219,7 +287,8 @@ class PaymentMethodWidget extends StatelessWidget {
                       style: AppTextStyle.text10RG().copyWith(
                         color: AppColors.darkTextColor,
                         fontSize: 9.5,
-                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w500,
                       ),
                     ),
                   ),
@@ -246,7 +315,8 @@ class PaymentMethodWidget extends StatelessWidget {
                           style: AppTextStyle.text10RG().copyWith(
                             color: AppColors.darkTextColor,
                             fontSize: 9,
-                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                            fontWeight:
+                                isSelected ? FontWeight.w700 : FontWeight.w500,
                           ),
                         ),
                       ),
@@ -268,7 +338,9 @@ class PaymentMethodWidget extends StatelessWidget {
         shape: BoxShape.circle,
         color: isSelected ? AppColors.mainAppColor : Colors.white,
         border: Border.all(
-          color: isSelected ? AppColors.mainAppColor : const Color(0xFFBDBDBD),
+          color: isSelected
+              ? AppColors.mainAppColor
+              : const Color(0xFFBDBDBD),
           width: 1.2,
         ),
       ),

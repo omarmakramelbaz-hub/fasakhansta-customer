@@ -210,29 +210,12 @@ class _CustomButtonBottomNavigationState extends State<CustomButtonBottomNavigat
         cartController.getCart();
       },
       anotherCart: () {
-        CommonMethods.showChooseDialog(
-          context,
-          title: 'didYouWantToDeleteCart'.tr,
-          message: '',
-          onPressed: () {
-            cartController.emptyCart(
-              onSuccess: () {
-                Navigator.pop(context);
-                widget.onSuccessAddItems?.call();
-                cartController.addToCart(
-                  restaurantProductId: widget.restaurantProductId,
-                  productFeature: widget.featureId,
-                  productClean: widget.productClean,
-                  qty: count,
-                  onSuccess: () {
-                    widget.onSuccessAddItems?.call();
-                    cartController.getCart();
-                  },
-                  anotherCart: () {},
-                );
-              },
-            );
-          },
+        final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+        CommonMethods.showAlertDialog(
+          title: isArabic ? 'تعذر إضافة المنتج' : 'Unable to add item',
+          message: isArabic
+              ? 'لديك منتجات من مطعم آخر في السلة. احذف السلة الحالية أولاً لإنشاء سلة جديدة من هذا المطعم.'
+              : 'Your cart already contains items from another restaurant. Please delete the current cart first to create a new cart for this restaurant.',
         );
       },
     );

@@ -187,7 +187,7 @@ class _ChargeWalletBottomSheetState extends State<ChargeWalletBottomSheet> {
                                 focusNode: walletController.chargeAmountFocusNode,
                                 keyboardType: TextInputType.number,
                                 textDirection: TextDirection.ltr,
-                                inputFormatters: const [
+                                inputFormatters: [
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
                                 onFieldSubmitted: (_) =>
@@ -332,7 +332,9 @@ class _ChargeWalletBottomSheetState extends State<ChargeWalletBottomSheet> {
                                 const SizedBox(width: 6),
                                 Text(
                                   'payNow'.tr,
-                                  style: AppTextStyle.text14BW(),
+                                  style: AppTextStyle.text14BS(
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ],
                             ),

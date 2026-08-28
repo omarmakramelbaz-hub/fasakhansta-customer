@@ -1,1 +1,2 @@
-Fasakhansta opening splash video data. Generated from the user-provided MP4 and optimized for app startup.
+Splash video is stored as eight Base64 asset chunks (part_00.b64 through part_07.b64).
+The Flutter splash screen assembles the chunks in memory and plays the MP4 directly, so no external video URL is required.

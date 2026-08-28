@@ -1,6 +1,8 @@
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:upgrader/upgrader.dart';
 
 import '../../view/layout/address/controller/address_controller.dart';
 import '../../view/layout/auth/controller/auth_controller.dart';
@@ -57,13 +59,39 @@ class _MyAppState extends State<MyApp> {
         stream: mainAppBloc.langStream,
         builder: (context, lang) {
           if (lang.hasData) {
+            final languageCode = lang.data!;
+            final botToastBuilder = BotToastInit();
+
             return MaterialApp(
               title: 'FaskhaNinja',
-              locale: Locale(lang.data!, ''),
+              locale: Locale(languageCode, ''),
               supportedLocales: GlobalTranslations.supportedLocales(),
               localizationsDelegates: context.localizationsDelegates,
               debugShowCheckedModeBanner: false,
-              builder: BotToastInit(),
+              builder: (context, child) {
+                final appChild = botToastBuilder(context, child);
+
+                // Web is only used for the review build. Store-version checks
+                // are enabled on the actual Android/iOS applications.
+                if (kIsWeb) return appChild;
+
+                return UpgradeAlert(
+                  upgrader: Upgrader(
+                    countryCode: 'EG',
+                    durationUntilAlertAgain: Duration.zero,
+                    messages: _FasakhanstaUpgraderMessages(
+                      code: languageCode,
+                    ),
+                  ),
+                  showIgnore: false,
+                  showLater: false,
+                  showPrompt: true,
+                  showReleaseNotes: false,
+                  barrierDismissible: false,
+                  shouldPopScope: () => false,
+                  child: appChild,
+                );
+              },
               navigatorObservers: [BotToastNavigatorObserver()],
               initialRoute: SplashScreen.routeName,
               onGenerateRoute: NamedNavigatorImpl.onGenerateRoute,
@@ -76,5 +104,48 @@ class _MyAppState extends State<MyApp> {
         },
       ),
     );
+  }
+}
+
+class _FasakhanstaUpgraderMessages extends UpgraderMessages {
+  _FasakhanstaUpgraderMessages({required String code}) : super(code: code);
+
+  @override
+  String message(UpgraderMessage messageKey) {
+    if (languageCode == 'ar') {
+      switch (messageKey) {
+        case UpgraderMessage.title:
+          return 'تحديث جديد متاح';
+        case UpgraderMessage.body:
+          return 'يتوفر إصدار جديد من فسخانستا. يجب تحديث التطبيق للاستمرار والاستفادة من أحدث التحسينات.';
+        case UpgraderMessage.prompt:
+          return 'التحديث مطلوب للمتابعة';
+        case UpgraderMessage.buttonTitleUpdate:
+          return 'تحديث التطبيق الآن';
+        case UpgraderMessage.buttonTitleIgnore:
+          return 'تجاهل';
+        case UpgraderMessage.buttonTitleLater:
+          return 'لاحقاً';
+        case UpgraderMessage.releaseNotes:
+          return 'ما الجديد';
+      }
+    }
+
+    switch (messageKey) {
+      case UpgraderMessage.title:
+        return 'New update available';
+      case UpgraderMessage.body:
+        return 'A new version of Fasakhansta is available. Please update the app to continue and get the latest improvements.';
+      case UpgraderMessage.prompt:
+        return 'Update required to continue';
+      case UpgraderMessage.buttonTitleUpdate:
+        return 'Update app now';
+      case UpgraderMessage.buttonTitleIgnore:
+        return 'Ignore';
+      case UpgraderMessage.buttonTitleLater:
+        return 'Later';
+      case UpgraderMessage.releaseNotes:
+        return "What's new";
+    }
   }
 }

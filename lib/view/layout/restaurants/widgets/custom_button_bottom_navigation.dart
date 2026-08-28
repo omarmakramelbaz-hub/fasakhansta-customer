@@ -205,11 +205,12 @@ class _CustomButtonBottomNavigationState extends State<CustomButtonBottomNavigat
 
   void _showDifferentRestaurantError(BuildContext context) {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    CommonMethods.showAlertDialog(
-      title: isArabic ? 'تعذر إضافة المنتج' : 'Unable to add item',
+    CommonMethods.showError(
+      title: isArabic ? 'سلة من مطعم آخر' : 'Different restaurant cart',
       message: isArabic
-          ? 'لديك منتجات من مطعم آخر في السلة. احذف السلة الحالية أولاً لإنشاء سلة جديدة من هذا المطعم.'
-          : 'Your cart already contains items from another restaurant. Please delete the current cart first to create a new cart for this restaurant.',
+          ? 'السلة الحالية تحتوي على منتجات من مطعم آخر. احذف السلة أولاً ثم أضف منتجات هذا المطعم.'
+          : 'Your current cart contains items from another restaurant. Clear the cart first, then add items from this restaurant.',
+      seconds: 5,
     );
   }
 

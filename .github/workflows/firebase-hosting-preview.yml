@@ -176,6 +176,7 @@ jobs:
 
       - name: Prune old Firebase Hosting versions before deploy
         if: github.event_name != 'pull_request'
+        continue-on-error: true
         env:
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_FASAKHANINJATEST }}
         run: |
@@ -220,8 +221,10 @@ jobs:
           versions = [v for v in versions if v.get('status') != 'DELETED']
           versions.sort(key=lambda item: item.get('createTime', ''), reverse=True)
           old_versions = versions[KEEP:]
-          print(f'Found {len(versions)} active Hosting versions; keeping newest {min(KEEP, len(versions))}.')
+          print(f'Found {len(versions)} active Hosting versions; target is newest {min(KEEP, len(versions))}.')
 
+          deleted = 0
+          skipped = 0
           for version in old_versions:
               name = version['name']
               response = requests.delete(
@@ -229,11 +232,26 @@ jobs:
                   headers=headers,
                   timeout=60,
               )
-              if response.status_code not in (200, 204, 404):
-                  raise RuntimeError(
-                      f'Could not delete {name}: {response.status_code} {response.text}'
-                  )
-              print(f'Deleted old Hosting version: {name}')
+              if response.status_code in (200, 204, 404):
+                  deleted += 1
+                  print(f'Deleted old Hosting version: {name}')
+                  continue
+
+              # Firebase protects a version that is still referenced by the
+              # current live release. Keep it for now; after the new deploy,
+              # the post-deploy prune can remove it if it is no longer live.
+              if response.status_code == 400 and 'FAILED_PRECONDITION' in response.text:
+                  skipped += 1
+                  print(f'Skipping protected live Hosting version for now: {name}')
+                  continue
+
+              skipped += 1
+              print(
+                  f'Warning: could not delete {name}: '
+                  f'{response.status_code} {response.text}'
+              )
+
+          print(f'Prune finished: deleted={deleted}, skipped={skipped}.')
           PY
           python3 /tmp/prune_firebase_hosting.py
 
@@ -248,6 +266,7 @@ jobs:
 
       - name: Enforce last 5 Firebase Hosting versions
         if: success() && github.event_name != 'pull_request'
+        continue-on-error: true
         env:
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_FASAKHANINJATEST }}
         run: python3 /tmp/prune_firebase_hosting.py

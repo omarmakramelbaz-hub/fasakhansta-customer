@@ -37,23 +37,15 @@ jobs:
           from PIL import Image
           import json
 
-          master = Path('assets/app_icon_master.png')
-          seed = Path('android/app/src/main/res/mipmap-xxxhdpi/launcher_icon.png')
-          master.parent.mkdir(parents=True, exist_ok=True)
-
-          # The approved high-resolution icon was placed in the Android icon slot
-          # by the preceding commit. Preserve it as a permanent master before
-          # generating platform-specific sizes.
-          if not master.exists():
-              Image.open(seed).convert('RGB').save(master, 'PNG', optimize=True)
-
+          master = Path('assets/app_icon_master.jpg')
           source = Image.open(master).convert('RGB')
+          source.load()
 
           def save_rgb(path: Path, size: int):
               path.parent.mkdir(parents=True, exist_ok=True)
               source.resize((size, size), Image.Resampling.LANCZOS).save(path, 'PNG', optimize=True)
 
-          # Android legacy launcher icon densities.
+          # Android launcher icon densities.
           android_sizes = {
               'mdpi': 48,
               'hdpi': 72,
@@ -64,9 +56,7 @@ jobs:
           for density, size in android_sizes.items():
               save_rgb(Path(f'android/app/src/main/res/mipmap-{density}/launcher_icon.png'), size)
 
-          # Android adaptive icon layers. Use the approved icon as the complete
-          # foreground and a matching dark navy backing layer. Update normal and
-          # night resources so the icon never falls back to the previous artwork.
+          # Android adaptive icon resources, including night-mode fallbacks.
           adaptive_sizes = {
               'mdpi': 108,
               'hdpi': 162,
@@ -90,11 +80,11 @@ jobs:
               <foreground android:drawable="@drawable/ic_launcher_foreground"/>
           </adaptive-icon>
           '''
-          adaptive_path = Path('android/app/src/main/res/mipmap-anydpi-v26/launcher_icon.xml')
-          adaptive_path.write_text(adaptive_xml, encoding='utf-8')
+          Path('android/app/src/main/res/mipmap-anydpi-v26/launcher_icon.xml').write_text(
+              adaptive_xml, encoding='utf-8'
+          )
 
-          # iOS / iPadOS: generate every exact pixel size declared by the existing
-          # asset catalog, including the 1024 px App Store marketing icon.
+          # iOS/iPadOS exact sizes declared by the existing AppIcon catalog.
           catalog = Path('ios/Runner/Assets.xcassets/AppIcon.appiconset')
           data = json.loads((catalog / 'Contents.json').read_text(encoding='utf-8'))
           generated = set()
@@ -110,9 +100,9 @@ jobs:
               save_rgb(catalog / filename, size)
               generated.add(key)
 
-          print(f'Generated {len(android_sizes)} Android legacy sizes, '
-                f'{len(adaptive_sizes)} adaptive sizes (normal + night), '
-                f'and {len(generated)} iOS asset entries.')
+          print(f'Generated {len(android_sizes)} Android launcher sizes, '
+                f'{len(adaptive_sizes)} adaptive sizes for normal/night mode, '
+                f'and {len(generated)} iOS icon files.')
           PY
 
       - name: Commit generated icon assets
@@ -120,8 +110,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/app_icon_master.png \
-            android/app/src/main/res \
+          git add android/app/src/main/res \
             ios/Runner/Assets.xcassets/AppIcon.appiconset
           if git diff --cached --quiet; then
             echo "No icon changes to commit."

@@ -147,11 +147,8 @@ class RestaurantsNearYouWidget extends StatelessWidget {
           ),
         ),
         10.sbH,
-        IgnorePointer(
-          ignoring: isGuest,
-          child: RestaurantsNearYouListViewWidget(
-            restaurantsNearYou: controller.restaurantsNearYou,
-          ),
+        RestaurantsNearYouListViewWidget(
+          restaurantsNearYou: controller.restaurantsNearYou,
         ),
       ],
     );

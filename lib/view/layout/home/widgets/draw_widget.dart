@@ -173,7 +173,7 @@ class _UserStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      minHeight: 82,
+      constraints: const BoxConstraints(minHeight: 82),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
       decoration: BoxDecoration(
         color: Colors.white,

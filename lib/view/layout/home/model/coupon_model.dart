@@ -38,6 +38,8 @@ class Data {
   String? image;
   List<Resturants>? resturants;
   String? createdAt;
+  int? eligibleOrdersCount;
+  num? eligibleOrdersTotal;
 
   Data({
     this.id,
@@ -50,6 +52,8 @@ class Data {
     this.image,
     this.resturants,
     this.createdAt,
+    this.eligibleOrdersCount,
+    this.eligibleOrdersTotal,
   });
 
   Data.fromJson(Map<String, dynamic> json) {
@@ -74,6 +78,8 @@ class Data {
       });
     }
     createdAt = json['created_at'];
+    eligibleOrdersCount = int.tryParse(json['eligible_orders_count']?.toString() ?? '') ?? 0;
+    eligibleOrdersTotal = num.tryParse(json['eligible_orders_total']?.toString() ?? '') ?? 0;
   }
 
   Map<String, dynamic> toJson() {
@@ -90,6 +96,8 @@ class Data {
       data['resturants'] = resturants!.map((v) => v.toJson()).toList();
     }
     data['created_at'] = createdAt;
+    data['eligible_orders_count'] = eligibleOrdersCount;
+    data['eligible_orders_total'] = eligibleOrdersTotal;
     return data;
   }
 }

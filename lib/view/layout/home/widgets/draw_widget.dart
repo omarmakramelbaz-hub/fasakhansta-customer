@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../../helpers/routes/app_routers_import.dart';
 import '../../../../helpers/theme/app_colors.dart';
 import '../../../../helpers/theme/app_text_style.dart';
 import '../../../custom_widgets/custom_image/custom_image.dart';
+import '../../restaurants/screen/restaurant_details_screen.dart';
 import '../controller/home_controller.dart';
 import '../model/coupon_model.dart';
 
@@ -13,71 +15,200 @@ class RestaurantsDrawWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final restaurants = homeController.coupon?.data?.resturants ?? <Resturants>[];
-    final couponId = homeController.coupon?.data?.id ?? 0;
+    final data = homeController.coupon?.data;
+    final restaurants = data?.resturants ?? <Resturants>[];
 
-    if (restaurants.isEmpty) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: const Color(0xFFF0F0F0)),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x0D000000),
-              blurRadius: 16,
-              offset: Offset(0, 6),
-            ),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _ParticipationStatsCard(
+          ordersCount: data?.eligibleOrdersCount ?? 0,
+          ordersTotal: data?.eligibleOrdersTotal ?? 0,
         ),
-        child: Column(
-          children: [
-            Container(
-              width: 58,
-              height: 58,
-              decoration: BoxDecoration(
-                color: AppColors.mainAppColor.withValues(alpha: .10),
-                shape: BoxShape.circle,
+        const SizedBox(height: 16),
+        if (restaurants.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: const Color(0xFFF0F0F0)),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x0D000000),
+                  blurRadius: 16,
+                  offset: Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 58,
+                  height: 58,
+                  decoration: BoxDecoration(
+                    color: AppColors.mainAppColor.withValues(alpha: .10),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.storefront_rounded, color: AppColors.mainAppColor, size: 30),
+                ),
+                const SizedBox(height: 12),
+                Text('لا توجد مطاعم مشاركة حالياً', style: AppTextStyle.text14BS()),
+              ],
+            ),
+          )
+        else
+          ListView.separated(
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: restaurants.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 14),
+            itemBuilder: (context, index) {
+              return RestaurantCard(restaurant: restaurants[index]);
+            },
+          ),
+      ],
+    );
+  }
+}
+
+class _ParticipationStatsCard extends StatelessWidget {
+  const _ParticipationStatsCard({
+    required this.ordersCount,
+    required this.ordersTotal,
+  });
+
+  final int ordersCount;
+  final num ordersTotal;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3FBFA),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFCFEAE6)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 14,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.confirmation_number_rounded,
+                  color: Color(0xFF0A857A),
+                  size: 23,
+                ),
               ),
-              child: Icon(Icons.storefront_rounded, color: AppColors.mainAppColor, size: 30),
-            ),
-            const SizedBox(height: 12),
-            Text('لا توجد مطاعم مشاركة حالياً', style: AppTextStyle.text14BS()),
-          ],
-        ),
-      );
-    }
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('مشاركاتك المؤهلة في السحب', style: AppTextStyle.text15BS()),
+                    const SizedBox(height: 2),
+                    Text(
+                      'كل طلب مؤهل = فرصة مستقلة للفوز',
+                      style: AppTextStyle.text11RG(color: const Color(0xFF6F7D7B)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _UserStat(
+                  label: 'عدد الطلبات المؤهلة',
+                  value: ordersCount.toString(),
+                  icon: Icons.receipt_long_rounded,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _UserStat(
+                  label: 'إجمالي قيمة الطلبات',
+                  value: _formatMoney(ordersTotal),
+                  icon: Icons.payments_rounded,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-    return ListView.separated(
-      padding: EdgeInsets.zero,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: restaurants.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 14),
-      itemBuilder: (context, index) {
-        return RestaurantCard(
-          restaurant: restaurants[index],
-          couponId: couponId,
-          homeController: homeController,
-        );
-      },
+class _UserStat extends StatelessWidget {
+  const _UserStat({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      minHeight: 82,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE6F1EF)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: AppColors.mainAppColor, size: 20),
+          const SizedBox(height: 5),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyle.text16BS(color: const Color(0xFF153B3A)),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyle.text10RG(color: const Color(0xFF778482)),
+          ),
+        ],
+      ),
     );
   }
 }
 
 class RestaurantCard extends StatelessWidget {
-  const RestaurantCard({
-    super.key,
-    required this.restaurant,
-    required this.couponId,
-    required this.homeController,
-  });
+  const RestaurantCard({super.key, required this.restaurant});
 
   final Resturants restaurant;
-  final int couponId;
-  final HomeController homeController;
 
   @override
   Widget build(BuildContext context) {
@@ -87,17 +218,17 @@ class RestaurantCard extends StatelessWidget {
     final address = (restaurant.address ?? '').trim().isNotEmpty
         ? restaurant.address!.trim()
         : (restaurant.cityName ?? restaurant.cityname ?? '').trim();
-    final canSubscribe = couponId > 0 && (restaurant.id ?? 0) > 0;
+    final restaurantId = restaurant.id ?? 0;
 
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(22),
       child: InkWell(
         borderRadius: BorderRadius.circular(22),
-        onTap: canSubscribe
-            ? () => homeController.couponSubscribe(
-                  couponWheelId: couponId,
-                  resturantId: restaurant.id!,
+        onTap: restaurantId > 0
+            ? () => NamedNavigatorImpl.push(
+                  RestaurantDetailsScreen.routeName,
+                  arguments: RestaurantDetailsArgs(id: restaurantId),
                 )
             : null,
         child: Container(
@@ -334,7 +465,7 @@ String _formatMoney(dynamic value) {
   if (value == null) return '-';
   final number = value is num ? value : num.tryParse(value.toString());
   if (number == null) return value.toString();
-  if (number == 0) return 'مجاني';
+  if (number == 0) return '0 ج';
   return '${number.toStringAsFixed(number % 1 == 0 ? 0 : 2)} ج';
 }
 

@@ -105,7 +105,6 @@ jobs:
             -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/Fasakhansta.xcarchive" \
             DEVELOPMENT_TEAM=4769DGYGT3 \
-            CODE_SIGN_IDENTITY='Apple Distribution' \
             archive
 
       - name: Export signed IPA

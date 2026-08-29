@@ -183,9 +183,13 @@ class OrdersController extends ChangeNotifier {
     // while sending an e-mail / broadcast. Verify the persisted state before
     // showing an error so the customer never sees a false cancellation error.
     final verifyResponse = await ApiHelper.instance.get('${Urls.detailsOrders}/$orderId');
-    final verifiedStatus = verifyResponse.state == ResponseState.complete
-        ? verifyResponse.data['data']?['status']?.toString()
-        : null;
+    String? verifiedStatus;
+    if (verifyResponse.state == ResponseState.complete) {
+      final dynamic verifyData = verifyResponse.data['data'];
+      if (verifyData is Map) {
+        verifiedStatus = verifyData['status']?.toString();
+      }
+    }
 
     Utils.loadingOff();
 

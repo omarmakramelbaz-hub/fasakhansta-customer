@@ -25,8 +25,8 @@ Future<void> main() async {
   await initServices();
   await GlobalTranslations.setNewLanguage('ar');
 
-  final requestedRoute = Uri.base.queryParameters['route'] ??
-      BottomNavigationBarScreen.routeName;
+  final requestedRoute =
+      Uri.base.queryParameters['route'] ?? 'BottomNavigationBarScreen';
   runApp(_ScreenshotApp(initialRoute: requestedRoute));
 }
 

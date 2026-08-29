@@ -98,10 +98,13 @@ class SocialBtn extends StatelessWidget {
 class SocialLoginRowWidget extends StatelessWidget {
   const SocialLoginRowWidget({super.key});
 
+  // OAuth 2.0 Web client for the same Firebase/Google Cloud project used by
+  // the Android app. Android uses it as serverClientId so Google returns an
+  // ID token whose audience can be verified safely by the backend.
   static const String _googleWebClientId = String.fromEnvironment(
     'GOOGLE_WEB_CLIENT_ID',
     defaultValue:
-        '284797821306-sgmrmkr2ibd1nan66svmn9d3oq76vtj1.apps.googleusercontent.com',
+        '224648167390-efdtr7rjcnept7eiml1d642sdn8n9ki7.apps.googleusercontent.com',
   );
 
   void _onAuthSuccess(
@@ -175,15 +178,24 @@ class SocialLoginRowWidget extends StatelessWidget {
     BuildContext context, {
     required String provider,
     required String accessToken,
+    String? idToken,
   }) async {
     Utils.loading();
 
     try {
-      final body = FormData.fromMap({
-        'access_token': accessToken,
+      final requestData = <String, dynamic>{
         'provider': provider,
         'fcm_id': FirebaseNotifications.fcmToken ?? '',
-      });
+      };
+
+      if (accessToken.trim().isNotEmpty) {
+        requestData['access_token'] = accessToken.trim();
+      }
+      if (idToken?.trim().isNotEmpty == true) {
+        requestData['id_token'] = idToken!.trim();
+      }
+
+      final body = FormData.fromMap(requestData);
 
       final response = await ApiHelper.instance.post(
         provider == 'facebook' ? Urls.loginWithFacebook : Urls.loginWithGoogle,
@@ -259,12 +271,19 @@ class SocialLoginRowWidget extends StatelessWidget {
       );
 
       if (mobile.isEmpty) {
+        final socialAuthData = <String, dynamic>{
+          'provider': provider,
+        };
+        if (accessToken.trim().isNotEmpty) {
+          socialAuthData['access_token'] = accessToken.trim();
+        }
+        if (idToken?.trim().isNotEmpty == true) {
+          socialAuthData['id_token'] = idToken!.trim();
+        }
+
         NamedNavigatorImpl.push(
           SocialAuthPhoneScreen.routeName,
-          arguments: {
-            'provider': provider,
-            'access_token': accessToken,
-          },
+          arguments: socialAuthData,
         );
         return;
       }
@@ -333,6 +352,7 @@ class SocialLoginRowWidget extends StatelessWidget {
     try {
       final googleSignIn = GoogleSignIn(
         clientId: kIsWeb ? _googleWebClientId : null,
+        serverClientId: kIsWeb ? null : _googleWebClientId,
         scopes: const ['email', 'profile'],
       );
 
@@ -345,10 +365,11 @@ class SocialLoginRowWidget extends StatelessWidget {
 
       final authentication = await googleUser.authentication;
       final accessToken = authentication.accessToken ?? '';
+      final idToken = authentication.idToken ?? '';
 
-      if (accessToken.isEmpty) {
+      if (idToken.isEmpty && accessToken.isEmpty) {
         CommonMethods.showToast(
-          message: 'Google لم يرجع Access Token صالح.',
+          message: 'Google لم يرجع رمز تحقق صالح.',
           type: ToastType.error,
         );
         return;
@@ -358,6 +379,7 @@ class SocialLoginRowWidget extends StatelessWidget {
         context,
         provider: 'google',
         accessToken: accessToken,
+        idToken: idToken,
       );
     } catch (error) {
       Utils.loadingOff();

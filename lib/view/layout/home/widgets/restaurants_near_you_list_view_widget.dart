@@ -83,9 +83,7 @@ class _NearbyRestaurantCard extends StatelessWidget {
         ? model.address!.trim()
         : (model.cityName ?? model.cityname ?? '').trim();
     final actualDistanceKm = _calculateDistanceKm(model);
-    final deliveryFee = actualDistanceKm == null || model.kmPrice == null
-        ? null
-        : actualDistanceKm * model.kmPrice!.toDouble();
+    final deliveryFee = _calculateDeliveryFee(model, actualDistanceKm);
 
     return SizedBox(
       width: width,
@@ -391,6 +389,34 @@ String _formatMoney(dynamic value) {
   if (value is num) return '${value.toStringAsFixed(0)}ج';
   final parsed = num.tryParse(value.toString());
   return parsed == null ? 'حسب المنطقة' : '${parsed.toStringAsFixed(0)}ج';
+}
+
+double? _calculateDeliveryFee(
+  RestaurantsNearYouHomeModel model,
+  double? distanceKm,
+) {
+  if (distanceKm == null || !distanceKm.isFinite || distanceKm < 0) {
+    return null;
+  }
+
+  num? configuredPrice;
+  if (distanceKm <= 1) {
+    configuredPrice = model.default_0_1;
+  } else if (distanceKm <= 2) {
+    configuredPrice = model.default_1_2;
+  } else if (distanceKm <= 3) {
+    configuredPrice = model.default_2_3;
+  } else {
+    final perKmPrice = model.kmPrice;
+    return perKmPrice == null ? null : distanceKm * perKmPrice.toDouble();
+  }
+
+  if (configuredPrice != null) {
+    return configuredPrice.toDouble();
+  }
+
+  final perKmPrice = model.kmPrice;
+  return perKmPrice == null ? null : distanceKm * perKmPrice.toDouble();
 }
 
 double? _calculateDistanceKm(RestaurantsNearYouHomeModel model) {

@@ -6,8 +6,21 @@ class NamedNavigatorImpl {
   static final BuildContext context = navigatorState.currentContext!;
   static final NavigatorState currentState = navigatorState.currentState!;
 
+  static bool _isGuestProtectedRoute(String screen) {
+    return screen == RestaurantDetailsScreen.routeName ||
+        screen == RequestDelegateScreen.routeName ||
+        screen == PersonalInformationScreen.routeName ||
+        screen == WalletScreen.routeName;
+  }
+
   static Future push(String screen, {bool replace = false, bool clean = false, Object? arguments}) {
     log('screen ======> $screen');
+
+    if (GuestAccessGuard.isGuest && _isGuestProtectedRoute(screen)) {
+      GuestAccessGuard.showLoginRequired(context);
+      return Future.value();
+    }
+
     if (clean) {
       return currentState.pushNamedAndRemoveUntil(screen, (route) => false, arguments: arguments);
     } else if (replace) {

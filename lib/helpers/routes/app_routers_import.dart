@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../utils/guest_access_guard.dart';
 import '../../view/custom_widgets/custom_payment_web_view/custom_payment_web_view.dart';
 import '../../view/custom_widgets/zoom_image/zoom_image_screen.dart';
 import '../../view/layout/address/screen/add_address_screen.dart';

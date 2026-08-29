@@ -222,11 +222,11 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
                           _buildBranchStats(restaurantsController),
                           _buildSpecialOffer(),
                           _buildCategoryTabs(restaurantsController),
+                          if (restaurantsController.previousOrders.isNotEmpty)
+                            _buildPreviousOrders(restaurantsController),
                           _buildBestSellers(restaurantsController),
                           _buildOfferBanner(),
                           ..._buildCategories(restaurantsController),
-                          if (restaurantsController.previousOrders.isNotEmpty)
-                            _buildPreviousOrders(restaurantsController),
                           if (restaurantsController.detailsRestaurant?.highestRated?.isNotEmpty == true)
                             _buildChoicesAccordingToYourTaste(restaurantsController),
                         ],
@@ -716,7 +716,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('previousOrders'.tr, style: AppTextStyle.text18BS()),
+          Text('المنتجات المطلوبة مسبقاً', style: AppTextStyle.text18BS()),
           const SizedBox(height: 10),
           const PreviousOrdersListViewWidget(),
         ],

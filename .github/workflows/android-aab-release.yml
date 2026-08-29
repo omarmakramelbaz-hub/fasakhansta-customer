@@ -1,4 +1,4 @@
-name: Android AAB Release Build
+name: Android Release Build
 
 on:
   workflow_dispatch:
@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  build_aab:
+  build_android:
     runs-on: ubuntu-latest
 
     steps:
@@ -37,13 +37,26 @@ jobs:
       - name: Build signed Play Store AAB
         run: flutter build appbundle --release --build-name=1.0.54 --build-number=56
 
-      - name: Prepare AAB
-        run: cp build/app/outputs/bundle/release/app-release.aab 'Fasakhansta-1.0.54-56.aab'
+      - name: Build signed release APK
+        run: flutter build apk --release --build-name=1.0.54 --build-number=56
 
-      - name: Upload AAB artifact
+      - name: Prepare release files
+        run: |
+          cp build/app/outputs/bundle/release/app-release.aab 'Fasakhansta-1.0.54-56.aab'
+          cp build/app/outputs/flutter-apk/app-release.apk 'Fasakhansta-1.0.54-56.apk'
+
+      - name: Upload Play Store AAB artifact
         uses: actions/upload-artifact@v4
         with:
           name: Fasakhansta-PlayStore-AAB-1.0.54-56
           path: Fasakhansta-1.0.54-56.aab
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload Android APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Fasakhansta-APK-1.0.54-56
+          path: Fasakhansta-1.0.54-56.apk
           if-no-files-found: error
           retention-days: 14

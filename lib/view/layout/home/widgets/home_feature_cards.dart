@@ -6,6 +6,7 @@ import '../../../../helpers/theme/app_text_style.dart';
 import '../../../custom_widgets/custom_image/custom_network_image.dart';
 import '../controller/home_controller.dart';
 import '../screen/draw_resturant_screen.dart';
+import 'celebrate_widget.dart';
 
 class HomeFeatureCards extends StatelessWidget {
   final HomeController controller;
@@ -14,7 +15,17 @@ class HomeFeatureCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dashboardImage = controller.coupon?.data?.image?.trim() ?? '';
+    final coupon = controller.coupon;
+    final isWinner = coupon?.flag?.trim().toLowerCase() == 'winner';
+
+    if (isWinner) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: CelebrateWidget(homeController: controller),
+      );
+    }
+
+    final dashboardImage = coupon?.data?.image?.trim() ?? '';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),

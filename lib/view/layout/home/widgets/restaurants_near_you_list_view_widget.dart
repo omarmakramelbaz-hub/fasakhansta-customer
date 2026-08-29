@@ -83,6 +83,9 @@ class _NearbyRestaurantCard extends StatelessWidget {
         ? model.address!.trim()
         : (model.cityName ?? model.cityname ?? '').trim();
     final actualDistanceKm = _calculateDistanceKm(model);
+    final deliveryFee = actualDistanceKm == null || model.kmPrice == null
+        ? null
+        : actualDistanceKm * model.kmPrice!.toDouble();
 
     return SizedBox(
       width: width,
@@ -250,7 +253,7 @@ class _NearbyRestaurantCard extends StatelessWidget {
                                 icon: Icons.delivery_dining_rounded,
                                 iconColor: teal,
                                 label: 'التوصيل',
-                                value: _formatMoney(model.serviceFees),
+                                value: _formatMoney(deliveryFee),
                               ),
                             ),
                           ],

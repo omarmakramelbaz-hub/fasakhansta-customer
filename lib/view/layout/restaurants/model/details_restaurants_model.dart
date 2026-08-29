@@ -20,6 +20,9 @@ class DetailsRestaurantModel {
   String? openAt;
   dynamic minOrderPrice;
   int? kmPrice;
+  num? default_0_1;
+  num? default_1_2;
+  num? default_2_3;
   List<ResturantAreas>? resturantAreas;
   List<ResturantCategorys>? resturantCategorys;
   List<ResturantItems>? resturantItems;
@@ -47,6 +50,9 @@ class DetailsRestaurantModel {
     this.openAt,
     this.minOrderPrice,
     this.kmPrice,
+    this.default_0_1,
+    this.default_1_2,
+    this.default_2_3,
     this.resturantAreas,
     this.resturantCategorys,
     this.resturantItems,
@@ -75,6 +81,9 @@ class DetailsRestaurantModel {
     openAt = json['open_at'];
     minOrderPrice = json['min_order_price'];
     kmPrice = json['km_price'];
+    default_0_1 = json['default_0_1'];
+    default_1_2 = json['default_1_2'];
+    default_2_3 = json['default_2_3'];
     if (json['resturant_areas'] != null) {
       resturantAreas = <ResturantAreas>[];
       json['resturant_areas'].forEach((v) {
@@ -124,6 +133,9 @@ class DetailsRestaurantModel {
     data['open_at'] = openAt;
     data['min_order_price'] = minOrderPrice;
     data['km_price'] = kmPrice;
+    data['default_0_1'] = default_0_1;
+    data['default_1_2'] = default_1_2;
+    data['default_2_3'] = default_2_3;
     if (resturantAreas != null) {
       data['resturant_areas'] = resturantAreas!.map((v) => v.toJson()).toList();
     }

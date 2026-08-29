@@ -1,4 +1,4 @@
-# Latest APK build trigger
+# Latest APK build trigger - social login verification fix
 name: Android APK Test Build
 
 on:

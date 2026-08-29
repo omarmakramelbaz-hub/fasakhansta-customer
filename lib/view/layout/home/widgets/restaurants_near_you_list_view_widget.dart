@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../helpers/hive/hive_methods.dart';
@@ -46,7 +47,9 @@ class RestaurantsNearYouListViewWidget extends StatelessWidget {
           separatorBuilder: (_, __) => const SizedBox(width: 10),
           itemBuilder: (context, index) {
             final model = restaurantsNearYou[index];
-            final canOpen = model.underContract != 'yes' && model.status != 'busy' && model.status != 'closed';
+            final canOpen = model.underContract != 'yes' &&
+                model.status != 'busy' &&
+                model.status != 'closed';
 
             return _NearbyRestaurantCard(
               model: model,
@@ -79,6 +82,7 @@ class _NearbyRestaurantCard extends StatelessWidget {
     final subtitle = (model.address ?? '').trim().isNotEmpty
         ? model.address!.trim()
         : (model.cityName ?? model.cityname ?? '').trim();
+    final actualDistanceKm = _calculateDistanceKm(model);
 
     return SizedBox(
       width: width,
@@ -147,10 +151,18 @@ class _NearbyRestaurantCard extends StatelessWidget {
                             color: Colors.white.withValues(alpha: .94),
                             borderRadius: BorderRadius.circular(10),
                             boxShadow: const [
-                              BoxShadow(color: Color(0x18000000), blurRadius: 5, offset: Offset(0, 2)),
+                              BoxShadow(
+                                color: Color(0x18000000),
+                                blurRadius: 5,
+                                offset: Offset(0, 2),
+                              ),
                             ],
                           ),
-                          child: const Icon(Icons.location_on_rounded, color: orange, size: 18),
+                          child: const Icon(
+                            Icons.location_on_rounded,
+                            color: orange,
+                            size: 18,
+                          ),
                         ),
                       ),
                       Positioned(
@@ -179,7 +191,11 @@ class _NearbyRestaurantCard extends StatelessWidget {
                                 color: orange.withValues(alpha: .09),
                                 borderRadius: BorderRadius.circular(9),
                               ),
-                              child: const Icon(Icons.storefront_rounded, size: 16, color: orange),
+                              child: const Icon(
+                                Icons.storefront_rounded,
+                                size: 16,
+                                color: orange,
+                              ),
                             ),
                             const SizedBox(width: 6),
                             Expanded(
@@ -195,11 +211,15 @@ class _NearbyRestaurantCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          subtitle.isEmpty ? 'مأكولات بحرية طازجة بأعلى جودة' : subtitle,
+                          subtitle.isEmpty
+                              ? 'مأكولات بحرية طازجة بأعلى جودة'
+                              : subtitle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.right,
-                          style: AppTextStyle.text10RG(color: AppColors.lightTextColor),
+                          style: AppTextStyle.text10RG(
+                            color: AppColors.lightTextColor,
+                          ),
                         ),
                         const SizedBox(height: 7),
                         Container(height: 1, color: const Color(0xFFF1F1F1)),
@@ -221,7 +241,7 @@ class _NearbyRestaurantCard extends StatelessWidget {
                                 icon: Icons.location_on_outlined,
                                 iconColor: orange,
                                 label: 'المسافة',
-                                value: _formatKm(model.kmPrice),
+                                value: _formatKm(actualDistanceKm),
                               ),
                             ),
                             const SizedBox(width: 4),
@@ -314,13 +334,21 @@ class _DeliveryBadge extends StatelessWidget {
         color: Colors.white.withValues(alpha: .96),
         borderRadius: BorderRadius.circular(10),
         boxShadow: const [
-          BoxShadow(color: Color(0x18000000), blurRadius: 6, offset: Offset(0, 2)),
+          BoxShadow(
+            color: Color(0x18000000),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
         ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.schedule_rounded, size: 12, color: Color(0xFFFF6B00)),
+          const Icon(
+            Icons.schedule_rounded,
+            size: 12,
+            color: Color(0xFFFF6B00),
+          ),
           const SizedBox(width: 3),
           Text(
             text,
@@ -362,12 +390,41 @@ String _formatMoney(dynamic value) {
   return parsed == null ? 'حسب المنطقة' : '${parsed.toStringAsFixed(0)}ج';
 }
 
-String _formatKm(dynamic value) {
-  if (value == null) return '-';
-  if (value is num) return '${value.toStringAsFixed(value % 1 == 0 ? 0 : 1)} كم';
-  final parsed = num.tryParse(value.toString());
-  if (parsed == null) return '-';
-  return '${parsed.toStringAsFixed(parsed % 1 == 0 ? 0 : 1)} كم';
+double? _calculateDistanceKm(RestaurantsNearYouHomeModel model) {
+  final userLat = HiveMethods.getLat();
+  final userLng = HiveMethods.getLan();
+  final restaurantLat = double.tryParse((model.lat ?? '').trim());
+  final restaurantLng = double.tryParse((model.lng ?? '').trim());
+
+  if (userLat == null ||
+      userLng == null ||
+      restaurantLat == null ||
+      restaurantLng == null) {
+    return null;
+  }
+
+  if (userLat.abs() > 90 ||
+      restaurantLat.abs() > 90 ||
+      userLng.abs() > 180 ||
+      restaurantLng.abs() > 180) {
+    return null;
+  }
+
+  final distanceMeters = Geolocator.distanceBetween(
+    userLat,
+    userLng,
+    restaurantLat,
+    restaurantLng,
+  );
+
+  return distanceMeters / 1000;
+}
+
+String _formatKm(double? value) {
+  if (value == null || !value.isFinite) return '-';
+  if (value < 1) return '${(value * 1000).round()} م';
+  if (value < 10) return '${value.toStringAsFixed(1)} كم';
+  return '${value.round()} كم';
 }
 
 class IsRestaurantBusyWidget extends StatelessWidget {
@@ -377,7 +434,9 @@ class IsRestaurantBusyWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final unavailable = model.status == 'closed' || model.underContract == 'yes' || model.status == 'busy';
+    final unavailable = model.status == 'closed' ||
+        model.underContract == 'yes' ||
+        model.status == 'busy';
     if (!unavailable) return const SizedBox.shrink();
 
     return Positioned.fill(

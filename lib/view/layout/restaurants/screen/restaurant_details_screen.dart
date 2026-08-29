@@ -3,10 +3,12 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'package:pusher_channels_flutter/pusher_channels_flutter.dart';
 
 import '../../../../helpers/extensions/extensions.dart';
+import '../../../../helpers/hive/hive_methods.dart';
 import '../../../../helpers/images/app_images.dart';
 import '../../../../helpers/pusher_service/pusher_controller.dart';
 import '../../../../helpers/routes/app_routers_import.dart';
@@ -243,18 +245,116 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
 
   Widget _buildBranchStats(RestaurantsController controller) {
     final restaurant = controller.detailsRestaurant;
+    final distanceKm = _calculateDistanceKm(restaurant);
+    final deliveryFee = _calculateDeliveryFee(restaurant, distanceKm);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
       child: Row(
         children: [
-          Expanded(child: _statCard(Icons.delivery_dining, '${restaurant?.serviceFees ?? 0} جنيه', 'رسوم التوصيل')),
+          Expanded(
+            child: _statCard(
+              Icons.delivery_dining,
+              _formatDeliveryFee(deliveryFee),
+              'رسوم التوصيل',
+            ),
+          ),
           const SizedBox(width: 8),
-          Expanded(child: _statCard(Icons.near_me_outlined, '${restaurant?.kmPrice ?? 0} كم', 'المسافة منك')),
+          Expanded(
+            child: _statCard(
+              Icons.near_me_outlined,
+              _formatDistance(distanceKm),
+              'المسافة منك',
+            ),
+          ),
           const SizedBox(width: 8),
-          Expanded(child: _statCard(Icons.access_time_rounded, restaurant?.deliveryTime ?? '-', 'وقت التوصيل')),
+          Expanded(
+            child: _statCard(
+              Icons.access_time_rounded,
+              restaurant?.deliveryTime ?? '-',
+              'وقت التوصيل',
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  double? _calculateDistanceKm(
+    details_restaurant_model.DetailsRestaurantModel? restaurant,
+  ) {
+    if (restaurant == null) return null;
+
+    final userLat = HiveMethods.getLat();
+    final userLng = HiveMethods.getLan();
+    final restaurantLat = double.tryParse((restaurant.lat ?? '').trim());
+    final restaurantLng = double.tryParse((restaurant.lng ?? '').trim());
+
+    if (userLat == null ||
+        userLng == null ||
+        restaurantLat == null ||
+        restaurantLng == null) {
+      return null;
+    }
+
+    if (userLat.abs() > 90 ||
+        restaurantLat.abs() > 90 ||
+        userLng.abs() > 180 ||
+        restaurantLng.abs() > 180) {
+      return null;
+    }
+
+    final distanceMeters = Geolocator.distanceBetween(
+      userLat,
+      userLng,
+      restaurantLat,
+      restaurantLng,
+    );
+
+    return distanceMeters / 1000;
+  }
+
+  double? _calculateDeliveryFee(
+    details_restaurant_model.DetailsRestaurantModel? restaurant,
+    double? distanceKm,
+  ) {
+    if (restaurant == null ||
+        distanceKm == null ||
+        !distanceKm.isFinite ||
+        distanceKm < 0) {
+      return null;
+    }
+
+    num? configuredPrice;
+    if (distanceKm <= 1) {
+      configuredPrice = restaurant.default_0_1;
+    } else if (distanceKm <= 2) {
+      configuredPrice = restaurant.default_1_2;
+    } else if (distanceKm <= 3) {
+      configuredPrice = restaurant.default_2_3;
+    } else {
+      final perKmPrice = restaurant.kmPrice;
+      return perKmPrice == null ? null : distanceKm * perKmPrice.toDouble();
+    }
+
+    if (configuredPrice != null) {
+      return configuredPrice.toDouble();
+    }
+
+    final perKmPrice = restaurant.kmPrice;
+    return perKmPrice == null ? null : distanceKm * perKmPrice.toDouble();
+  }
+
+  String _formatDeliveryFee(double? value) {
+    if (value == null || !value.isFinite) return 'حسب المنطقة';
+    return '${value.toStringAsFixed(0)} جنيه';
+  }
+
+  String _formatDistance(double? value) {
+    if (value == null || !value.isFinite) return '-';
+    if (value < 1) return '${(value * 1000).round()} م';
+    if (value < 10) return '${value.toStringAsFixed(1)} كم';
+    return '${value.round()} كم';
   }
 
   Widget _statCard(IconData icon, String value, String title) {

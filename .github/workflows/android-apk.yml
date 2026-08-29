@@ -6,6 +6,7 @@ on:
     branches: [ "main" ]
     paths:
       - '.github/workflows/android-apk.yml'
+      - 'android/app/src/main/res/**'
 
 permissions:
   contents: read

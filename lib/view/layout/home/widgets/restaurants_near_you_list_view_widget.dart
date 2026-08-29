@@ -84,6 +84,9 @@ class _NearbyRestaurantCard extends StatelessWidget {
         : (model.cityName ?? model.cityname ?? '').trim();
     final actualDistanceKm = _calculateDistanceKm(model);
     final deliveryFee = _calculateDeliveryFee(model, actualDistanceKm);
+    final deliveryTime = (model.deliveryTime ?? '').trim().isEmpty
+        ? '-'
+        : model.deliveryTime!.trim();
 
     return SizedBox(
       width: width,
@@ -230,10 +233,10 @@ class _NearbyRestaurantCard extends StatelessWidget {
                           children: [
                             Expanded(
                               child: _MetricTile(
-                                icon: Icons.star_outline_rounded,
+                                icon: Icons.schedule_rounded,
                                 iconColor: orange,
-                                label: 'التقييم',
-                                value: model.avgRate?.toStringAsFixed(1) ?? '0.0',
+                                label: 'وقت التوصيل',
+                                value: deliveryTime,
                               ),
                             ),
                             const SizedBox(width: 4),

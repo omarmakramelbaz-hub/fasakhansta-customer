@@ -169,16 +169,35 @@ class OrdersController extends ChangeNotifier {
     Utils.loading();
 
     final response = await ApiHelper.instance.post('${Urls.cancelOrder}/$orderId');
-    Utils.loadingOff();
+
     if (response.state == ResponseState.complete) {
+      Utils.loadingOff();
       CommonMethods.showToast(message: response.data['message']);
       Provider.of<DeliveryProvider>(NamedNavigatorImpl.context, listen: false).stopDelivery();
       onSuccess.call();
-      NamedNavigatorImpl.pop();
       await getOrders();
-    } else {
-      CommonMethods.showError(message: response.data['message'], apiResponse: response);
+      return;
     }
+
+    // The legacy backend used to update the order first and could then fail
+    // while sending an e-mail / broadcast. Verify the persisted state before
+    // showing an error so the customer never sees a false cancellation error.
+    final verifyResponse = await ApiHelper.instance.get('${Urls.detailsOrders}/$orderId');
+    final verifiedStatus = verifyResponse.state == ResponseState.complete
+        ? verifyResponse.data['data']?['status']?.toString()
+        : null;
+
+    Utils.loadingOff();
+
+    if (verifiedStatus == 'cancelled') {
+      CommonMethods.showToast(message: 'تم إلغاء الطلب بنجاح');
+      Provider.of<DeliveryProvider>(NamedNavigatorImpl.context, listen: false).stopDelivery();
+      onSuccess.call();
+      await getOrders();
+      return;
+    }
+
+    CommonMethods.showError(message: response.data['message'], apiResponse: response);
   }
 
   //===========> commission order <==========

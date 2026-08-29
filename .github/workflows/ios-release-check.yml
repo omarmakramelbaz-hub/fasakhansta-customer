@@ -1,0 +1,50 @@
+name: iOS Release Check
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - '.github/workflows/ios-release-check.yml'
+      - 'ios/**'
+
+permissions:
+  contents: read
+
+jobs:
+  build_ios:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+
+      - name: Install Flutter Dependencies
+        run: flutter pub get
+
+      - name: Install CocoaPods Dependencies
+        run: |
+          cd ios
+          pod install --repo-update
+
+      - name: Build iOS release without codesign
+        run: flutter build ios --release --no-codesign --build-name=2.0.6 --build-number=56
+
+      - name: Archive unsigned app for inspection
+        run: |
+          ditto -c -k --sequesterRsrc --keepParent build/ios/iphoneos/Runner.app Fasakhansta-iOS-2.0.6-56-unsigned.zip
+
+      - name: Upload iOS check artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Fasakhansta-iOS-2.0.6-56-unsigned
+          path: Fasakhansta-iOS-2.0.6-56-unsigned.zip
+          if-no-files-found: error
+          retention-days: 14

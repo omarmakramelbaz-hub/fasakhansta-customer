@@ -15,9 +15,10 @@ import 'helpers/translation/all_translation.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Keep App Store screenshots in Arabic regardless of fresh browser storage.
-  await GlobalTranslations.setNewLanguage('ar');
+  // Initialize Hive/assets first, then persist Arabic for the fresh browser
+  // profile used by the screenshot runner.
   await initServices();
+  await GlobalTranslations.setNewLanguage('ar');
 
   runApp(const MyApp());
 

@@ -17,7 +17,7 @@ permissions:
 jobs:
   build_and_upload:
     runs-on: macos-26
-    timeout-minutes: 60
+    timeout-minutes: 45
     steps:
       - name: Verify required secrets
         env:
@@ -51,7 +51,7 @@ jobs:
           /usr/libexec/PlistBuddy -c 'Add :aps-environment string production' ios/Runner/Runner.entitlements
           flutter pub get
           cd ios
-          pod install --repo-update
+          pod install
 
       - name: Install Apple signing assets
         env:
@@ -83,10 +83,6 @@ jobs:
           echo "KEYCHAIN_PATH=$KEYCHAIN" >> "$GITHUB_ENV"
           security find-identity -v -p codesigning "$KEYCHAIN"
 
-      - name: Build unsigned Flutter release
-        working-directory: driver
-        run: flutter build ios --release --no-codesign --build-name="$BUILD_NAME" --build-number="$BUILD_NUMBER"
-
       - name: Configure Runner-only signing
         working-directory: driver
         run: |
@@ -109,15 +105,7 @@ jobs:
           puts "Runner profile: #{ENV.fetch('DRIVER_PROFILE_NAME')}"
           RUBY
 
-      - name: Archive signed Drivers app
-        working-directory: driver
-        run: |
-          set -euo pipefail
-          xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner -configuration Release \
-            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/Drivers.xcarchive" archive
-
-      - name: Export signed IPA
-        working-directory: driver
+      - name: Prepare export options
         run: |
           set -euo pipefail
           cat > "$RUNNER_TEMP/DriversExportOptions.plist" <<PLIST
@@ -133,9 +121,15 @@ jobs:
           <key>com.fasakhaninja.delegate</key><string>${DRIVER_PROFILE_NAME}</string>
           </dict></dict></plist>
           PLIST
-          mkdir -p build/ios/ipa
-          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/Drivers.xcarchive" \
-            -exportPath build/ios/ipa -exportOptionsPlist "$RUNNER_TEMP/DriversExportOptions.plist"
+
+      - name: Build signed IPA once
+        working-directory: driver
+        run: |
+          set -euo pipefail
+          flutter build ipa --release \
+            --build-name="$BUILD_NAME" \
+            --build-number="$BUILD_NUMBER" \
+            --export-options-plist="$RUNNER_TEMP/DriversExportOptions.plist"
           IPA=$(find build/ios/ipa -maxdepth 1 -name '*.ipa' -print -quit)
           test -n "$IPA"
           echo "IPA_PATH=$PWD/$IPA" >> "$GITHUB_ENV"

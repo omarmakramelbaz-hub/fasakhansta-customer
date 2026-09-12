@@ -37,7 +37,7 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 9, 12, 10),
+            padding: const EdgeInsets.fromLTRB(12, 45, 12, 0),
             child: Directionality(
               textDirection: TextDirection.ltr,
               child: GestureDetector(
@@ -123,29 +123,13 @@ class _LocationButton extends StatelessWidget {
   const _LocationButton();
 
   @override
-  Widget build(BuildContext context) => Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x33000000),
-              blurRadius: 9,
-              offset: Offset(0, 4),
-            ),
-            BoxShadow(
-              color: Color(0x66FFFFFF),
-              blurRadius: 2,
-              offset: Offset(0, -1),
-            ),
-          ],
-        ),
+  Widget build(BuildContext context) => const SizedBox(
+        width: 30,
+        height: 34,
         child: Icon(
           Icons.location_on_rounded,
-          color: AppColors.mainAppColor,
-          size: 20,
+          color: Colors.white,
+          size: 28,
         ),
       );
 }

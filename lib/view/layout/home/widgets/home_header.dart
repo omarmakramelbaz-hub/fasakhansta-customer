@@ -22,9 +22,13 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
     final auth = context.watch<AuthController>();
     final profile = auth.profile;
     final addresses = profile?.userAddresses ?? [];
-    final selectedAddressId = auth.selectedAddressId ?? HiveMethods.getSelectedCity();
-    final selectedIndex = addresses.indexWhere((item) => item.id == selectedAddressId);
-    final address = addresses.isEmpty ? null : addresses[selectedIndex >= 0 ? selectedIndex : 0];
+    final selectedAddressId =
+        auth.selectedAddressId ?? HiveMethods.getSelectedCity();
+    final selectedIndex =
+        addresses.indexWhere((item) => item.id == selectedAddressId);
+    final address = addresses.isEmpty
+        ? null
+        : addresses[selectedIndex >= 0 ? selectedIndex : 0];
     final location = [address?.streetName, address?.cityName]
         .where((value) => value != null && value.trim().isNotEmpty)
         .join(' - ');
@@ -34,75 +38,73 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
       child: Container(
         height: 100,
         color: AppColors.mainAppColor,
-        child: SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 45, 12, 0),
-            child: Transform.translate(
-              offset: const Offset(0, 18),
-              child: Directionality(
-                textDirection: TextDirection.ltr,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: onLocationTap,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              top: 42,
+              left: 12,
+              right: 12,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onLocationTap,
+                child: Directionality(
+                  textDirection: TextDirection.ltr,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Flexible(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 1),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(
-                                    Icons.keyboard_arrow_down_rounded,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                  color: Colors.white,
+                                  size: 14,
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  'التوصيل إلى',
+                                  textDirection: TextDirection.rtl,
+                                  style: AppTextStyle.text12BS().copyWith(
                                     color: Colors.white,
-                                    size: 14,
+                                    fontSize: 10,
+                                    shadows: const [
+                                      Shadow(
+                                        color: Color(0x55000000),
+                                        blurRadius: 4,
+                                        offset: Offset(0, 1),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(width: 2),
-                                  Text(
-                                    'التوصيل إلى',
-                                    textDirection: TextDirection.rtl,
-                                    style: AppTextStyle.text12BS().copyWith(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      shadows: const [
-                                        Shadow(
-                                          color: Color(0x55000000),
-                                          blurRadius: 4,
-                                          offset: Offset(0, 1),
-                                        ),
-                                      ],
-                                    ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 1),
+                            Text(
+                              location.isEmpty ? 'اختر العنوان' : location,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.right,
+                              textDirection: TextDirection.rtl,
+                              style: AppTextStyle.text12BS().copyWith(
+                                color: Colors.white,
+                                fontSize: 9.5,
+                                shadows: const [
+                                  Shadow(
+                                    color: Color(0x55000000),
+                                    blurRadius: 4,
+                                    offset: Offset(0, 1),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 1),
-                              Text(
-                                location.isEmpty ? 'اختر العنوان' : location,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.right,
-                                textDirection: TextDirection.rtl,
-                                style: AppTextStyle.text12BS().copyWith(
-                                  color: Colors.white,
-                                  fontSize: 9.5,
-                                  shadows: const [
-                                    Shadow(
-                                      color: Color(0x55000000),
-                                      blurRadius: 4,
-                                      offset: Offset(0, 1),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(width: 5),
@@ -112,7 +114,7 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -146,7 +148,6 @@ class _FiveAngleHeaderClipper extends CustomClipper<Path> {
     final height = size.height;
     const shallowDepth = 12.0;
 
-    // Five light, sharp bends across the lower edge.
     return Path()
       ..moveTo(0, 0)
       ..lineTo(width, 0)

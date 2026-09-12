@@ -37,7 +37,7 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 45, 12, 0),
+            padding: const EdgeInsets.fromLTRB(12, 63, 12, 0),
             child: Directionality(
               textDirection: TextDirection.ltr,
               child: GestureDetector(

@@ -37,7 +37,7 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 18, 12, 10),
+            padding: const EdgeInsets.fromLTRB(12, 9, 12, 10),
             child: Directionality(
               textDirection: TextDirection.ltr,
               child: GestureDetector(
@@ -143,7 +143,7 @@ class _LocationButton extends StatelessWidget {
           ],
         ),
         child: Icon(
-          Icons.location_on_outlined,
+          Icons.location_on_rounded,
           color: AppColors.mainAppColor,
           size: 20,
         ),

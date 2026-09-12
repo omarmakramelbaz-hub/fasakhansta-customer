@@ -37,75 +37,78 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 63, 12, 0),
-            child: Directionality(
-              textDirection: TextDirection.ltr,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: onLocationTap,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Flexible(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 1),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.keyboard_arrow_down_rounded,
-                                  color: Colors.white,
-                                  size: 14,
-                                ),
-                                const SizedBox(width: 2),
-                                Text(
-                                  'التوصيل إلى',
-                                  textDirection: TextDirection.rtl,
-                                  style: AppTextStyle.text12BS().copyWith(
+            padding: const EdgeInsets.fromLTRB(12, 45, 12, 0),
+            child: Transform.translate(
+              offset: const Offset(0, 18),
+              child: Directionality(
+                textDirection: TextDirection.ltr,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onLocationTap,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Flexible(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 1),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.keyboard_arrow_down_rounded,
                                     color: Colors.white,
-                                    fontSize: 10,
-                                    shadows: const [
-                                      Shadow(
-                                        color: Color(0x55000000),
-                                        blurRadius: 4,
-                                        offset: Offset(0, 1),
-                                      ),
-                                    ],
+                                    size: 14,
                                   ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 1),
-                            Text(
-                              location.isEmpty ? 'اختر العنوان' : location,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.right,
-                              textDirection: TextDirection.rtl,
-                              style: AppTextStyle.text12BS().copyWith(
-                                color: Colors.white,
-                                fontSize: 9.5,
-                                shadows: const [
-                                  Shadow(
-                                    color: Color(0x55000000),
-                                    blurRadius: 4,
-                                    offset: Offset(0, 1),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    'التوصيل إلى',
+                                    textDirection: TextDirection.rtl,
+                                    style: AppTextStyle.text12BS().copyWith(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      shadows: const [
+                                        Shadow(
+                                          color: Color(0x55000000),
+                                          blurRadius: 4,
+                                          offset: Offset(0, 1),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 1),
+                              Text(
+                                location.isEmpty ? 'اختر العنوان' : location,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.right,
+                                textDirection: TextDirection.rtl,
+                                style: AppTextStyle.text12BS().copyWith(
+                                  color: Colors.white,
+                                  fontSize: 9.5,
+                                  shadows: const [
+                                    Shadow(
+                                      color: Color(0x55000000),
+                                      blurRadius: 4,
+                                      offset: Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 5),
-                    const _LocationButton(),
-                  ],
+                      const SizedBox(width: 5),
+                      const _LocationButton(),
+                    ],
+                  ),
                 ),
               ),
             ),

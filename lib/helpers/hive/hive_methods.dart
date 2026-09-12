@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 
 class HiveMethods {
@@ -11,15 +12,40 @@ class HiveMethods {
 
   static final _box = Hive.box('app');
 
+  // Keep the auth token mirrored in memory. Hive writes are asynchronous on
+  // the web backend, while authenticated API calls can start immediately after
+  // login. The cache makes the freshly-issued token available synchronously to
+  // request headers while the persistent write finishes.
+  static String? _tokenCache;
+  static bool _tokenCacheInitialized = false;
+  static DateTime? _lastTokenUpdateAt;
+
   static String getLang() => _box.get('lang', defaultValue: 'ar');
 
   static void updateLang(String lang) => _box.put('lang', lang);
 
-  static String? getToken() => _box.get('token');
+  static String? getToken() {
+    if (_tokenCacheInitialized) return _tokenCache;
 
-  static void updateToken(String token) => _box.put('token', token);
+    final storedToken = _box.get('token');
+    _tokenCache = storedToken is String ? storedToken : null;
+    _tokenCacheInitialized = true;
+    return _tokenCache;
+  }
 
-  static void deleteToken() => _box.delete('token');
+  static Future<void> updateToken(String token) async {
+    _tokenCache = token;
+    _tokenCacheInitialized = true;
+    _lastTokenUpdateAt = DateTime.now();
+    await _box.put('token', token);
+  }
+
+  static Future<void> deleteToken() async {
+    _tokenCache = null;
+    _tokenCacheInitialized = true;
+    _lastTokenUpdateAt = null;
+    await _box.delete('token');
+  }
 
   static int? getUserId() => _box.get('userId');
 
@@ -93,7 +119,20 @@ class HiveMethods {
     await _box.put(_hiddenNotificationsKey(), limited);
   }
 
-  static bool isVisitor() => _box.get('isVisitor', defaultValue: false);
+  static bool isVisitor() {
+    final storedVisitor = _box.get('isVisitor', defaultValue: false) == true;
+    if (storedVisitor) return true;
+
+    // The web review build fires several API calls immediately after login.
+    // During this short hand-off window a single optional 401 must not send the
+    // user back to Login while the new authenticated session is being settled.
+    if (kIsWeb && getToken() != null && _lastTokenUpdateAt != null) {
+      return DateTime.now().difference(_lastTokenUpdateAt!) <
+          const Duration(seconds: 30);
+    }
+
+    return false;
+  }
 
   static void updateIsVisitor(bool? isVisitor) => _box.put('isVisitor', isVisitor);
 }
